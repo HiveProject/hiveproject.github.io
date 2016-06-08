@@ -27,7 +27,6 @@ var openModelViewer;
 loadScript("https://apis.google.com/js/api.js",function(){
 	loadScript("https://www.gstatic.com/realtime/realtime-client-utils.js",Initialize);
 	
- openModelViewer=gapi.drive.realtime.debug;
 });
 
 function Initialize()
@@ -43,6 +42,8 @@ function Initialize()
 
  var loadedCallback=undefined;
  function start(callback) {
+	 
+ openModelViewer=gapi.drive.realtime.debug;
    // With auth taken care of, load a file, or create one if there
    // is not an id in the URL.
    var id = '0B7Fr-eaQNfHDWWVKQXFsMmtwY3c';

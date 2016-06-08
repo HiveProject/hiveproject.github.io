@@ -27,6 +27,7 @@ var openModelViewer;
 loadScript("https://apis.google.com/js/api.js",function(){
 	loadScript("https://www.gstatic.com/realtime/realtime-client-utils.js",Initialize);
 	
+ openModelViewer=gapi.drive.realtime.debug;
 });
 
 function Initialize()
@@ -35,7 +36,6 @@ function Initialize()
    alert('Invalid Client ID - did you forget to insert your application Client ID?');
  }
  realtimeUtils = new utils.RealtimeUtils({ clientId: clientId });
- openModelViewer=gapi.drive.realtime.debug;
 }
 
  // Create a new instance of the realtime utility with your client ID.

@@ -17,8 +17,7 @@
       <h1>Hive Project</h1>
       <p>Now that your application is running, simply type in either text box and see your changes instantly appear in the other one. Open
       this same document in a <a onclick="window.open(window.location.href);return false;" target="_blank">new tab</a> to see it work across tabs.</p>
-      <textarea id="text_area_1"></textarea>
-      <textarea id="text_area_2"></textarea>
+      <textarea id="text_area_1"></textarea> 
       <button id="auth_button">Authorize</button>
     </main>
     <script>
@@ -87,8 +86,7 @@
       function wireTextBoxes(collaborativeString) {
         var textArea1 = document.getElementById('text_area_1');
         var textArea2 = document.getElementById('text_area_2');
-        gapi.drive.realtime.databinding.bindString(collaborativeString, textArea1);
-        gapi.drive.realtime.databinding.bindString(collaborativeString, textArea2);
+        gapi.drive.realtime.databinding.bindString(collaborativeString, textArea1); 
       }
     </script>
   </body>

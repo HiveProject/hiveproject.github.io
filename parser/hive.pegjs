@@ -11,7 +11,6 @@
     }
     function message(selector, args) {
     	return {
-        	type: 'Message',
             selector: selector,
             args: args
         };
@@ -36,7 +35,8 @@
                 result = {
                     type: 'MessageSend',
                     rcvr: result === null ? rcvr : result,
-                    msg: msg
+                    selector: msg.selector,
+                    args: msg.args
                 };
             });
             return result;
@@ -58,6 +58,14 @@
     	return message(selector, args);
     }
     function keywordSend(rcvr, msg) { return send(rcvr, [msg]); }
+    
+    function assignment(left, right) {
+    	return {
+        	type: 'Assignment',
+            left: left,
+            right: right
+        };
+    }
 }
 
 start = expression
@@ -80,7 +88,7 @@ variable "variable" = token:identifier { return variable(token); }
 reference "reference" = variable
 literal "literal" = token:(number / string) { return literal(token); }
 
-expression = keywordSend / binarySend
+expression = assignment / keywordSend / binarySend
 subexpression  = '(' ws expression:expression ws ')' { return expression; }
 operand = literal / reference / subexpression
 
@@ -99,6 +107,8 @@ keywordMessage = ws pairs:(pair:keywordPair ws { return pair; })+ { return keywo
 keywordSend = rcvr:binarySend msg:keywordMessage { return keywordSend(rcvr, msg); }
 
 message = binaryMessage / unaryMessage / keywordMessage
+
+assignment = left:variable ws ":=" ws right:expression { return assignment(left, right); }
 
 comments "comments" = $(["][^"]*["])+
 separator "separator" = (char:. & { return isSeparator(char); })+

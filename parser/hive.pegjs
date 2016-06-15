@@ -71,6 +71,17 @@
     	return message(selector, args);
     }
     function keywordSend(rcvr, msg) { return send(rcvr, [msg]); }
+    
+    function methodBody(first, rest) {
+    	rest.unshift(first);
+        return rest;
+    }
+    function method(body) {
+        return {
+        	type: 'Method',
+        	body: body
+        };
+    }
 }
 
 start = expression
@@ -81,7 +92,7 @@ float "float" = token:$(integer "." digits) { return parseFloat(token); }
 number "number" = val:(float / integer) { return number(val); }
 string = ['] val:(("''" {return "'"} / [^'])*) ['] { return string(val); }
 array = '{' ws first:expression? rest:('.' ws expr:expression { return expr; })* ws '}' { return array(first, rest); }
-literal "literal" = (number / string / array)
+literal "literal" = (number / string / array / method)
 
 letter = [a-zA-Z]
 word = [a-zA-Z0-9]
@@ -116,6 +127,15 @@ keywordSend = rcvr:binarySend msg:keywordMessage { return keywordSend(rcvr, msg)
 message = binaryMessage / unaryMessage / keywordMessage
 
 assignment = left:variable ws ":=" ws right:expression { return assignment(left, right); }
+
+methodDeclaration = decl:(anonMethod / keywordMethod / unaryMethod / binaryMethod) ws '|' { return decl; }
+anonMethod = vars:(':' ws varName:identifier ws { return varName; })+ { return vars }
+keywordMethod = kvps:(sel:keywordSelector ws arg:identifier ws { return [sel, arg]; })+ { return kvps; }
+unaryMethod = identifier
+binaryMethod = binarySelector ws identifier
+
+methodBody = first:expression? rest:('.' ws expr:expression { return expr; })* ws '.'? { return methodBody(first, rest); }
+method = '[' ws methodDeclaration? ws body:methodBody ws ']' { return method(body); }
 
 comments "comments" = $(["][^"]*["])+
 separator "separator" = (char:. & { return isSeparator(char); })+

@@ -1,13 +1,29 @@
 {
-	function token(val) { return val.join(""); }
     function isSeparator(char) { return /\s/.test(char); }
     function isForbidden(char) { return "[](){}\".'|:".includes(char); }
     
     function variable(token) {
-    	return { type: 'VariableNode', value: token };
+    	return { type: 'Variable', value: token };
 	}
-    function literal(token) {
-    	return { type: 'LiteralNode', value: token };
+    function number(value) {
+    	return { type: 'Number', value: value };
+    }
+    function string(value) {
+    	return { type: 'String', value: value.join("") };
+    }
+    function assignment(left, right) {
+    	return {
+        	type: 'Assignment',
+            left: left,
+            right: right
+        };
+    }
+    function array(first, rest) {
+    	rest.unshift(first);
+        return {
+        	type: 'Array',
+        	elements: rest
+        };
     }
     function message(selector, args) {
     	return {
@@ -16,9 +32,6 @@
         };
     }
     function flatten(msg, tail) {
-    	/*
-        Returns a list of messages
-        */
     	if (tail == undefined) {
         	return [msg];
         } else {
@@ -58,14 +71,6 @@
     	return message(selector, args);
     }
     function keywordSend(rcvr, msg) { return send(rcvr, [msg]); }
-    
-    function assignment(left, right) {
-    	return {
-        	type: 'Assignment',
-            left: left,
-            right: right
-        };
-    }
 }
 
 start = expression
@@ -73,7 +78,9 @@ start = expression
 digits = $[0-9]+
 integer "integer" = token:$("-"? digits) { return parseInt(token); }
 float "float" = token:$(integer "." digits) { return parseFloat(token); }
-number "number" = (float / integer)
+number "number" = val:(float / integer) { return number(val); }
+
+array = '{' ws first:expression? rest:('.' ws expr:expression { return expr; })* ws '}' { return array(first, rest); }
 
 letter = [a-zA-Z]
 word = [a-zA-Z0-9]
@@ -86,7 +93,7 @@ binarySelector "binary selector"
 
 variable "variable" = token:identifier { return variable(token); }
 reference "reference" = variable
-literal "literal" = token:(number / string) { return literal(token); }
+literal "literal" = (number / string / array)
 
 expression = assignment / keywordSend / binarySend
 subexpression  = '(' ws expression:expression ws ')' { return expression; }
@@ -114,4 +121,4 @@ comments "comments" = $(["][^"]*["])+
 separator "separator" = (char:. & { return isSeparator(char); })+
 ws = (separator / comments)*
 
-string = ['] val:(("''" {return "'"} / [^'])*) ['] { return token(val); }
+string = ['] val:(("''" {return "'"} / [^'])*) ['] { return string(val); }

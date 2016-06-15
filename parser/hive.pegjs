@@ -79,8 +79,9 @@ digits = $[0-9]+
 integer "integer" = token:$("-"? digits) { return parseInt(token); }
 float "float" = token:$(integer "." digits) { return parseFloat(token); }
 number "number" = val:(float / integer) { return number(val); }
-
+string = ['] val:(("''" {return "'"} / [^'])*) ['] { return string(val); }
 array = '{' ws first:expression? rest:('.' ws expr:expression { return expr; })* ws '}' { return array(first, rest); }
+literal "literal" = (number / string / array)
 
 letter = [a-zA-Z]
 word = [a-zA-Z0-9]
@@ -93,7 +94,6 @@ binarySelector "binary selector"
 
 variable "variable" = token:identifier { return variable(token); }
 reference "reference" = variable
-literal "literal" = (number / string / array)
 
 expression = assignment / keywordSend / binarySend
 subexpression  = '(' ws expression:expression ws ')' { return expression; }
@@ -120,5 +120,3 @@ assignment = left:variable ws ":=" ws right:expression { return assignment(left,
 comments "comments" = $(["][^"]*["])+
 separator "separator" = (char:. & { return isSeparator(char); })+
 ws = (separator / comments)*
-
-string = ['] val:(("''" {return "'"} / [^'])*) ['] { return string(val); }

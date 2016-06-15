@@ -76,10 +76,13 @@
     	rest.unshift(first);
         return rest;
     }
-    function method(body) {
+    function method(decl, body) {
+    	if (!decl) { decl = { selector: "", args: [] }; }
         return {
         	type: 'Method',
-        	body: body
+            selector: decl.selector,
+            args: decl.args,
+        	body: body.filter(function (e) { return e; })
         };
     }
 }
@@ -129,13 +132,17 @@ message = binaryMessage / unaryMessage / keywordMessage
 assignment = left:variable ws ":=" ws right:expression { return assignment(left, right); }
 
 methodDeclaration = decl:(anonMethod / keywordMethod / unaryMethod / binaryMethod) ws '|' { return decl; }
-anonMethod = vars:(':' ws varName:identifier ws { return varName; })+ { return vars }
-keywordMethod = kvps:(sel:keywordSelector ws arg:identifier ws { return [sel, arg]; })+ { return kvps; }
-unaryMethod = identifier
-binaryMethod = binarySelector ws identifier
+anonMethod = vars:(':' ws varName:identifier ws { return varName; })+ { 
+	return { selector: "", args: vars }
+}
+keywordMethod = kvps:(key:keywordSelector ws arg:identifier ws { return {key: key, arg: arg}; })+ { 
+	return keywordMessage(kvps); 
+}
+unaryMethod = sel:identifier { return unaryMessage(sel); }
+binaryMethod = sel:binarySelector ws arg:identifier { return binaryMessage(sel, arg); }
 
 methodBody = first:expression? rest:('.' ws expr:expression { return expr; })* ws '.'? { return methodBody(first, rest); }
-method = '[' ws methodDeclaration? ws body:methodBody ws ']' { return method(body); }
+method = '[' ws decl:methodDeclaration? ws body:methodBody ws ']' { return method(decl, body); }
 
 comments "comments" = $(["][^"]*["])+
 separator "separator" = (char:. & { return isSeparator(char); })+

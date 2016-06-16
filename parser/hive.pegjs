@@ -85,6 +85,13 @@
         	body: body.filter(function (e) { return e; })
         };
     }
+    
+    function jsStatement(src) {
+    	return {
+        	type: "Javascript",
+            code: src
+        };
+    }
 }
 
 start = expression
@@ -109,7 +116,7 @@ binarySelector "binary selector"
 variable "variable" = token:identifier { return variable(token); }
 reference "reference" = variable
 
-expression = assignment / keywordSend / binarySend
+expression = assignment / keywordSend / binarySend / jsStatement
 subexpression  = '(' ws expression:expression ws ')' { return expression; }
 operand = literal / reference / subexpression
 
@@ -143,6 +150,9 @@ binaryMethod = sel:binarySelector ws arg:identifier { return binaryMessage(sel, 
 
 methodBody = first:expression? rest:('.' ws expr:expression { return expr; })* ws '.'? { return methodBody(first, rest); }
 method = '[' ws decl:methodDeclaration? ws body:methodBody ws ']' { return method(decl, body); }
+
+jsStatement "Javascript statement" 
+	= "<" val:((">>" {return ">"} / [^>])*) ">" { return jsStatement(val.join("")); }
 
 comments "comments" = $(["][^"]*["])+
 separator "separator" = (char:. & { return isSeparator(char); })+

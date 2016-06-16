@@ -74,15 +74,17 @@
     
     function methodBody(first, rest) {
     	rest.unshift(first);
-        return rest;
+        return rest.filter(function (e) { return e; });
     }
-    function method(decl, body) {
+    function method(decl, temps, body) {
     	if (!decl) { decl = { selector: "", args: [] }; }
+        if (!temps) { temps = []; }
         return {
         	type: 'Method',
             selector: decl.selector,
             args: decl.args,
-        	body: body.filter(function (e) { return e; })
+            temps: temps,
+        	body: body
         };
     }
     
@@ -94,7 +96,7 @@
     }
 }
 
-start = expression
+start = methodBody
 
 digits = $[0-9]+
 integer "integer" = token:$("-"? digits) { return parseInt(token); }
@@ -149,10 +151,13 @@ unaryMethod = sel:identifier { return unaryMessage(sel); }
 binaryMethod = sel:binarySelector ws arg:identifier { return binaryMessage(sel, arg); }
 
 methodBody = first:expression? rest:('.' ws expr:expression { return expr; })* ws '.'? { return methodBody(first, rest); }
-method = '[' ws decl:methodDeclaration? ws body:methodBody ws ']' { return method(decl, body); }
+method = '[' ws decl:methodDeclaration? ws temps:temps? ws body:methodBody ws ']' { return method(decl, temps, body); }
 
 jsStatement "Javascript statement" 
 	= "<" val:((">>" {return ">"} / [^>])*) ">" { return jsStatement(val.join("")); }
+
+temps
+	= "|" vars:(ws variable:identifier ws { return variable; })* "|" { return vars; }
 
 comments "comments" = $(["][^"]*["])+
 separator "separator" = (char:. & { return isSeparator(char); })+

@@ -1,6 +1,71 @@
 <html>
-	<head></head>
+	<head>
+		<link rel="stylesheet" type="text/css" 
+			href="https://fonts.googleapis.com/css?family=Source Code Pro">
+		<style>
+			body {
+				font-family: 'Source Code Pro', serif;
+				font-size: 14px;
+			}
+						
+            #repl_in {
+				width: 100%;
+            }
+			
+			#repl_out {
+				white-space: pre-wrap;
+			}
+            
+			.expr {
+				font-weight: bold;
+			}
+		</style>
+		<style>
+        </style>   
+	</head>
 	<body>
+		<div id="controls">
+			<p>
+				<textarea id="repl_in" type="text" rows="5"
+					onkeypress="if(event.which === 10 && event.ctrlKey) repl_eval();"></textarea>
+			</p>
+			<p>
+				<input type="button" value="Eval" onclick="repl_eval();"></input>
+			</p>
+        </div>
+        <p id="repl_out"></p>  
+		
 		<script src="parser.js"></script>
+		<script src="compiler.js"></script>
+		<script>
+			function repl_eval(src) {
+				if (src === undefined) {
+					src = repl_in.value;
+					repl_in.value = "";
+				}
+				repl_show(src, src);
+			}
+		
+            function repl_show(expr, result) {
+                var p = document.createElement("p");
+				split(expr).forEach(function (line, index) {				
+					var exprDiv = document.createElement("div");
+					exprDiv.setAttribute("class", "expr");
+					exprDiv.textContent = (index == 0 ? ">>  " : "    ") + line;
+					p.appendChild(exprDiv);
+				});
+				split(result).forEach(function (line) {				
+					var resDiv = document.createElement("div");
+					resDiv.setAttribute("class", "result");
+					resDiv.textContent = line;
+					p.appendChild(resDiv);
+				});
+                repl_out.insertBefore(p, repl_out.firstChild);
+            }
+			
+			function split(str) {
+				return str.match(/[^\r\n]+/g);
+			}
+		</script>
 	</body>
 </html>

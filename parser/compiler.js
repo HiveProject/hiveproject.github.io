@@ -3,8 +3,13 @@ var compiler = (function (parser) {
 	
 	function compile(string) {
 		var ast = parser.parse(string);
-		var js = ast.map(visit).join("\n");
+		var js = ast.map(visitStatement).join("\n");
 		return js;
+	}
+	
+	function visitStatement(statement) {
+		// Statements should finish with a semicolon
+		return visit(statement) + ";";
 	}
 	
 	function visit(expr) {

@@ -74,7 +74,7 @@ var compiler = (function (parser) {
 			expr.temps.map(function (tmp) { 
 				return "var " + tmp + ";";
 			}).join(" ") +
-			expr.body.map(visit).join("; ")	+ "})"
+			"return (" expr.body.map(visit).join("; ") + "); })"
 	}
 	
 	function visitJavascript(expr) {

@@ -63,7 +63,7 @@
 					src = repl_in.value;
 					repl_in.value = "";
 				}
-				repl_show(src, compiler.evaluate(src));
+				repl_show(src, JSON.stringify(eval(compiler.evaluate(src))));
 			}
 		
             function repl_show(expr, result) {
@@ -88,7 +88,7 @@
 			}
 		</script>
 		<script>
-	
+	var context;
 	function setButton(){
 	        var button = document.getElementById('auth_button');
             button.classList.add('visible');
@@ -119,6 +119,7 @@
       // Connects the text boxes to the collaborative string
       function wireTextBoxes(model) {
 	  
+		context = model.getRoot();
 		//var collaborativeString =model.getRoot().get('demo_string');
         //var textArea1 = document.getElementById('text_area_1'); 
         //gapi.drive.realtime.databinding.bindString(collaborativeString, textArea1); 

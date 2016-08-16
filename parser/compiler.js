@@ -63,8 +63,8 @@ var compiler = (function (parser) {
 	}
 	
 	function visitMessageSend(expr) {
-		return visit(expr.rcvr) + "." + 
-			expr.selector.replace(/:/g, "_") + "(" +
+		return visit(expr.rcvr) + ".get('" + 
+			expr.selector + "')(" +
 			expr.args.map(visit).join(", ") + ")";
 	}
 	

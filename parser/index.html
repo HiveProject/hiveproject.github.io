@@ -32,6 +32,8 @@
 					onkeypress="if(event.which === 10 && event.ctrlKey) repl_eval();"></textarea>
 			</p>
 			<p>
+				<input type="button" value="Parse" onclick="repl_parse();"></input>
+				<input type="button" value="Compile" onclick="repl_compile();"></input>
 				<input type="button" value="Eval" onclick="repl_eval();"></input>
 			</p>
         </div>
@@ -40,6 +42,22 @@
 		<script src="parser.js"></script>
 		<script src="compiler.js"></script>
 		<script>
+			function repl_parse(src) {
+				if (src === undefined) {
+					src = repl_in.value;
+					repl_in.value = "";
+				}
+				repl_show(src, JSON.stringify(parser.parse(src)));
+			}
+			
+			function repl_compile(src) {
+				if (src === undefined) {
+					src = repl_in.value;
+					repl_in.value = "";
+				}
+				repl_show(src, compiler.compile(src));
+			}
+						
 			function repl_eval(src) {
 				if (src === undefined) {
 					src = repl_in.value;

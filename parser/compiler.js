@@ -43,7 +43,7 @@ var compiler = (function (parser) {
 	}
 	
 	function visitVariable(expr) {
-		return expr.value;
+		return "context.get('" + expr.value + "')";
 	}
 	
 	function visitNumber(expr) {

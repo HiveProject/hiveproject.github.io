@@ -86,8 +86,8 @@ var compiler = (function (parser) {
 	}
 	
 	Object.prototype.lookup = function (selector) {
-		if (this.keys.indexOf(selector) != -1) {
-			var methodSource = this.get(selector);
+		var methodSource = this.get(selector);
+		if (methodSource != null) {
 			return HiveEval(this, methodSource);
 		}
 		return function () { return "DNU"; }

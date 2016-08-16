@@ -63,7 +63,7 @@ var compiler = (function (parser) {
 	}
 	
 	function visitMessageSend(expr) {
-		return visit(expr.rcvr) + ".get('" + 
+		return visit(expr.rcvr) + ".lookup('" + 
 			expr.selector + "')(" +
 			expr.args.map(visit).join(", ") + ")";
 	}
@@ -83,6 +83,11 @@ var compiler = (function (parser) {
 	
 	function evaluate(string) {
 		return HiveEval(context, compiler.compile(string));
+	}
+	
+	Object.prototype.lookup = function (selector) {
+		var methodSource = this.get(selector);
+		return HiveEval(this, methodSource);
 	}
 	
 	return {

@@ -82,7 +82,7 @@ var compiler = (function (parser) {
 	}
 	
 	function evaluate(string) {
-		return compiler.compile(string);
+		return HiveEval(context, compiler.compile(string));
 	}
 	
 	return {

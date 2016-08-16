@@ -63,7 +63,7 @@
 					src = repl_in.value;
 					repl_in.value = "";
 				}
-				repl_show(src, JSON.stringify(eval(compiler.evaluate(src))));
+				repl_show(src, compiler.evaluate(src).toString());
 			}
 		
             function repl_show(expr, result) {

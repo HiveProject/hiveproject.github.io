@@ -21,9 +21,11 @@
 			}
 		</style>
 		<style>
-        </style>   
+        </style>		
+		<script src="realtime.Sugar.js"></script>
 	</head>
 	<body>
+		<button id="auth_button">Authorize</button>
 		<div id="controls">
 			<p>
 				<textarea id="repl_in" type="text" rows="5"
@@ -67,5 +69,42 @@
 				return str.match(/[^\r\n]+/g);
 			}
 		</script>
+		<script>
+	
+	function setButton(){
+	        var button = document.getElementById('auth_button');
+            button.classList.add('visible');
+            button.addEventListener('click', authorize);
+	}
+	function unSetButton(){
+	
+	        var button = document.getElementById('auth_button');
+            button.classList.remove('visible');
+            
+	}
+    function authorize() {
+        // Attempt to authorize
+        realtimeUtils.authorize(function(response){
+          if(response.error){
+            // Authorization failed because this is the first time the user has used your application,
+            // show the authorize button to prompt them to authorize manually.
+				setButton();
+            }
+           else {
+              start(wireTextBoxes);
+			  unSetButton();
+          }
+        },true);
+	} 
+	setButton();
+
+      // Connects the text boxes to the collaborative string
+      function wireTextBoxes(model) {
+	  
+		//var collaborativeString =model.getRoot().get('demo_string');
+        //var textArea1 = document.getElementById('text_area_1'); 
+        //gapi.drive.realtime.databinding.bindString(collaborativeString, textArea1); 
+      }
+    </script>
 	</body>
 </html>

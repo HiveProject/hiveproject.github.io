@@ -70,8 +70,9 @@ var compiler = (function (parser) {
 	
 	function visitMethod(expr) {
 		return `CreateMethod("` +  expr.selector+
-		`","`+  "("+expr.args.map(function(item){return "context.set('"+item+"',"+item+");";}).join("")+"function " + "(" +
+		`","`+  "("+"function " + "(" +
 			expr.args.join(", ") + ") {" +
+			expr.args.map(function(item){return "context.set('"+item+"',"+item+");";}).join("")+
 			expr.temps.map(function (tmp) { 
 				return "var " + tmp + ";";
 			}).join(" ") +

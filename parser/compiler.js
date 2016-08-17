@@ -69,7 +69,7 @@ var compiler = (function (parser) {
 	}
 	
 	function visitMethod(expr) {
-		return `CreateMethod("` +  expr.selector.replace(/:/g, "_")+
+		return `CreateMethod("` +  expr.selector+
 		`","`+  "(function " + "(" +
 			expr.args.join(", ") + ") {" +
 			expr.temps.map(function (tmp) { 

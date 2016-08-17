@@ -129,6 +129,16 @@
 	function HiveEval(context, str) {
 		return eval(str);
 	}
+	function CreateMethod(selector,func)
+	{
+		var currentContext =model.createMap();
+		currentContext.set("parent",context);
+		var method= model.createMap();
+		method.set('context',currentContext);
+		method.set('source',func);
+		method.set("selector",selector);
+		return method;
+	}
 	</script>
 	</body>
 </html>

@@ -69,12 +69,13 @@ var compiler = (function (parser) {
 	}
 	
 	function visitMethod(expr) {
-		return "(function " + expr.selector.replace(/:/g, "_") + "(" +
+		return `CreateMethod("` +  expr.selector.replace(/:/g, "_")+
+		`","`+  "(function " + "(" +
 			expr.args.join(", ") + ") {" +
 			expr.temps.map(function (tmp) { 
 				return "var " + tmp + ";";
 			}).join(" ") +
-			"return (" expr.body.map(visit).join("; ") + "); })"
+			"return (" +expr.body.map(visit).join("; ") + `); })")`
 	}
 	
 	function visitJavascript(expr) {

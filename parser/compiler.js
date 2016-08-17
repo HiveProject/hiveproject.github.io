@@ -70,7 +70,7 @@ var compiler = (function (parser) {
 	
 	function visitMethod(expr) {
 		return `CreateMethod("` +  expr.selector+
-		`","`+  "(function " + "(" +
+		`","`+  "("+expr.args.map(function(item){return "context.set('"+item+"',"+item+");";}).join("")+"function " + "(" +
 			expr.args.join(", ") + ") {" +
 			expr.temps.map(function (tmp) { 
 				return "var " + tmp + ";";

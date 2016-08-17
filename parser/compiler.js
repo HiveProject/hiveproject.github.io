@@ -88,10 +88,10 @@ var compiler = (function (parser) {
 	
 	Object.prototype.lookup = function (selector) {
 		var method = this.get(selector);
-		var currentExecutionContext =model.createMap();
-		currentExecutionContext.set('self',this);
-		currentExecutionContext.set('parent',method.get("context"));
 		if (method != null) {
+			var currentExecutionContext =model.createMap();
+			currentExecutionContext.set('self',this);
+			currentExecutionContext.set('parent',method.get("context"));
 			return HiveEval(currentExecutionContext, method.get("source"));
 		}
 		return function () { return "DNU"; }

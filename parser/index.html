@@ -122,6 +122,10 @@
 		context = CreateContext();
 		 
 		model.getRoot().set('context',context);
+		
+		context.set('object',model.createMap());
+		
+		
 		//var collaborativeString =model.getRoot().get('demo_string');
         //var textArea1 = document.getElementById('text_area_1'); 
         //gapi.drive.realtime.databinding.bindString(collaborativeString, textArea1); 
@@ -159,8 +163,12 @@
 			if(context.keys().includes('parent'))
 			{
 				return context.get('parent').lookup(selector);
-			}
-			return "DNU";
+			} 
+			context.set(selector,null);
+			return {
+					get:function(){return context.get(selector);},
+					set:function(value){context.set(selector,value);}
+					};
 		}
 		return context;
 	}

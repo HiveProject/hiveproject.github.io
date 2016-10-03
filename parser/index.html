@@ -109,26 +109,24 @@
 				setButton();
             }
            else {
-              start(wireTextBoxes);
+              start(initializeObjects);
 			  unSetButton();
           }
         },true);
 	} 
 	setButton();
 
-      // Connects the text boxes to the collaborative string
-      function wireTextBoxes(model) {
+      // startups the system
+      function initializeObjects(model) {
 	  
 		context = CreateContext();
 		 
 		model.getRoot().set('context',context);
 		
 		context.set('object',model.createMap());
-		
-		
-		//var collaborativeString =model.getRoot().get('demo_string');
-        //var textArea1 = document.getElementById('text_area_1'); 
-        //gapi.drive.realtime.databinding.bindString(collaborativeString, textArea1); 
+		context.get('object').set('addMethod:',CreateMethod(
+			'addMethod:',"function(b){context.lookup('self').get().set(b.selector,b);}"));
+		 
       }
     </script>
 	<script>

@@ -157,17 +157,23 @@
 			{
 				return {
 					get:function(){return context.get(selector);},
-					set:function(value){context.set(selector,value);}
+					set:function(value){context.set(selector,value),
+					found:true
+					}
 					};
 			}
 			if(context.keys().includes('parent'))
 			{
-				return context.get('parent').lookup(selector);
+			var parentSlot= context.get('parent').lookup(selector);
+				if(parentSlot.found)
+				{return parentSlot;}
 			} 
 			context.set(selector,null);
 			return {
 					get:function(){return context.get(selector);},
-					set:function(value){context.set(selector,value);}
+					set:function(value){context.set(selector,value);},
+					found:false
+					
 					};
 		}
 		return context;

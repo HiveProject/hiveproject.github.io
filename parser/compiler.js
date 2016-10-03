@@ -43,7 +43,7 @@ var compiler = (function (parser) {
 	}
 	
 	function visitVariable(expr) {
-		return "context.get('" + expr.value + "')";
+		return "context.lookup('" + expr.value + "').get()";
 	}
 	
 	function visitNumber(expr) {
@@ -55,7 +55,7 @@ var compiler = (function (parser) {
 	}
 	
 	function visitAssignment(expr) {
-		return visit(expr.left) + " = " + visit(expr.right);
+			return "context.lookup('" + expr.value + "').set("+visit(expr.right)+")"; 
 	}
 	
 	function visitArray(expr) {
@@ -90,10 +90,9 @@ var compiler = (function (parser) {
 	Object.prototype.lookup = function (selector) {
 		var method = this.get(selector);
 		if (method != null) {
-			var currentExecutionContext =model.createMap();
-			currentExecutionContext.set('self',this);
-			currentExecutionContext.set('parent',method.get("context"));
-			return HiveEval(currentExecutionContext, method.get("source"));
+			var currentExecutionContext=CreateContext(method.get("context"));
+		 	currentExecutionContext.set('self',this);
+			 return HiveEval(currentExecutionContext, method.get("source"));
 		}
 		return function () { return "DNU"; }
 	}

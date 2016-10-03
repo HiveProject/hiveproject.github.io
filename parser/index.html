@@ -119,7 +119,9 @@
       // Connects the text boxes to the collaborative string
       function wireTextBoxes(model) {
 	  
-		context = model.getRoot();
+		context = CreateContext();
+		 
+		model.getRoot().set('context',context);
 		//var collaborativeString =model.getRoot().get('demo_string');
         //var textArea1 = document.getElementById('text_area_1'); 
         //gapi.drive.realtime.databinding.bindString(collaborativeString, textArea1); 
@@ -130,14 +132,37 @@
 		return eval(str);
 	}
 	function CreateMethod(selector,func)
-	{
-		var currentContext =model.createMap();
-		currentContext.set("parent",context);
+	{ 
 		var method= model.createMap();
-		method.set('context',currentContext);
+		method.set('context',context);
 		method.set('source',func);
 		method.set("selector",selector);
 		return method;
+	}
+	function CreateContext(parent)
+	{
+		var context = model.CreateMap();
+		
+		if(parent!=null)
+		{
+			context.set('parent',parent);
+		}
+		
+		context.lookup = function(selector){
+			if(context.keys().includes(selector))
+			{
+				return {
+					get:function(){return context.get(selector);},
+					set:function(value){context.set(selector,value);}
+					};
+			}
+			if(context.keys().includes('parent'))
+			{
+				return context.get('parent').lookup(selector);
+			}
+			return "DNU";
+		}
+		return context;
 	}
 	</script>
 	</body>

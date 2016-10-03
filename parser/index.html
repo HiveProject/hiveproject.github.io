@@ -164,8 +164,7 @@
 			var parentSlot= context.get('parent').lookup(selector);
 				if(parentSlot.found)
 				{return parentSlot;}
-			} 
-			context.set(selector,null);
+			}  
 			return {
 					get:function(){return context.get(selector);},
 					set:function(value){context.set(selector,value);},

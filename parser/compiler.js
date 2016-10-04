@@ -64,7 +64,7 @@ var compiler = (function (parser) {
 	
 	function visitMessageSend(expr) {
 		return visit(expr.rcvr) + ".lookup('" + 
-			expr.selector + "')(" +
+			expr.selector + "').get()(" +
 			expr.args.map(visit).join(", ") + ")";
 	}
 	
@@ -91,8 +91,8 @@ var compiler = (function (parser) {
 		var method = this.get(selector);
 		if (method != null) {
 			var currentExecutionContext=CreateContext(method.get("context"));
-		 	currentExecutionContext.set('self',this);
-			 return HiveEval(currentExecutionContext, method.get("source"));
+		 	//currentExecutionContext.set('self',this);
+			return HiveEval(currentExecutionContext, method.get("source"));
 		}
 		return function () { return "DNU"; }
 	}

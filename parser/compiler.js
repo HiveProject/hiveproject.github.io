@@ -63,8 +63,8 @@ var compiler = (function (parser) {
 	}
 	
 	function visitMessageSend(expr) {
-		return visit(expr.rcvr) + ".lookup('" + 
-			expr.selector + "').get()(" +
+		return visit(expr.rcvr) + ".receive('" + 
+			expr.selector + "')(" +
 			expr.args.map(visit).join(", ") + ")";
 	}
 	
@@ -87,8 +87,8 @@ var compiler = (function (parser) {
 		return HiveEval(context, compiler.compile(string));
 	}
 	
-	Object.prototype.lookup = function (selector) {
-		var method = this.get(selector);
+	Object.prototype.receive = function (selector) {
+		var method = this.lookup(selector).get();
 		if (method != null) {
 			var currentExecutionContext=CreateContext(method.get("context"));
 		 	//currentExecutionContext.set('self',this);

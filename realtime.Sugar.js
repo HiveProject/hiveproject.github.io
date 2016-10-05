@@ -1,7 +1,7 @@
  var clientId = '763227956228-btgo7elk6eclu3b3fho6sutsi52884io.apps.googleusercontent.com';
  var model;
 var openModelViewer;
-
+var authCallback;
  function loadScript(url, callback){
 
     var script = document.createElement("script")
@@ -35,6 +35,7 @@ function Initialize()
    alert('Invalid Client ID - did you forget to insert your application Client ID?');
  }
  realtimeUtils = new utils.RealtimeUtils({ clientId: clientId });
+ authCallback();
 }
 
  // Create a new instance of the realtime utility with your client ID.

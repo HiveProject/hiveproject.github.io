@@ -43,7 +43,7 @@ var compiler = (function (parser) {
 	}
 	
 	function visitVariable(expr) {
-		return "context.lookup('" + expr.value + "').get()";
+		return "context.hiveLookup('" + expr.value + "').get()";
 	}
 	
 	function visitNumber(expr) {
@@ -55,7 +55,7 @@ var compiler = (function (parser) {
 	}
 	
 	function visitAssignment(expr) {
-			return "context.lookup('" + expr.left.value + "').set("+visit(expr.right)+"); context.lookup('" + expr.left.value + "').get();"; 
+			return "context.hiveLookup('" + expr.left.value + "').set("+visit(expr.right)+"); context.hiveLookup('" + expr.left.value + "').get();"; 
 	}
 	
 	function visitArray(expr) {
@@ -88,7 +88,7 @@ var compiler = (function (parser) {
 	}
 	
 	Object.prototype.receive = function (selector) {
-		var method = this.lookup(selector).get();
+		var method = this.hiveLookup(selector).get();
 		if (method != null) {
 			var currentExecutionContext=CreateContext(method.get("context"));
 		 	currentExecutionContext.set('self',this);
@@ -97,24 +97,24 @@ var compiler = (function (parser) {
 		return function () { return "DNU"; }
 	}
 	
-	Object.prototype.lookup = function(selector){
-			if(this.keys().includes(selector))
+	Object.prototype.hiveLookup = function(selector,context){
+			if(context.keys().includes(selector))
 			{
 				return {
-					get:function(){return this.get(selector);},
-					set:function(value){this.set(selector,value);},
+					get:function(){return context.get(selector);},
+					set:function(value){context.set(selector,value);},
 					found:true
 					};
 			}
-			if(this.keys().includes('parent'))
+			if(context.keys().includes('parent'))
 			{
-			var parentSlot= this.get('parent').lookup(selector);
+			var parentSlot= context.get('parent').hiveLookup(selector);
 				if(parentSlot.found)
 				{return parentSlot;}
 			}  
 			return {
-					get:function(){return this.get(selector);},
-					set:function(value){this.set(selector,value);},
+					get:function(){return context.get(selector);},
+					set:function(value){context.set(selector,value);},
 					found:false
 					
 					};

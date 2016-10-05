@@ -97,6 +97,29 @@ var compiler = (function (parser) {
 		return function () { return "DNU"; }
 	}
 	
+	Object.prototype.lookup = function(selector){
+			if(context.keys().includes(selector))
+			{
+				return {
+					get:function(){return context.get(selector);},
+					set:function(value){context.set(selector,value);},
+					found:true
+					};
+			}
+			if(context.keys().includes('parent'))
+			{
+			var parentSlot= context.get('parent').lookup(selector);
+				if(parentSlot.found)
+				{return parentSlot;}
+			}  
+			return {
+					get:function(){return context.get(selector);},
+					set:function(value){context.set(selector,value);},
+					found:false
+					
+					};
+		}
+	
 	return {
 		compile: compile,
 		evaluate: evaluate

@@ -87,6 +87,7 @@ var compiler = (function (parser) {
 		return HiveEval(model.getRoot().get("context"), compiler.compile(string));
 	}
 	
+	
 	Object.prototype.receive = function (selector) {
 		var method = this.lookup(selector).get();
 		if (method != null) {

@@ -126,13 +126,13 @@
 		context.set('object',CreateContext());
 		
 		//context.get('object').set('addMethod:',CreateMethod(
-		//	'addMethod:',"(function(b){context.lookup('self').get().set(b.get('selector'),b); return context.lookup('self').get();})",context));
+		//	'addMethod:',"(function(b){context.hiveLookup('self').get().set(b.get('selector'),b); return context.hiveLookup('self').get();})",context));
 		
 		context.get('object').set('basicNew', CreateMethod(
-			'basicNew',"(function () { context.lookup('parent').set(context.lookup('self').get());context.lookup('self').set(context); return context;})",context));
+			'basicNew',"(function () { context.hiveLookup('parent').set(context.hiveLookup('self').get());context.hiveLookup('self').set(context); return context;})",context));
 			 
 		context.get('object').set('addMethod:',CreateMethod(
-			'addMethod:',"(function(b){context.lookup('self').get().set(b.get('selector'),b); return context.lookup('self').get();})",context));
+			'addMethod:',"(function(b){context.hiveLookup('self').get().set(b.get('selector'),b); return context.hiveLookup('self').get();})",context));
 			 
 		openModelViewer();
     }
@@ -158,28 +158,7 @@
 			context.set('parent',parent);
 		}
 		
-		context.lookup = function(selector){
-			if(context.keys().includes(selector))
-			{
-				return {
-					get:function(){return context.get(selector);},
-					set:function(value){context.set(selector,value);},
-					found:true
-					};
-			}
-			if(context.keys().includes('parent'))
-			{
-			var parentSlot= context.get('parent').lookup(selector);
-				if(parentSlot.found)
-				{return parentSlot;}
-			}  
-			return {
-					get:function(){return context.get(selector);},
-					set:function(value){context.set(selector,value);},
-					found:false
-					
-					};
-		}
+		
 		return context;
 	}
 	</script>

@@ -136,6 +136,28 @@
 			 
 		openModelViewer();
 		
+	look = function(selector){
+			if(this.keys().includes(selector))
+			{
+				return {
+					get:function(){return this.get(selector);},
+					set:function(value){this.set(selector,value);},
+					found:true
+					};
+			}
+			if(this.keys().includes('parent'))
+			{
+			var parentSlot= this.get('parent').lookup(selector);
+				if(parentSlot.found)
+				{return parentSlot;}
+			}  
+			return {
+					get:function(){return this.get(selector);},
+					set:function(value){this.set(selector,value);},
+					found:false
+					
+					};
+		}
 doc.getModel().getRoot().addEventListener(gapi.drive.realtime.EventType.OBJECT_CHANGED, function(evt){evt.target.lookup=look; console.log(evt);});
     }
     </script>
@@ -185,28 +207,6 @@ doc.getModel().getRoot().addEventListener(gapi.drive.realtime.EventType.OBJECT_C
 		return context;
 	}
 	
-	look = function(selector){
-			if(context.keys().includes(selector))
-			{
-				return {
-					get:function(){return context.get(selector);},
-					set:function(value){context.set(selector,value);},
-					found:true
-					};
-			}
-			if(context.keys().includes('parent'))
-			{
-			var parentSlot= context.get('parent').lookup(selector);
-				if(parentSlot.found)
-				{return parentSlot;}
-			}  
-			return {
-					get:function(){return context.get(selector);},
-					set:function(value){context.set(selector,value);},
-					found:false
-					
-					};
-		}
 		
 	</script>
 	</body>

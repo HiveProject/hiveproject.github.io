@@ -98,23 +98,23 @@ var compiler = (function (parser) {
 	}
 	
 	Object.prototype.lookup = function(selector){
-			if(context.keys().includes(selector))
+			if(this.keys().includes(selector))
 			{
 				return {
-					get:function(){return context.get(selector);},
-					set:function(value){context.set(selector,value);},
+					get:function(){return this.get(selector);},
+					set:function(value){this.set(selector,value);},
 					found:true
 					};
 			}
-			if(context.keys().includes('parent'))
+			if(this.keys().includes('parent'))
 			{
-			var parentSlot= context.get('parent').lookup(selector);
+			var parentSlot= this.get('parent').lookup(selector);
 				if(parentSlot.found)
 				{return parentSlot;}
 			}  
 			return {
-					get:function(){return context.get(selector);},
-					set:function(value){context.set(selector,value);},
+					get:function(){return this.get(selector);},
+					set:function(value){this.set(selector,value);},
 					found:false
 					
 					};

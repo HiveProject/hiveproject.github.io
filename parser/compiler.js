@@ -91,7 +91,7 @@ var compiler = (function (parser) {
 		var method = this.lookup(selector).get();
 		if (method != null) {
 			var currentExecutionContext=CreateContext(method.get("context"));
-		 	//currentExecutionContext.set('self',this);
+		 	currentExecutionContext.set('self',this);
 			return HiveEval(currentExecutionContext, method.get("source"));
 		}
 		return function () { return "DNU"; }

@@ -1,36 +1,107 @@
-<!DOCTYPE html>
 <html>
-<script src="realtime.Sugar.js"></script>
-  <head>
-    <title>Hive Project-  version 1</title>
-
-    <!-- Load Styles -->
-    <link href="https://www.gstatic.com/realtime/quickstart-styles.css" rel="stylesheet" type="text/css"/>
-
-    <!-- Load the Realtime JavaScript library -->
-  </head>
-  <body>
-    <main>
-      <h1>Hive Project</h1>
-      <p>Now that your application is running, simply type in either text box and see your changes instantly appear in the other one. Open
-      this same document in a <a onclick="window.open(window.location.href);return false;" target="_blank">new tab</a> to see it work across tabs.</p>
-      <textarea id="text_area_1"></textarea> 
-      <button id="auth_button">Authorize</button>
-    </main>
-    <script>
-	
+	<head>
+		<link rel="stylesheet" type="text/css" 
+			href="https://fonts.googleapis.com/css?family=Source Code Pro">
+		<style>
+			body {
+				font-family: 'Source Code Pro', serif;
+				font-size: 14px;
+			}
+						
+            #repl_in {
+				width: 100%;
+            }
+			
+			#repl_out {
+				white-space: pre-wrap;
+			}
+            
+			.expr {
+				font-weight: bold;
+			}
+		</style>
+		<style>
+        </style>		
+<script src="http://ajax.googleapis.com/ajax/libs/jquery/1.7.1/jquery.min.js" type="text/javascript"></script>
+		<script src="realtime.Sugar.js"></script>
+	</head>
+	<body>
+		<button id="auth_button">Authorize</button>
+		<div id="controls">
+			<p>
+				<textarea id="repl_in" type="text" rows="5"
+					onkeypress="if(event.which === 10 && event.ctrlKey) repl_eval();"></textarea>
+			</p>
+			<p>
+				<input type="button" value="Parse" onclick="repl_parse();"></input>
+				<input type="button" value="Compile" onclick="repl_compile();"></input>
+				<input type="button" value="Eval" onclick="repl_eval();"></input>
+			</p>
+        </div>
+        <p id="repl_out"></p>  
+		
+		<script src="parser/parser.js"></script>
+		<script src="compiler.js"></script>
+		<script>
+			function repl_parse(src) {
+				if (src === undefined) {
+					src = repl_in.value;
+					repl_in.value = "";
+				}
+				repl_show(src, JSON.stringify(parser.parse(src)));
+			}
+			
+			function repl_compile(src) {
+				if (src === undefined) {
+					src = repl_in.value;
+					repl_in.value = "";
+				}
+				repl_show(src, compiler.compile(src));
+			}
+						
+			function repl_eval(src) {
+				if (src === undefined) {
+					src = repl_in.value;
+					repl_in.value = "";
+				}
+				repl_show(src, compiler.evaluate(src).toString());
+			}
+		
+            function repl_show(expr, result) {
+                var p = document.createElement("p");
+				split(expr).forEach(function (line, index) {				
+					var exprDiv = document.createElement("div");
+					exprDiv.setAttribute("class", "expr");
+					exprDiv.textContent = (index == 0 ? ">>  " : "    ") + line;
+					p.appendChild(exprDiv);
+				});
+				split(result).forEach(function (line) {				
+					var resDiv = document.createElement("div");
+					resDiv.setAttribute("class", "result");
+					resDiv.textContent = line;
+					p.appendChild(resDiv);
+				});
+                repl_out.insertBefore(p, repl_out.firstChild);
+            }
+			
+			function split(str) {
+				return str.match(/[^\r\n]+/g);
+			}
+		</script>
+		<script>
+	var context;
 	function setButton(){
 	        var button = document.getElementById('auth_button');
-            button.classList.add('visible');
-            button.addEventListener('click', authorize);
+			button.style.visibility="visible";
+			button.addEventListener('click', authorize);
 	}
 	function unSetButton(){
 	
 	        var button = document.getElementById('auth_button');
-            button.classList.remove('visible');
+			button.style.visibility="hidden";
             
 	}
-      function authorize() {
+    function authorize() {
         // Attempt to authorize
         realtimeUtils.authorize(function(response){
           if(response.error){
@@ -39,19 +110,78 @@
 				setButton();
             }
            else {
-              start(wireTextBoxes);
 			  unSetButton();
+              start(initializeObjects);
           }
-        },true);} 
-setButton();
-
-      // Connects the text boxes to the collaborative string
-      function wireTextBoxes(model) {
+        },true);
+	} 
+	 authCallback=authorize;
+      // startups the system
+      function initializeObjects(model) {
 	  
-		var collaborativeString =model.getRoot().get('demo_string');
-        var textArea1 = document.getElementById('text_area_1'); 
-        gapi.drive.realtime.databinding.bindString(collaborativeString, textArea1); 
-      }
+		context = CreateContext();
+		 
+		model.getRoot().set('context',context);
+		
+		context.set('object',CreateContext());
+		
+		//context.get('object').set('addMethod:',CreateMethod(
+		//	'addMethod:',"(function(b){context.lookup('self').get().set(b.get('selector'),b); return context.lookup('self').get();})",context));
+		
+		context.get('object').set('basicNew', CreateMethod(
+			'basicNew',"(function () { context.lookup('parent').set(context.lookup('self').get());context.lookup('self').set(context); return context;})",context));
+			 
+		context.get('object').set('addMethod:',CreateMethod(
+			'addMethod:',"(function(b){context.lookup('self').get().set(b.get('selector'),b); return context.lookup('self').get();})",context));
+			 
+		openModelViewer();
+    }
     </script>
-  </body>
+	<script>
+	function HiveEval(context, str) {
+		return eval(str);
+	}
+	function CreateMethod(selector,func,context)
+	{ 
+		var method= model.createMap();
+		method.set('context',context);
+		method.set('source',func);
+		method.set("selector",selector);
+		return method;
+	}
+	function CreateContext(parent)
+	{
+		var context = model.createMap();
+		
+		if(parent!=null)
+		{
+			context.set('parent',parent);
+		}
+		
+		context.lookup = function(selector){
+			if(context.keys().includes(selector))
+			{
+				return {
+					get:function(){return context.get(selector);},
+					set:function(value){context.set(selector,value);},
+					found:true
+					};
+			}
+			if(context.keys().includes('parent'))
+			{
+			var parentSlot= context.get('parent').lookup(selector);
+				if(parentSlot.found)
+				{return parentSlot;}
+			}  
+			return {
+					get:function(){return context.get(selector);},
+					set:function(value){context.set(selector,value);},
+					found:false
+					
+					};
+		}
+		return context;
+	}
+	</script>
+	</body>
 </html>

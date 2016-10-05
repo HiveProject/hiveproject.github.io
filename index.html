@@ -137,11 +137,12 @@
 		openModelViewer();
 		
 	look = function(selector){
+			var me = this;
 			if(this.keys().includes(selector))
 			{
 				return {
-					get:function(){return this.get(selector);},
-					set:function(value){this.set(selector,value);},
+					get:function(){return me.get(selector);},
+					set:function(value){me.set(selector,value);},
 					found:true
 					};
 			}
@@ -152,8 +153,8 @@
 				{return parentSlot;}
 			}  
 			return {
-					get:function(){return this.get(selector);},
-					set:function(value){this.set(selector,value);},
+					get:function(){return me.get(selector);},
+					set:function(value){me.set(selector,value);},
 					found:false
 					
 					};

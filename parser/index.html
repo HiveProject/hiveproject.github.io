@@ -91,13 +91,13 @@
 	var context;
 	function setButton(){
 	        var button = document.getElementById('auth_button');
-            button.classList.add('visible');
-            button.addEventListener('click', authorize);
+			button.style.visibility="visible";
+			button.addEventListener('click', authorize);
 	}
 	function unSetButton(){
 	
 	        var button = document.getElementById('auth_button');
-            button.classList.remove('visible');
+			button.style.visibility="hidden";
             
 	}
     function authorize() {
@@ -109,13 +109,13 @@
 				setButton();
             }
            else {
-              start(initializeObjects);
 			  unSetButton();
+              start(initializeObjects);
           }
         },true);
 	} 
-	setButton();
-
+	
+	$(function() { authorize(); });
       // startups the system
       function initializeObjects(model) {
 	  

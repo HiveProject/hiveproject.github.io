@@ -135,31 +135,7 @@
 			'addMethod:',"(function(b){context.lookup('self').get().set(b.get('selector'),b); return context.lookup('self').get();})",context));
 			 
 		openModelViewer();
-		
-	look = function(selector){
-			var me = this;
-			if(this.keys().includes(selector))
-			{
-				return {
-					get:function(){return me.get(selector);},
-					set:function(value){me.set(selector,value);},
-					found:true
-					};
-			}
-			if(this.keys().includes('parent'))
-			{
-			var parentSlot= this.get('parent').lookup(selector);
-				if(parentSlot.found)
-				{return parentSlot;}
-			}  
-			return {
-					get:function(){return me.get(selector);},
-					set:function(value){me.set(selector,value);},
-					found:false
-					
-					};
-		}
-doc.getModel().getRoot().addEventListener(gapi.drive.realtime.EventType.OBJECT_CHANGED, function(evt){evt.target.lookup=look; console.log(evt);});
+		 
     }
     </script>
 	<script>
@@ -183,28 +159,7 @@ doc.getModel().getRoot().addEventListener(gapi.drive.realtime.EventType.OBJECT_C
 			context.set('parent',parent);
 		}
 		
-		context.lookup = function(selector){
-			if(context.keys().includes(selector))
-			{
-				return {
-					get:function(){return context.get(selector);},
-					set:function(value){context.set(selector,value);},
-					found:true
-					};
-			}
-			if(context.keys().includes('parent'))
-			{
-			var parentSlot= context.get('parent').lookup(selector);
-				if(parentSlot.found)
-				{return parentSlot;}
-			}  
-			return {
-					get:function(){return context.get(selector);},
-					set:function(value){context.set(selector,value);},
-					found:false
-					
-					};
-		}
+	 
 		return context;
 	}
 	

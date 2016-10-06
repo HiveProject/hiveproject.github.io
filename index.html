@@ -127,7 +127,14 @@
 	 
 		context.get('object').set('basicNew', CreateMethod(
 			'basicNew',"(function () { var self =model.createMap();context.set('self',self); initObject(self,context);return self;})",context));
-	  
+		
+		HiveEval(context,'Number := object basicNew ');
+		context.get('object').set('+', CreateMethod(
+			'+',"(function (b) {return (context.lookup('self').get() + b);})",context));
+		
+		
+		(function (b) {return (context.lookup('self').get() + b);})
+		
 		openModelViewer();
 		 
     }

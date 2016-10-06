@@ -47,7 +47,7 @@ var compiler = (function (parser) {
 	}
 	
 	function visitNumber(expr) {
-		return expr.value;
+		return "("+expr.value+")";
 	}
 	
 	function visitString(expr) {
@@ -121,7 +121,33 @@ var compiler = (function (parser) {
 					found:false
 					
 					};
-		}
+		};
+		
+	Number.prototype.lookup = function(selector){
+		var parent=context.lookup('Number').get(); 
+		if(parent!=null) {
+			var real= parent.lookup(selector).get();
+			var method= model.createMap();
+			if(real==null)
+			{return {
+						get:function(){return parent.get(selector);},
+						set:function(value){parent.set(selector,value);},
+						found:false
+						
+						};}
+			var ct = CreateContext(real.get('context'));
+			ct.set('self',this.valueOf());
+			console.log(this);
+				method.set('context',ct);
+				method.set('source',real.get('source'));
+				method.set("selector",selector);
+			return {
+						get:function(){return method;},
+						set:function(value){parent.set(value);},
+						found:true
+						};
+			}else{return 'DNU'}};
+			
 	return {
 		compile: compile,
 		evaluate: evaluate

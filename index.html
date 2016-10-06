@@ -128,16 +128,23 @@
 		context.get('object').set('basicNew', CreateMethod(
 			'basicNew',"(function () { var self =model.createMap();context.set('self',self); initObject(self,context);return self;})",context));
 	
-		compiler.evaluate("Number := object basicNew");
-		context.get('Number').set('+', CreateMethod(
-			'+',"(function (b) {return (context.lookup('self').get() + b);})",context));
-		
-		
-		(function (b) {return (context.lookup('self').get() + b);})
+	 
 		
 		openModelViewer();
 		 
     }
+	function InitializeNumbers()
+	{
+		compiler.evaluate("Number := object basicNew");
+		context.get('Number').set('+', CreateMethod(
+			'+',"(function (b) {return (context.lookup('self').get() + b);})",context));
+		context.get('Number').set('/', CreateMethod(
+			'/',"(function (b) {return (context.lookup('self').get() / b);})",context));
+		
+		compiler.evaluate("Number addMethod:[* b | self / (1/b) ]");
+		
+		compiler.evaluate("Number addMethod:[- b | self + (-1 * b) ]");
+	}
     </script>
 	<script>
 	function HiveEval(context, str) {

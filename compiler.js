@@ -69,6 +69,8 @@ var compiler = (function (parser) {
 	}
 	
 	function visitMethod(expr) {
+		var body = expr.body.map(visit);
+		body.push("return ("+ body.pop()+")")
 		return `CreateMethod("` +  expr.selector+
 		`","`+  "("+"function " + "(" +
 			expr.args.join(", ") + ") {" +
@@ -76,7 +78,7 @@ var compiler = (function (parser) {
 			expr.temps.map(function (tmp) { 
 				return "var " + tmp + ";";
 			}).join(" ") +
-			"return (" +expr.body.map(visit).join("; ").replace(/"/g,'\\"') + `); })",context)`
+			"return (" +body.join("; ").replace(/"/g,'\\"') + `); })",context)`
 	}
 	
 	function visitJavascript(expr) {

@@ -55,7 +55,7 @@ var compiler = (function (parser) {
 	}
 	
 	function visitAssignment(expr) {
-			return "context.lookup('" + expr.left.value + "').set("+visit(expr.right)+"); context.lookup('" + expr.left.value + "').get();"; 
+			return "context.lookup('" + expr.left.value + "').set("+visit(expr.right)+")"; 
 	}
 	
 	function visitArray(expr) {

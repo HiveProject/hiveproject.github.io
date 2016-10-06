@@ -150,7 +150,7 @@ keywordMethod = kvps:(key:keywordSelector ws arg:identifier ws { return {key: ke
 unaryMethod = sel:identifier { return unaryMessage(sel); }
 binaryMethod = sel:binarySelector ws arg:identifier { return binaryMessage(sel, arg); }
 
-methodBody = first:expression? rest:('.' ws expr:expression { return expr; })* ws '.'? { return methodBody(first, rest); }
+methodBody = ws first:expression? rest:('.' ws expr:expression { return expr; })* ws '.'? { return methodBody(first, rest); }
 method = '[' ws decl:methodDeclaration? ws temps:temps? ws body:methodBody ws ']' { return method(decl, temps, body); }
 
 jsStatement "Javascript statement" 

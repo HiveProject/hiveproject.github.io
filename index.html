@@ -129,7 +129,7 @@
 			'basicNew',"(function () { var self =model.createMap();context.set('self',self); initObject(self,context);return self;})",context));
 	
 		compiler.evaluate("Number := object basicNew");
-		context.get('object').set('+', CreateMethod(
+		context.get('Number').set('+', CreateMethod(
 			'+',"(function (b) {return (context.lookup('self').get() + b);})",context));
 		
 		

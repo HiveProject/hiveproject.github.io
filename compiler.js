@@ -137,7 +137,6 @@ var compiler = (function (parser) {
 						};}
 			var ct = CreateContext(real.get('context'));
 			ct.set('self',this.valueOf());
-			console.log(this);
 				method.set('context',ct);
 				method.set('source',real.get('source'));
 				method.set("selector",selector);

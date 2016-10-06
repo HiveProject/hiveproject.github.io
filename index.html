@@ -123,17 +123,11 @@
 		 
 		model.getRoot().set('context',context);
 		
-		context.set('object',CreateContext());
-		
-		//context.get('object').set('addMethod:',CreateMethod(
-		//	'addMethod:',"(function(b){context.lookup('self').get().set(b.get('selector'),b); return context.lookup('self').get();})",context));
-		
+		context.set('object', model.createMap());
+	 
 		context.get('object').set('basicNew', CreateMethod(
-			'basicNew',"(function () { context.lookup('parent').set(context.lookup('self').get());context.lookup('self').set(context); return context;})",context));
-			 
-		context.get('object').set('addMethod:',CreateMethod(
-			'addMethod:',"(function(b){context.lookup('self').get().set(b.get('selector'),b); return context.lookup('self').get();})",context));
-			 
+			'basicNew',"(function () { var self =model.createMap();context.set('self',self); initObject(self,context);return self;})",context));
+	  
 		openModelViewer();
 		 
     }
@@ -141,6 +135,12 @@
 	<script>
 	function HiveEval(context, str) {
 		return eval(str);
+	}
+	function initObject(obj,context)
+	{
+		obj.set('addMethod:',CreateMethod(
+			'addMethod:',"(function(b){context.lookup('self').get().set(b.get('selector'),b); return context.lookup('self').get();})",context));
+			 
 	}
 	function CreateMethod(selector,func,context)
 	{ 

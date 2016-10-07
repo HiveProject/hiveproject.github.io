@@ -124,7 +124,7 @@ var compiler = (function (parser) {
 		};
 		
 	Number.prototype.lookup = function(selector){
-		var parent=context.lookup('Number').get(); 
+		var parent=model.getRoot().get('context').lookup('Number').get(); 
 		if(parent!=null) {
 			var real= parent.lookup(selector).get();
 			var method= model.createMap();

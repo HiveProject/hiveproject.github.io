@@ -111,13 +111,18 @@
             }
            else {
 			  unSetButton();
-              start(initializeObjects);
+              start(hiveLoaded);
           }
         },true);
 	} 
 	 authCallback=authorize;
+	 function hiveLoaded(model){
+		if(model.getRoot().get('context')==null)
+		{initializeObjects();}
+		openModelViewer();
+	 }
       // startups the system
-      function initializeObjects(model) {
+      function initializeObjects() {
 	  
 		context = CreateContext();
 		 
@@ -131,7 +136,6 @@
 	 
 		InitializeNumbers();
 		
-		openModelViewer();
 		 
     }
 	function InitializeNumbers()

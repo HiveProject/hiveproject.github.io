@@ -105,7 +105,7 @@ var compiler = (function (parser) {
 			{
 				return {
 					get:function(){return me.get(selector);},
-					set:function(value){me.set(selector,value);},
+					set:function(value){me.set(selector,value);return value;},
 					found:true
 					};
 			}
@@ -117,7 +117,7 @@ var compiler = (function (parser) {
 			}  
 			return {
 					get:function(){return me.get(selector);},
-					set:function(value){me.set(selector,value);},
+					set:function(value){me.set(selector,value);return value;},
 					found:false
 					
 					};
@@ -131,7 +131,7 @@ var compiler = (function (parser) {
 			if(real==null)
 			{return {
 						get:function(){return parent.get(selector);},
-						set:function(value){parent.set(selector,value);},
+						set:function(value){parent.set(selector,value);return value;},
 						found:false
 						
 						};}
@@ -142,7 +142,7 @@ var compiler = (function (parser) {
 				method.set("selector",selector);
 			return {
 						get:function(){return method;},
-						set:function(value){parent.set(value);},
+						set:function(value){parent.set(value);return value;},
 						found:true
 						};
 			}else{return 'DNU'}};

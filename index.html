@@ -153,25 +153,30 @@
 		context.get('Number').set('/', CreateMethod(
 			'/',"(function (b) {return (context.lookup('self').get() / b);})",context));
 		
+
 		compiler.evaluate("Number addMethod:[* b | self / (1/b) ]");
-		
 		compiler.evaluate("Number addMethod:[- b | self + (-1 * b) ]");
+	
+		context.get('Number').set('toString',CreateMethod('toString',"(function(){ return CreatString(context.lookup('self').get().toString());})",context));
 	}	
 	function InitializeStrings()
 	{
 		compiler.evaluate("String := object basicNew");
+		compiler.evaluate("String addMethod:[toString | self]");
+		
 		//concat
 		context.get('String').set('+', CreateMethod(
-			'+',"(function (b) {return (model.createString(context.lookup('self').get().toString() + b));})",context));  
+			'+',"(function (b) {return (model.createString(context.lookup('self').get().toString() + b.lookup('toString')().text);})",context));  
 		//append
 		context.get('String').set('+=', CreateMethod(
-			'+=',"(function (b) {context.lookup('self').get().append(b);return (context.lookup('self').get());})",context)); 
+			'+=',"(function (b) {context.lookup('self').get().append(b.lookup('toString')().text);return (context.lookup('self').get());})",context)); 
 		//length
 		context.get('String').set('length', CreateMethod(
 			'length',"(function () {return (context.lookup('self').get().length);})",context)); 
 		//toList
 		context.get('String').set('toList', CreateMethod(
 			'toList',"(function () {return (model.createList(context.lookup('self').get().text));})",context)); 
+			
 	}
     </script>
 	<script>

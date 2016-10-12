@@ -102,7 +102,7 @@ var compiler = (function (parser) {
 
 	Object.prototype.lookup = function(selector){
 			var me = this;
-			var  = me.type;
+			var myType  = me.type;
 			switch(myType) {
 				case " List ":
 					//Array

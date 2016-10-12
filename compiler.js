@@ -104,15 +104,15 @@ var compiler = (function (parser) {
 			var me = this;
 			var myType  = me.type;
 			switch(myType) {
-				case " List ":
+				case "List":
 					//Array
 					return "NotImplemented";
 				break;
-				case " EditableString ":
+				case "EditableString":
 					//String
 					return "NotImplemented";
 				break;
-				case " Map ":
+				case "Map":
 					if(this.keys().includes(selector))
 						{
 							return {

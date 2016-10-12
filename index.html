@@ -43,6 +43,7 @@
 		<script src="parser/parser.js"></script>
 		<script src="compiler.js"></script>
 		<script>
+		var loaded=false;
 			function repl_parse(src) {
 				if (src === undefined) {
 					src = repl_in.value;
@@ -60,6 +61,11 @@
 			}
 						
 			function repl_eval(src) {
+				if(!loaded)
+				{
+					console.log("The system is not initialized yet.");
+					return;
+				}
 				if (src === undefined) {
 					src = repl_in.value;
 					repl_in.value = "";
@@ -120,6 +126,7 @@
 		if(model.getRoot().get('context')==null)
 		{initializeObjects();}
 		openModelViewer();
+		loaded=true;
 	 }
       // startups the system
       function initializeObjects() {

@@ -51,7 +51,7 @@ var compiler = (function (parser) {
 	}
 	
 	function visitString(expr) {
-		return "'" + expr.value + "'";
+		return "model.createString('" + expr.value + "')";
 	}
 	
 	function visitAssignment(expr) {
@@ -59,7 +59,7 @@ var compiler = (function (parser) {
 	}
 	
 	function visitArray(expr) {
-		return "[" + expr.elements.map(visit).join(", ") + "]";
+		return "model.createList([" + expr.elements.map(visit).join(", ") + "])";
 	}
 	
 	function visitMessageSend(expr) {

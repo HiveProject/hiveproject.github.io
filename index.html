@@ -139,11 +139,13 @@
 	 
 		context.get('object').set('basicNew', CreateMethod(
 			'basicNew',"(function () { var self =model.createMap();context.set('self',self); initObject(self,context);return self;})",context));
-	
-	 
+			
 		InitializeNumbers();
 		InitializeStrings();
-		 
+		InitializeLists();
+		InitializeOthers();
+		
+
     }
 	function InitializeNumbers()
 	{
@@ -178,6 +180,21 @@
 			'toList',"(function () {return (model.createList(context.lookup('self').get().text));})",context)); 
 			
 	}
+	function InitializeLists()
+	{
+	
+	}
+	function InitializeOthers(){
+		compiler.evaluate("Block := object basicNew");
+		
+		context.get('Block').set('new:', CreateMethod(
+			'new:',"(function (method) { var self =context.lookup('object').get().receive('basicNew')(); self.set('value',method);return self;})",context));
+		
+		compiler.evaluate("True := (object basicNew addMethod:[ifTrue:aBlock| aBlock value]) addMethod:[ifFalse:aBlock| ]")
+	
+		compiler.evaluate("False := (object basicNew addMethod:[ifTrue:aBlock| ]) addMethod:[ifFalse:aBlock| aBlock value]")
+	
+	}
     </script>
 	<script>
 	function HiveEval(context, str) {
@@ -188,6 +205,9 @@
 		obj.set('addMethod:',CreateMethod(
 			'addMethod:',"(function(b){context.lookup('self').get().set(b.get('selector'),b); return context.lookup('self').get();})",context));
 		obj.set('toString',CreateMethod('toString',"(function(){ return CreateString('An Object');})",context));
+		obj.set('Equals:',CreateMethod(
+			'Equals:',"(function(other){if(context.lookup('self').get()==other){return context.lookup('True').get();}else{return context.lookup('False').get();}})",context));
+		
 		
 	}
 	function CreateString( str)

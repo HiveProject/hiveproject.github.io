@@ -166,7 +166,7 @@
 		
 		//concat
 		context.get('String').set('+', CreateMethod(
-			'+',"(function (b) {return (model.createString(context.lookup('self').get().toString() + b.receive('toString')().text);})",context));  
+			'+',"(function (b) {return (model.createString(context.lookup('self').get().toString() + b.receive('toString')().text));})",context));  
 		//append
 		context.get('String').set('+=', CreateMethod(
 			'+=',"(function (b) {context.lookup('self').get().append(b.receive('toString')().text);return (context.lookup('self').get());})",context)); 

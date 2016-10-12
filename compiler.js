@@ -51,7 +51,7 @@ var compiler = (function (parser) {
 	}
 	
 	function visitString(expr) {
-		return "model.createString('" + expr.value + "')";
+		return "CreateString('" + expr.value + "')";
 	}
 	
 	function visitAssignment(expr) {
@@ -96,7 +96,7 @@ var compiler = (function (parser) {
 		 	//currentExecutionContext.set('self',this);
 			return HiveEval(currentExecutionContext, method.get("source"));
 		}
-		return function () { return "DNU"; }
+		return function () { return CreatString("DNU"); }
 	}
 	  
 	Object.prototype.lookup = function(selector){
@@ -155,7 +155,7 @@ var compiler = (function (parser) {
 						set:function(value){parent.set(value);return value;},
 						found:true
 						};
-			}else{return 'DNU'}};
+			}else{return CreatString('DNU')}};
 			
 	Number.prototype.lookup = function(selector){ return staticLookup('Number',this.valueOf(),selector);}; 
 			

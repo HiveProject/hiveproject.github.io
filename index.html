@@ -142,7 +142,7 @@
 	
 	 
 		InitializeNumbers();
-		
+		InitializeStrings();
 		 
     }
 	function InitializeNumbers()
@@ -156,6 +156,22 @@
 		compiler.evaluate("Number addMethod:[* b | self / (1/b) ]");
 		
 		compiler.evaluate("Number addMethod:[- b | self + (-1 * b) ]");
+	}	
+	function InitializeStrings()
+	{
+		compiler.evaluate("String := object basicNew");
+		//concat
+		context.get('String').set('+', CreateMethod(
+			'+',"(function (b) {return (model.createString(context.lookup('self').get().toString() + b));})",context));  
+		//append
+		context.get('String').set('+=', CreateMethod(
+			'+=',"(function (b) {context.lookup('self').get().append(b);return (context.lookup('self').get());})",context)); 
+		//length
+		context.get('String').set('length', CreateMethod(
+			'length',"(function () {return (context.lookup('self').get().length);})",context)); 
+		//toList
+		context.get('String').set('toList', CreateMethod(
+			'toList',"(function () {return (model.createList(context.lookup('self').get().text));})",context)); 
 	}
     </script>
 	<script>
@@ -166,8 +182,11 @@
 	{
 		obj.set('addMethod:',CreateMethod(
 			'addMethod:',"(function(b){context.lookup('self').get().set(b.get('selector'),b); return context.lookup('self').get();})",context));
-			 
+		obj.set('toString',CreateMethod('toString',"(function(){ return CreatString("An Object");})",context));
+		
 	}
+	function CreateString(var str)
+	{return model.createString(str);}
 	function CreateMethod(selector,func,context)
 	{ 
 		var method= model.createMap();

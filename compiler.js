@@ -101,6 +101,17 @@ var compiler = (function (parser) {
 	  
 	Object.prototype.lookup = function(selector){
 			var me = this;
+			var myType=me.type;
+			switch(myType) {
+				case "List":
+					//Array
+					return staticLookup("List",me,selector);
+				break;
+				case "EditableString":
+					//String
+					return staticLookup("String",me,selector);
+				break;
+			}
 			if(this.keys().includes(selector))
 			{
 				return {

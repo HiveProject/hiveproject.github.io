@@ -122,9 +122,8 @@ var compiler = (function (parser) {
 					
 					};
 		};
-		
-	Number.prototype.lookup = function(selector){
-		var parent=model.getRoot().get('context').lookup('Number').get(); 
+	var staticLookup = function(parnetName,selfValue,selector){
+		var parent=model.getRoot().get('context').lookup(parnetName).get(); 
 		if(parent!=null) {
 			var real= parent.lookup(selector).get();
 			var method= model.createMap();
@@ -136,7 +135,7 @@ var compiler = (function (parser) {
 						
 						};}
 			var ct = CreateContext(real.get('context'));
-			ct.set('self',this.valueOf());
+			ct.set('self',selfValue);
 				method.set('context',ct);
 				method.set('source',real.get('source'));
 				method.set("selector",selector);
@@ -146,6 +145,8 @@ var compiler = (function (parser) {
 						found:true
 						};
 			}else{return 'DNU'}};
+			
+	Number.prototype.lookup = function(selector){ return staticLookup('Number',this.valueOf(),selector);}; 
 			
 	return {
 		compile: compile,

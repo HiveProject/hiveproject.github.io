@@ -96,7 +96,7 @@ var compiler = (function (parser) {
 		 	//currentExecutionContext.set('self',this);
 			return HiveEval(currentExecutionContext, method.get("source"));
 		}
-		return function () { return CreatString("DNU"); }
+		return function () { return CreateString("DNU"); }
 	}
 	  
 	Object.prototype.lookup = function(selector){
@@ -155,7 +155,7 @@ var compiler = (function (parser) {
 						set:function(value){parent.set(value);return value;},
 						found:true
 						};
-			}else{return CreatString('DNU')}};
+			}else{return CreateString('DNU')}};
 			
 	Number.prototype.lookup = function(selector){ return staticLookup('Number',this.valueOf(),selector);}; 
 			

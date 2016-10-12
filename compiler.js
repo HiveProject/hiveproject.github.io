@@ -70,17 +70,16 @@ var compiler = (function (parser) {
 
 	function visitMethod(expr) {
 		var body = expr.body.map(visit);
-		body.push("return ("+ body.pop()+")");
-		return `CreateMethod("` +  expr.selector+
-		`","`+  "("+"function " + "(" +
-			expr.args.join(", ") + ") {" +
-			expr.args.map(function(item){return "context.set('"+item+"',"+item+");";}).join("")+
-			expr.temps.map(function (tmp) { 
-				return "var " + tmp + ";";
-			}).join(" ") +
-			body.join("; ").replace(/\\/g,'\\\\').replace(/"/g,'\\"') + `; })",context)`
-	}
-	
+		body.push("return (" + body.pop() + ")");
+		return  ` CreateMethod("` +  expr.selector+
+					`", "`+  "("+" function " + "(" +
+							expr.args.join(", ") + ") {	" +
+							expr.args.map(function(item){return " context.set('"+item+"', "+item+");";}).join(" ")+
+							expr.temps.map(function (tmp) {
+								return " var " + tmp + ";";
+							}).join(" ") +
+							body.join(";").replace(/\\/g,'\\\\').replace(/" / g,'\\"') +  ` ;})",context)`
+				}
 
 	function visitJavascript(expr) {
 		return expr.code;

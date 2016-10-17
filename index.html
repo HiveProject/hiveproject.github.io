@@ -158,15 +158,16 @@
 
 		compiler.evaluate("Number addMethod:[* b | self / (1/b) ]");
 		compiler.evaluate("Number addMethod:[- b | self + (-1 * b) ]");
+		
 		context.get('Number').set('>', CreateMethod(
 			'>',"(function (b) {if(context.lookup('self').get() > b){return context.lookup('true').get();}else{return context.lookup('false').get();}})",context));
 		context.get('Number').set('<', CreateMethod(
 			'<',"(function (b) {if(context.lookup('self').get() < b){return context.lookup('true').get();}else{return context.lookup('false').get();}})",context));
 		
-		compiler.evaluate("Number addMethod:[>= b | (self < b) not ]");
+		compiler.evaluate("Number addMethod:[>= b | (self < b) Not ]");
 		
-		compiler.evaluate("Number addMethod:[<= b | (self > b) not ]");
-	 
+		compiler.evaluate("Number addMethod:[<= b | (self > b) Not ]");
+		compiler.evaluate("Number addMethod:[=b | self Equals:b]");
 		context.get('Number').set('toString',CreateMethod('toString',"(function(){ return CreateString(context.lookup('self').get().toString());})",context));
 	}	
 	function InitializeStrings()
@@ -199,10 +200,15 @@
 			'new:',"(function (method) { var self =context.lookup('object').get().receive('basicNew')(); self.set('value',method);return self;})",context));
 		
 		compiler.evaluate("true := ((object basicNew addMethod:[ifTrue:aBlock| aBlock value]) addMethod:[ifFalse:aBlock| ]) addMethod:[ifTrue: aBlock ifFalse: anotherBlock| aBlock value]");
-		compiler.evaluate("true addMethod:[not| false].true addMethod:[toString|'true']");
-		 
+		compiler.evaluate("true addMethod:[toString|'true']");
 		compiler.evaluate("false := ((object basicNew addMethod:[ifTrue:aBlock| ]) addMethod:[ifFalse:aBlock| aBlock value]) addMethod:[ifTrue: aBlock ifFalse: anotherBlock| anotherBlock value]");
-		compiler.evaluate("false  addMethod:[not| true]. false addMethod:[toString|'false']")
+		compiler.evaluate("false addMethod:[toString|'false']")
+		
+		//logical operators
+		compiler.evaluate("true addMethod:[Not| false]. true addMethod:[And: other| other]. true addMethod:[Or: other| self].");
+		compiler.evaluate("false addMethod:[Not| true]. false addMethod:[And: other| self]. false addMethod:[Or: other| other].");
+		
+		
 	}
     </script>
 	<script>

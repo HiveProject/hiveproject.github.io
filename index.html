@@ -166,10 +166,7 @@
 		compiler.evaluate("Number addMethod:[>= b | (self < b) not ]");
 		
 		compiler.evaluate("Number addMethod:[<= b | (self > b) not ]");
-		
-		obj.set('Equals:',CreateMethod(
-			'Equals:',"(function(other){if(context.lookup('self').get()==other){return context.lookup('true').get();}else{return context.lookup('false').get();}})",context));
-		
+	 
 		context.get('Number').set('toString',CreateMethod('toString',"(function(){ return CreateString(context.lookup('self').get().toString());})",context));
 	}	
 	function InitializeStrings()

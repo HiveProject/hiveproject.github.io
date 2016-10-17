@@ -200,7 +200,7 @@
 		
 		compiler.evaluate("true := (((object basicNew addMethod:[ifTrue:aBlock| aBlock value]) addMethod:[ifFalse:aBlock| ]) addMethod:[ifTrue: aBlock ifFalse: anotherBlock| aBlock value]) addMethod:[not| false]");
 	
-		compiler.evaluate("false := (((object basicNew addMethod:[ifTrue:aBlock| ]) addMethod:[ifFalse:aBlock| aBlock value]) addMethod:[ifTrue: aBlock ifFalse: anotherBlock| anotherBlock value])) addMethod:[not| false]");
+		compiler.evaluate("false := (((object basicNew addMethod:[ifTrue:aBlock| ]) addMethod:[ifFalse:aBlock| aBlock value]) addMethod:[ifTrue: aBlock ifFalse: anotherBlock| anotherBlock value]) addMethod:[not| false]");
 	
 	}
     </script>

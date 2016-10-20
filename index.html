@@ -199,13 +199,13 @@
 	function InitializeOthers(){
 		 
 		compiler.evaluate("true := ((object basicNew addMethod:[ifTrue:aBlock| aBlock value]) addMethod:[ifFalse:aBlock| ]) addMethod:[ifTrue: aBlock ifFalse: anotherBlock| aBlock value]");
-		compiler.evaluate("true addMethod:[toString|'true']");
+		compiler.evaluate("true addMethod:[toString|'true']. true addMethod:[value|true]");
 		compiler.evaluate("false := ((object basicNew addMethod:[ifTrue:aBlock| ]) addMethod:[ifFalse:aBlock| aBlock value]) addMethod:[ifTrue: aBlock ifFalse: anotherBlock| anotherBlock value]");
-		compiler.evaluate("false addMethod:[toString|'false']")
+		compiler.evaluate("false addMethod:[toString|'false']. false addMethod:[value|false]")
 		
 		//logical operators
-		compiler.evaluate("true addMethod:[Not| false]. true addMethod:[And: other| other value]. true addMethod:[Or: other| self].");
-		compiler.evaluate("false addMethod:[Not| true]. false addMethod:[And: other| self]. false addMethod:[Or: other| other value].");
+		compiler.evaluate("true addMethod:[Not| false]. true addMethod:[And: other| other value]. true addMethod:[Or: other| true].");
+		compiler.evaluate("false addMethod:[Not| true]. false addMethod:[And: other| false]. false addMethod:[Or: other| other value].");
 		
 		
 	}

@@ -150,6 +150,8 @@
 	function InitializeNumbers()
 	{
 		compiler.evaluate("Number := object basicNew");
+		
+		compiler.evaluate("Number addMethod:[value | self]");
 		context.get('Number').set('+', CreateMethod(
 			'+',"(function (b) {return (context.lookup('self').get() + b);})",context));
 		context.get('Number').set('/', CreateMethod(
@@ -174,6 +176,7 @@
 	{
 		compiler.evaluate("String := object basicNew");
 		compiler.evaluate("String addMethod:[toString | self]");
+		compiler.evaluate("String addMethod:[value | self]");
 		
 		//concat
 		context.get('String').set('+', CreateMethod(
@@ -194,19 +197,15 @@
 	
 	}
 	function InitializeOthers(){
-		compiler.evaluate("Block := object basicNew");
-		
-		context.get('Block').set('new:', CreateMethod(
-			'new:',"(function (method) { var self =context.lookup('object').get().receive('basicNew')(); self.set('value',method);return self;})",context));
-		
+		 
 		compiler.evaluate("true := ((object basicNew addMethod:[ifTrue:aBlock| aBlock value]) addMethod:[ifFalse:aBlock| ]) addMethod:[ifTrue: aBlock ifFalse: anotherBlock| aBlock value]");
 		compiler.evaluate("true addMethod:[toString|'true']");
 		compiler.evaluate("false := ((object basicNew addMethod:[ifTrue:aBlock| ]) addMethod:[ifFalse:aBlock| aBlock value]) addMethod:[ifTrue: aBlock ifFalse: anotherBlock| anotherBlock value]");
 		compiler.evaluate("false addMethod:[toString|'false']")
 		
 		//logical operators
-		compiler.evaluate("true addMethod:[Not| false]. true addMethod:[And: other| other]. true addMethod:[Or: other| self].");
-		compiler.evaluate("false addMethod:[Not| true]. false addMethod:[And: other| self]. false addMethod:[Or: other| other].");
+		compiler.evaluate("true addMethod:[Not| false]. true addMethod:[And: other| other value]. true addMethod:[Or: other| self].");
+		compiler.evaluate("false addMethod:[Not| true]. false addMethod:[And: other| self]. false addMethod:[Or: other| other value].");
 		
 		
 	}

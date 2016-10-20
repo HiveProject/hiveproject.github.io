@@ -146,10 +146,11 @@ var compiler = (function (parser) {
 						
 						};}
 			var ct = CreateContext(real.get('context'));
-			ct.set('self',selfValue);
+				ct.set('self',selfValue);
 				method.set('context',ct);
 				method.set('source',real.get('source'));
 				method.set("selector",selector);
+				method.set("value",method);
 			return {
 						get:function(){return method;},
 						set:function(value){parent.set(value);return value;},

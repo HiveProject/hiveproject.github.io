@@ -103,7 +103,7 @@ integer "integer" = token:$("-"? digits) { return parseInt(token); }
 float "float" = token:$(integer "." digits) { return parseFloat(token); }
 number "number" = val:(float / integer) { return number(val); }
 string = ['] val:(("''" {return "'"} / [^'])*) ['] { return string(val); }
-array = '{' ws first:expression? rest:('.' ws expr:expression { return expr; })* ws '}' { return array(first, rest); }
+array = '{' ws first:expression? rest:('.' ws expr:expression { return expr; })* ws '.'? ws '}' { return array(first, rest); }
 literal "literal" = (number / string / array / method)
 
 letter = [a-zA-Z]

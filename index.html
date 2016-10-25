@@ -124,7 +124,11 @@
 	 authCallback=authorize;
 	 function hiveLoaded(model){
 		if(model.getRoot().get('context')==null)
-		{initializeObjects();}
+		{
+			initializeObjects();
+		}else{ 
+			context= model.getRoot().get('context');
+		}
 		openModelViewer();
 		loaded=true;
 	 }
@@ -139,7 +143,8 @@
 	 
 		context.get('object').set('basicNew', CreateMethod(
 			'basicNew',"(function () { var self =model.createMap();context.set('self',self); initObject(self,context);return self;})",context));
-			
+		
+		compiler.evaluate("null := (object basicNew addMethod:[isNull| true]) addMethod:[toString|'null']")
 		InitializeNumbers();
 		InitializeStrings();
 		InitializeLists();
@@ -147,6 +152,17 @@
 		
 
     }
+	function initObject(obj,context)
+	{
+		obj.set('addMethod:',CreateMethod(
+			'addMethod:',"(function(b){context.lookup('self').get().set(b.get('selector'),b); return context.lookup('self').get();})",context));
+		obj.set('toString',CreateMethod('toString',"(function(){ return CreateString('An Object');})",context));
+		obj.set('Equals:',CreateMethod(
+			'Equals:',"(function(other){if(context.lookup('self').get()==other){return context.lookup('true').get();}else{return context.lookup('false').get();}})",context));
+		
+		obj.set('isNull',CreateMethod('isNull',"(function(){ return context.lookup('false').get();})",context));
+		
+	}
 	function InitializeNumbers()
 	{
 		compiler.evaluate("Number := object basicNew");
@@ -194,7 +210,17 @@
 	}
 	function InitializeLists()
 	{
+		compiler.evaluate("List := object basicNew");
 	
+		context.get('List').set('at:', CreateMethod(
+			'at:',"(function (index) {var s=context.lookup('self').get(); if(index>=s.length){return context.lookup('null').get();} return s.get(index); })",context));
+		
+		context.get('List').set('at:put:', CreateMethod(
+			'at:put:',"(function (index,value) { var s=context.lookup('self').get(); while(index>=s.length){s.push(context.lookup('null').get());} context.lookup('self').get().set(index,value); return context.lookup('self').get(); })",context));
+			
+		context.get('List').set('count', CreateMethod(
+			'count',"(function () {return context.lookup('self').get().length; })",context));
+		
 	}
 	function InitializeOthers(){
 		 
@@ -214,16 +240,7 @@
 	function HiveEval(context, str) {
 		return eval(str);
 	}
-	function initObject(obj,context)
-	{
-		obj.set('addMethod:',CreateMethod(
-			'addMethod:',"(function(b){context.lookup('self').get().set(b.get('selector'),b); return context.lookup('self').get();})",context));
-		obj.set('toString',CreateMethod('toString',"(function(){ return CreateString('An Object');})",context));
-		obj.set('Equals:',CreateMethod(
-			'Equals:',"(function(other){if(context.lookup('self').get()==other){return context.lookup('true').get();}else{return context.lookup('false').get();}})",context));
-		
-		
-	}
+	
 	function CreateString( str)
 	{return model.createString(str);}
 	function CreateMethod(selector,func,context)

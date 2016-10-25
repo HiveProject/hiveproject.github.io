@@ -70,13 +70,13 @@ var compiler = (function (parser) {
 	
 	function visitMethod(expr) {
 		if (expr.body.type && expr.body.type === "Javascript") {
-			return "CreateMethod('" + expr.selector + "', (function (" +
+			return 'CreateMethod("' + expr.selector + '", "(function (' +
 				expr.args.join(", ") + ") {" +
 				expr.args.map(function(item){return "context.set('"+item+"',"+item+");";}).join("")+
 				expr.temps.map(function (tmp) { 
 					return "var " + tmp + ";";
 				}).join(" ") +
-				expr.body.code + "}), context)";
+				expr.body.code.replace(/\\/g,'\\\\').replace(/"/g,'\\"') + '})", context)';
 		} else {			
 			var body = expr.body.map(visit);
 			body.push("return ("+ body.pop()+")");

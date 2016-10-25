@@ -223,6 +223,7 @@
 		
 		context.get('List').set('removeAt:', CreateMethod(
 			'removeAt:',"(function (index) {var s =context.lookup('self').get(); s.remove(index); return s; })",context));
+		compiler.evaluate('List addMethod:[pop| r:= self at:(self count-1). self removeAt:(self count-1). r].List addMethod:[push: value| self at:(self count) put: value].');
 		
 	}
 	function InitializeOthers(){
@@ -253,8 +254,17 @@
 		method.set('source',func);
 		method.set("selector",selector);
 		method.set("value",method);
+		
+		var valctx = CreateContext(context);
+		valctx.set('self',method);
+		var valWithArgs =model.createMap();
+		valWithArgs.set('context',valctx);
+		valWithArgs.set('selector', 'valWithArguments:');
+		valWithArgs.set('source', "(function (args) {var s =context.lookup('self').get(); var func = HiveEval(context,s.get('source'));return func.apply(this,args.asArray());})");
+		method.set('valueWithArguments:',valWithArgs);
 		return method;
 	}
+
 	function CreateContext(parent)
 	{
 		var context = model.createMap();

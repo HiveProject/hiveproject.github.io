@@ -221,6 +221,9 @@
 		context.get('List').set('count', CreateMethod(
 			'count',"(function () {return context.lookup('self').get().length; })",context));
 		
+		context.get('List').set('removeAt:', CreateMethod(
+			'removeAt:',"(function (index) {var s =context.lookup('self').get(); s.remove(index); return s; })",context));
+		
 	}
 	function InitializeOthers(){
 		 

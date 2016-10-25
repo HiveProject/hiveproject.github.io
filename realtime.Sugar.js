@@ -47,7 +47,7 @@ function Initialize()
  openModelViewer=gapi.drive.realtime.debug;
    // With auth taken care of, load a file, or create one if there
    // is not an id in the URL.
-   var id = '0B2v_aVrVchSUYWszSjFjeVp3UVE';
+   var id = '0B2v_aVrVchSUTF9OMklQcG9CODg';
    loadedCallback=callback;	
    if (id) {
      // Load the document id from the URL

@@ -254,8 +254,17 @@
 		method.set('source',func);
 		method.set("selector",selector);
 		method.set("value",method);
+		
+		var valctx = CreateContext(context);
+		valctx.set('self',method);
+		var valWithArgs =model.createMap();
+		valWithArgs.set('context',valctx);
+		valWithArgs.set('selector', 'valWithArguments:');
+		valWithArgs.set('source', "(function (args) {var s =context.lookup('self').get(); var func = HiveEval(context,s.get('source'));return func.apply(this,args.asArray());})");
+		method.set('valueWithArguments:',valWithArgs);
 		return method;
 	}
+
 	function CreateContext(parent)
 	{
 		var context = model.createMap();

@@ -1047,9 +1047,6 @@ parser = /*
         s0 = peg$parsekeywordSend();
         if (s0 === peg$FAILED) {
           s0 = peg$parsebinarySend();
-          if (s0 === peg$FAILED) {
-            s0 = peg$parsejsStatement();
-          }
         }
       }
 
@@ -1943,7 +1940,10 @@ parser = /*
               if (s5 !== peg$FAILED) {
                 s6 = peg$parsews();
                 if (s6 !== peg$FAILED) {
-                  s7 = peg$parsemethodBody();
+                  s7 = peg$parsejsStatement();
+                  if (s7 === peg$FAILED) {
+                    s7 = peg$parsemethodBody();
+                  }
                   if (s7 !== peg$FAILED) {
                     s8 = peg$parsews();
                     if (s8 !== peg$FAILED) {
@@ -2422,9 +2422,9 @@ parser = /*
             };
         }
         function array(first, rest) {
-            if (first) {
-				rest.unshift(first);
-			}
+    		if (first) {
+    			rest.unshift(first);
+    		}
             return {
             	type: 'Array',
             	elements: rest

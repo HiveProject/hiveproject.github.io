@@ -103,7 +103,7 @@ integer "integer" = token:$("-"? digits) { return parseInt(token); }
 float "float" = token:$(integer "." digits) { return parseFloat(token); }
 number "number" = val:(float / integer) { return number(val); }
 string = ['] val:(("''" {return "'"} / [^'])*) ['] { return string(val); }
-array = '{' ws first:expression? rest:('.' ws expr:expression { return expr; })* ws '}' { return array(first, rest); }
+array = '{' ws first:expression? rest:('.' ws expr:expression { return expr; })* ws '.'? ws '}' { return array(first, rest); }
 literal "literal" = (number / string / array / method)
 
 letter = [a-zA-Z]
@@ -150,7 +150,7 @@ keywordMethod = kvps:(key:keywordSelector ws arg:identifier ws { return {key: ke
 unaryMethod = sel:identifier { return unaryMessage(sel); }
 binaryMethod = sel:binarySelector ws arg:identifier { return binaryMessage(sel, arg); }
 
-methodBody = ws first:expression? rest:('.' ws expr:expression { return expr; })* ws '.'? { return methodBody(first, rest); }
+methodBody = ws first:expression? rest:('.' ws expr:expression { return expr; })* ws ('.' ws)* { return methodBody(first, rest); }
 method = '[' ws decl:methodDeclaration? ws temps:temps? ws body:methodBody ws ']' { return method(decl, temps, body); }
 
 jsStatement "Javascript statement" 

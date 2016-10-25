@@ -47,14 +47,14 @@ function Initialize()
  openModelViewer=gapi.drive.realtime.debug;
    // With auth taken care of, load a file, or create one if there
    // is not an id in the URL.
-   var id = '0B7Fr-eaQNfHDWWVKQXFsMmtwY3c';
+   var id = '0B7Fr-eaQNfHDbUI1N3JfNzRkVEU';
    loadedCallback=callback;	
    if (id) {
      // Load the document id from the URL
      realtimeUtils.load(id.replace('/', ''), onFileLoaded, onFileInitialize);
    } else {
      // Create a new document, add it to the URL
-	   realtimeUtils.createRealtimeFile('New Quickstart File', function(createResponse) {
+	   realtimeUtils.createRealtimeFile('Hive image', function(createResponse) {
        window.history.pushState(null, null, '?id=' + createResponse.id);
        realtimeUtils.load(createResponse.id, onFileLoaded, onFileInitialize);
      });

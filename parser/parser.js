@@ -2422,7 +2422,9 @@ parser = /*
             };
         }
         function array(first, rest) {
-        	rest.unshift(first);
+            if (first) {
+				rest.unshift(first);
+			}
             return {
             	type: 'Array',
             	elements: rest

@@ -1047,9 +1047,6 @@ parser = /*
         s0 = peg$parsekeywordSend();
         if (s0 === peg$FAILED) {
           s0 = peg$parsebinarySend();
-          if (s0 === peg$FAILED) {
-            s0 = peg$parsejsStatement();
-          }
         }
       }
 
@@ -1943,7 +1940,10 @@ parser = /*
               if (s5 !== peg$FAILED) {
                 s6 = peg$parsews();
                 if (s6 !== peg$FAILED) {
-                  s7 = peg$parsemethodBody();
+                  s7 = peg$parsejsStatement();
+                  if (s7 === peg$FAILED) {
+                    s7 = peg$parsemethodBody();
+                  }
                   if (s7 !== peg$FAILED) {
                     s8 = peg$parsews();
                     if (s8 !== peg$FAILED) {
@@ -2422,7 +2422,9 @@ parser = /*
             };
         }
         function array(first, rest) {
-        	rest.unshift(first);
+    		if (first) {
+    			rest.unshift(first);
+    		}
             return {
             	type: 'Array',
             	elements: rest
@@ -2482,6 +2484,9 @@ parser = /*
         function method(decl, temps, body) {
         	if (!decl) { decl = { selector: "", args: [] }; }
             if (!temps) { temps = []; }
+    		if (body.length === 1 && body[0].type === "Javascript") {
+    			body = body[0];
+    		}
             return {
             	type: 'Method',
                 selector: decl.selector,

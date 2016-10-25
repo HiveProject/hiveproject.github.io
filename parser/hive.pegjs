@@ -19,7 +19,9 @@
         };
     }
     function array(first, rest) {
-    	rest.unshift(first);
+		if (first) {
+			rest.unshift(first);
+		}
         return {
         	type: 'Array',
         	elements: rest
@@ -79,6 +81,9 @@
     function method(decl, temps, body) {
     	if (!decl) { decl = { selector: "", args: [] }; }
         if (!temps) { temps = []; }
+		if (body.length === 1 && body[0].type === "Javascript") {
+			body = body[0];
+		}
         return {
         	type: 'Method',
             selector: decl.selector,
@@ -118,7 +123,7 @@ binarySelector "binary selector"
 variable "variable" = token:identifier { return variable(token); }
 reference "reference" = variable
 
-expression = assignment / keywordSend / binarySend / jsStatement
+expression = assignment / keywordSend / binarySend
 subexpression  = '(' ws expression:expression ws ')' { return expression; }
 operand = literal / reference / subexpression
 
@@ -151,7 +156,7 @@ unaryMethod = sel:identifier { return unaryMessage(sel); }
 binaryMethod = sel:binarySelector ws arg:identifier { return binaryMessage(sel, arg); }
 
 methodBody = ws first:expression? rest:('.' ws expr:expression { return expr; })* ws ('.' ws)* { return methodBody(first, rest); }
-method = '[' ws decl:methodDeclaration? ws temps:temps? ws body:methodBody ws ']' { return method(decl, temps, body); }
+method = '[' ws decl:methodDeclaration? ws temps:temps? ws body:(jsStatement / methodBody) ws ']' { return method(decl, temps, body); }
 
 jsStatement "Javascript statement" 
 	= "<" val:((">>" {return ">"} / [^>])*) ">" { return jsStatement(val.join("")); }

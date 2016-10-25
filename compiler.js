@@ -69,16 +69,23 @@ var compiler = (function (parser) {
 	}
 	
 	function visitMethod(expr) {
-		var body = expr.body.map(visit);
-		body.push("return ("+ body.pop()+")");
-		return `CreateMethod("` +  expr.selector+
-		`","`+  "("+"function " + "(" +
-			expr.args.join(", ") + ") {" +
-			expr.args.map(function(item){return "context.set('"+item+"',"+item+");";}).join("")+
-			expr.temps.map(function (tmp) { 
-				return "var " + tmp + ";";
-			}).join(" ") +
-			body.join("; ").replace(/\\/g,'\\\\').replace(/"/g,'\\"') + `; })",context)`
+		if (expr.body.type && expr.body.type === "Javascript") {
+			return 'CreateMethod("' + expr.selector + '", "(function (' +
+				expr.args.join(", ") + ") {" +
+				expr.args.map(function(item){return "context.set('"+item+"',"+item+");";}).join("")+
+				expr.body.code.replace(/\\/g,'\\\\').replace(/"/g,'\\"') + '})", context)';
+		} else {			
+			var body = expr.body.map(visit);
+			body.push("return ("+ body.pop()+")");
+			return `CreateMethod("` +  expr.selector+
+			`","`+  "("+"function " + "(" +
+				expr.args.join(", ") + ") {" +
+				expr.args.map(function(item){return "context.set('"+item+"',"+item+");";}).join("")+
+				expr.temps.map(function (tmp) { 
+					return 'context.set("' + tmp + '", context.lookup("null").get());';
+				}).join(" ") +
+				body.join("; ").replace(/\\/g,'\\\\').replace(/"/g,'\\"') + `; })",context)`;
+		}
 	}
 	
 	function visitJavascript(expr) {
@@ -96,7 +103,7 @@ var compiler = (function (parser) {
 		 	//currentExecutionContext.set('self',this);
 			return HiveEval(currentExecutionContext, method.get("source"));
 		}
-		return function () { return CreateString("DNU"); }
+		return function () { return CreateString("DNU: " + selector); }
 	}
 	  
 	Object.prototype.lookup = function(selector){
@@ -156,7 +163,7 @@ var compiler = (function (parser) {
 						set:function(value){parent.set(value);return value;},
 						found:true
 						};
-			}else{return CreateString('DNU')}};
+			}else{return CreateString('DNU: ' + selector)}};
 			
 	Number.prototype.lookup = function(selector){ return staticLookup('Number',this.valueOf(),selector);}; 
 			

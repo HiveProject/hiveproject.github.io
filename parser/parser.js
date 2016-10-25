@@ -2484,6 +2484,9 @@ parser = /*
         function method(decl, temps, body) {
         	if (!decl) { decl = { selector: "", args: [] }; }
             if (!temps) { temps = []; }
+    		if (body.length === 1 && body[0].type === "Javascript") {
+    			body = body[0];
+    		}
             return {
             	type: 'Method',
                 selector: decl.selector,

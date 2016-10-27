@@ -57,6 +57,10 @@
 	 * Load Drive API client library.
 	 */
 	function loadDriveApi() {
+		//load realtime api.
+		
+		gapi.load('auth:client,drive-realtime,drive-share', start);
+		
 		gapi.client.load('drive', 'v2', function () {
 			// Get query param "id"
 			var param = location.search.substring(1).split("&")

@@ -59,16 +59,17 @@
 	function loadDriveApi() {
 		//load realtime api.
 		
-		gapi.load('auth:client,drive-realtime,drive-share', start);
-		
-		gapi.client.load('drive', 'v2', function () {
-			// Get query param "id"
-			var param = location.search.substring(1).split("&")
-				.map(function (param) { return param.split("="); })
-				.find(function (param) { return param[0] === "id"; });
-			if (param === undefined) { param = [] };
-			openFolder(param[1] || folder);
+		gapi.load('auth:client,drive-realtime,drive-share', function(){
+			gapi.client.load('drive', 'v2', function () {
+				// Get query param "id"
+				var param = location.search.substring(1).split("&")
+					.map(function (param) { return param.split("="); })
+					.find(function (param) { return param[0] === "id"; });
+				if (param === undefined) { param = [] };
+				openFolder(param[1] || folder);
+			});
 		});
+		
 	}
 
 	/**

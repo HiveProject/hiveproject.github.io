@@ -5,7 +5,8 @@
 
 	var SCOPES = ['https://www.googleapis.com/auth/drive.metadata'];
 	//HiveProject folder.
-	var folder = '0B7Fr-eaQNfHDOU81U2VJRU5VbGc';
+	var baseFolder= '0B7Fr-eaQNfHDOU81U2VJRU5VbGc'
+	var folder = baseFolder;
 	
 	/**
 	 * Check if current user has authorized this application.
@@ -62,7 +63,7 @@
 				.map(function (param) { return param.split("="); })
 				.find(function (param) { return param[0] === "id"; });
 			if (param === undefined) { param = [] };
-			openFolder(param[1] || "root");
+			openFolder(param[1] || folder);
 		});
 	}
 
@@ -191,7 +192,7 @@
 	}
 	
 	function updateState(state) {		
-		folder = state.folder || "root";
+		folder = state.folder || folder;
 		listFiles();
 	}
 	

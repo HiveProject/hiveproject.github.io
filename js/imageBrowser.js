@@ -4,8 +4,8 @@
 	var CLIENT_ID = '763227956228-btgo7elk6eclu3b3fho6sutsi52884io.apps.googleusercontent.com';
 
 	var SCOPES = ['https://www.googleapis.com/auth/drive.metadata'];
-
-	var folder = 'root';
+	//HiveProject folder.
+	var folder = '0B7Fr-eaQNfHDOU81U2VJRU5VbGc';
 	
 	/**
 	 * Check if current user has authorized this application.
@@ -49,7 +49,9 @@
 		}, handleAuthResult);
 		return false;
 	}
-
+	$( document ).ready(function() {
+		handleAuthClick();
+	});
 	/**
 	 * Load Drive API client library.
 	 */

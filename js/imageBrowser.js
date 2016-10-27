@@ -113,8 +113,9 @@
 							}));
 				row.append($("<td>")
 						.append("<span>" + file.ownerNames.join(", ") + "</span>"));
-				row.append($("<td>")
-						.append("<span>" + file.quotaBytesUsed + "</span>"));
+				var sizeNode = $("<td>");
+				getBytes(file,function(size){sizeNode.append("<span>" + size + "</span>")});
+				row.append(sizeNode);						
 				row.append($("<td>")
 						.append("<span>" + file.modifiedDate + "</span>"));
 				
@@ -123,7 +124,15 @@
 		 });
 	}
 	
-	
+	function getBytes(file,callback){
+		gapi.drive.realtime.load(file.id,function(doc){
+			var size = doc.getModel().bytesUsed
+			doc.close();
+			callback(size);
+		});
+		
+		
+	}
 	function openFolder(id) {
 		var state = {
 			folder: id

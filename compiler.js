@@ -81,10 +81,10 @@ var compiler = (function (parser) {
 			`","`+  "("+"function " + "(" +
 				expr.args.join(", ") + ") {" +
 				expr.args.map(function(item){return "context.set('"+item+"',"+item+");";}).join("")+
-				expr.temps.map(function (tmp) { 
+				(expr.temps.map(function (tmp) { 
 					return 'context.set("' + tmp + '", context.lookup("null").get());';
 				}).join(" ") +
-				body.join("; ").replace(/\\/g,'\\\\').replace(/"/g,'\\"') + `; })",context)`;
+				body.join("; ")).replace(/\\/g,'\\\\').replace(/"/g,'\\"') + `; })",context)`;
 		}
 	}
 	

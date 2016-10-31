@@ -106,66 +106,85 @@ var compiler = (function (parser) {
 		return function () { return CreateString("DNU: " + selector); }
 	}
 	  
-	Object.prototype.lookup = function(selector){
-			var me = this;
-			var myType=me.type;
-			switch(myType) {
-				case "List":
-					//Array
-					return staticLookup("List",me,selector);
+	Object.prototype.lookup = function(selector) {
+		var me = this;
+		var myType = me.type;
+		switch(myType) {
+			case "List":
+				//Array
+				return staticLookup("List",me,selector);
 				break;
-				case "EditableString":
-					//String
-					return staticLookup("String",me,selector);
+			case "EditableString":
+				//String
+				return staticLookup("String",me,selector);
 				break;
-			}
-			if(this.keys().includes(selector))
-			{
-				return {
-					get:function(){return me.get(selector);},
-					set:function(value){me.set(selector,value);return value;},
-					found:true
-					};
-			}
-			if(this.keys().includes('parent'))
-			{
-			var parentSlot= this.get('parent').lookup(selector);
-				if(parentSlot.found)
-				{return parentSlot;}
-			}  
+		}
+		if(this.keys().includes(selector)) {
 			return {
-					get:function(){return me.get(selector);},
-					set:function(value){me.set(selector,value);return value;},
-					found:false
-					
-					};
+				get: function () { 
+					return me.get(selector); 
+				},
+				set: function (value) { 
+					me.set(selector,value);
+					return value; 
+				},
+				found: true
+			};
+		}
+		if(this.keys().includes('parent')) {
+			var parentSlot = this.get('parent').lookup(selector);
+			if(parentSlot.found){ return parentSlot; }
+		} 
+		return {
+			get: function() {
+				return me.get(selector);
+			},
+			set: function(value) { 
+				me.set(selector,value);
+				return value;
+			},
+			found:false					
 		};
-	var staticLookup = function(parnetName,selfValue,selector){
-		var parent=model.getRoot().get('context').lookup(parnetName).get(); 
-		if(parent!=null) {
-			var real= parent.lookup(selector).get();
-			var method= model.createMap();
-			if(real==null)
-			{return {
-						get:function(){return parent.get(selector);},
-						set:function(value){parent.set(selector,value);return value;},
-						found:false
-						
-						};}
+	};
+	var staticLookup = function (parnetName,selfValue,selector) {
+		var parent = model.getRoot().get('context').lookup(parnetName).get(); 
+		if (parent != null) {
+			var real = parent.lookup(selector).get();
+			var method = model.createMap();
+			if(real == null) {
+				return {
+					get: function() {
+						return parent.get(selector);
+					},
+					set: function(value) {
+						parent.set(selector,value);
+						return value;
+					},
+					found:false
+				};
+			}
 			var ct = CreateContext(real.get('context'));
-				ct.set('self',selfValue);
-				method.set('context',ct);
-				method.set('source',real.get('source'));
-				method.set("selector",selector);
-				method.set("value",method);
+			ct.set('self',selfValue);
+			method.set('context',ct);
+			method.set('source',real.get('source'));
+			method.set("selector",selector);
+			method.set("value",method);
 			return {
-						get:function(){return method;},
-						set:function(value){parent.set(value);return value;},
-						found:true
-						};
-			}else{return CreateString('DNU: ' + selector)}};
+				get: function() {
+					return method;
+				},
+				set: function(value) {
+					parent.set(value);
+					return value;
+				},
+				found:true
+			};
+		} else {
+			return CreateString('DNU: ' + selector);
+		}
+	};
 			
-	Number.prototype.lookup = function(selector){ return staticLookup('Number',this.valueOf(),selector);}; 
+	Number.prototype.lookup = function(selector){ return staticLookup('Number',this.valueOf(),selector); }; 
 			
 	return {
 		compile: compile,

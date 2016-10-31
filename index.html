@@ -62,15 +62,20 @@
 			}
 						
 			function repl_eval(src) {
-				if(!loaded) {
+				if (!loaded) {
 					console.log("The system is not initialized yet.");
+					repl_show(src, "The system is not initialized yet.");
 					return;
 				}
 				if (src === undefined) {
 					src = repl_in.value;
 					repl_in.value = "";
 				}
-				repl_show(src, compiler.evaluate(src).toString());
+				try {
+					repl_show(src, compiler.evaluate(src).toString());
+				} catch (ex) {
+					repl_show(src, ex.toString());
+				}
 			}
 		
             function repl_show(expr, result) {

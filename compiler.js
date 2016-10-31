@@ -109,7 +109,7 @@ var compiler = (function (parser) {
 	Object.prototype.lookup = function(selector) {
 		var me = this;
 		var myType = me.type;
-		switch(myType) {
+		switch (myType) {
 			case "List":
 				//Array
 				return staticLookup("List",me,selector);
@@ -119,7 +119,7 @@ var compiler = (function (parser) {
 				return staticLookup("String",me,selector);
 				break;
 		}
-		if(this.keys().includes(selector)) {
+		if (this.keys().includes(selector)) {
 			return {
 				get: function () { 
 					return me.get(selector); 
@@ -131,9 +131,9 @@ var compiler = (function (parser) {
 				found: true
 			};
 		}
-		if(this.keys().includes('parent')) {
+		if (this.keys().includes('parent')) {
 			var parentSlot = this.get('parent').lookup(selector);
-			if(parentSlot.found){ return parentSlot; }
+			if (parentSlot.found){ return parentSlot; }
 		} 
 		return {
 			get: function() {
@@ -146,7 +146,8 @@ var compiler = (function (parser) {
 			found:false					
 		};
 	};
-	var staticLookup = function (parnetName,selfValue,selector) {
+	
+	function staticLookup (parnetName,selfValue,selector) {
 		var parent = model.getRoot().get('context').lookup(parnetName).get(); 
 		if (parent != null) {
 			var real = parent.lookup(selector).get();
@@ -182,9 +183,11 @@ var compiler = (function (parser) {
 		} else {
 			return CreateString('DNU: ' + selector);
 		}
-	};
+	}
 			
-	Number.prototype.lookup = function(selector){ return staticLookup('Number',this.valueOf(),selector); }; 
+	Number.prototype.lookup = function(selector) {
+		return staticLookup('Number',this.valueOf(),selector); 
+	}; 
 			
 	return {
 		compile: compile,

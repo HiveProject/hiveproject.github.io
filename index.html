@@ -22,7 +22,7 @@
 		</style>
 		<style>
         </style>		
-<script src="http://ajax.googleapis.com/ajax/libs/jquery/1.7.1/jquery.min.js" type="text/javascript"></script>
+		<script src="http://ajax.googleapis.com/ajax/libs/jquery/1.7.1/jquery.min.js" type="text/javascript"></script>
 		<script src="realtime.Sugar.js"></script>
 	</head>
 	<body>
@@ -43,7 +43,8 @@
 		<script src="parser/parser.js"></script>
 		<script src="compiler.js"></script>
 		<script>
-		var loaded=false;
+			var loaded = false;
+			
 			function repl_parse(src) {
 				if (src === undefined) {
 					src = repl_in.value;
@@ -61,8 +62,7 @@
 			}
 						
 			function repl_eval(src) {
-				if(!loaded)
-				{
+				if(!loaded) {
 					console.log("The system is not initialized yet.");
 					return;
 				}
@@ -95,190 +95,179 @@
 			}
 		</script>
 		<script>
-	var context;
-	function setButton(){
-	        var button = document.getElementById('auth_button');
-			button.style.visibility="visible";
-			button.addEventListener('click', authorize);
-	}
-	function unSetButton(){
-	
-	        var button = document.getElementById('auth_button');
-			button.style.visibility="hidden";
-            
-	}
-    function authorize() {
-        // Attempt to authorize
-        realtimeUtils.authorize(function(response){
-          if(response.error){
-            // Authorization failed because this is the first time the user has used your application,
-            // show the authorize button to prompt them to authorize manually.
-				setButton();
-            }
-           else {
-			  unSetButton();
-              start(hiveLoaded);
-          }
-        },true);
-	} 
-	 authCallback=authorize;
-	 function hiveLoaded(model){
-		if(model.getRoot().get('context')==null)
-		{
-			initializeObjects();
-		}else{ 
-			context= model.getRoot().get('context');
-		}
-		openModelViewer();
-		loaded=true;
-	 }
-      // startups the system
-      function initializeObjects() {
-	  
-		context = CreateContext();
-		 
-		model.getRoot().set('context',context);
-		
-		context.set('object', model.createMap());
-	 
-		context.get('object').set('basicNew', CreateMethod(
-			'basicNew',"(function () { var self =model.createMap();context.set('self',self); initObject(self,context);return self;})",context));
-		
-		compiler.evaluate("null := (object basicNew addMethod:[isNull| true]) addMethod:[toString|'null']")
-		InitializeNumbers();
-		InitializeStrings();
-		InitializeLists();
-		InitializeOthers();
-		
-
-    }
-	function initObject(obj,context)
-	{
-		obj.set('addMethod:',CreateMethod(
-			'addMethod:',"(function(b){context.lookup('self').get().set(b.get('selector'),b); return context.lookup('self').get();})",context));
-		obj.set('toString',CreateMethod('toString',"(function(){ return CreateString('An Object');})",context));
-		obj.set('Equals:',CreateMethod(
-			'Equals:',"(function(other){if(context.lookup('self').get()==other){return context.lookup('true').get();}else{return context.lookup('false').get();}})",context));
-		
-		obj.set('isNull',CreateMethod('isNull',"(function(){ return context.lookup('false').get();})",context));
-		
-	}
-	function InitializeNumbers()
-	{
-		compiler.evaluate("Number := object basicNew");
-		
-		compiler.evaluate("Number addMethod:[value | self]");
-		context.get('Number').set('+', CreateMethod(
-			'+',"(function (b) {return (context.lookup('self').get() + b);})",context));
-		context.get('Number').set('/', CreateMethod(
-			'/',"(function (b) {return (context.lookup('self').get() / b);})",context));
-		
-
-		compiler.evaluate("Number addMethod:[* b | self / (1/b) ]");
-		compiler.evaluate("Number addMethod:[- b | self + (-1 * b) ]");
-		
-		context.get('Number').set('>', CreateMethod(
-			'>',"(function (b) {if(context.lookup('self').get() > b){return context.lookup('true').get();}else{return context.lookup('false').get();}})",context));
-		context.get('Number').set('<', CreateMethod(
-			'<',"(function (b) {if(context.lookup('self').get() < b){return context.lookup('true').get();}else{return context.lookup('false').get();}})",context));
-		
-		compiler.evaluate("Number addMethod:[>= b | (self < b) Not ]");
-		
-		compiler.evaluate("Number addMethod:[<= b | (self > b) Not ]");
-		compiler.evaluate("Number addMethod:[=b | self Equals:b]");
-		context.get('Number').set('toString',CreateMethod('toString',"(function(){ return CreateString(context.lookup('self').get().toString());})",context));
-	}	
-	function InitializeStrings()
-	{
-		compiler.evaluate("String := object basicNew");
-		compiler.evaluate("String addMethod:[toString | self]");
-		compiler.evaluate("String addMethod:[value | self]");
-		
-		//concat
-		context.get('String').set('+', CreateMethod(
-			'+',"(function (b) {return (model.createString(context.lookup('self').get().toString() + b.receive('toString')().text));})",context));  
-		//append
-		context.get('String').set('+=', CreateMethod(
-			'+=',"(function (b) {context.lookup('self').get().append(b.receive('toString')().text);return (context.lookup('self').get());})",context)); 
-		//length
-		context.get('String').set('length', CreateMethod(
-			'length',"(function () {return (context.lookup('self').get().length);})",context)); 
-		//toList
-		context.get('String').set('toList', CreateMethod(
-			'toList',"(function () {return (model.createList(context.lookup('self').get().text));})",context)); 
+			var context;
 			
-	}
-	function InitializeLists()
-	{
-		compiler.evaluate("List := object basicNew");
-	
-		context.get('List').set('at:', CreateMethod(
-			'at:',"(function (index) {var s=context.lookup('self').get(); if(index>=s.length){return context.lookup('null').get();} return s.get(index); })",context));
-		
-		context.get('List').set('at:put:', CreateMethod(
-			'at:put:',"(function (index,value) { var s=context.lookup('self').get(); while(index>=s.length){s.push(context.lookup('null').get());} context.lookup('self').get().set(index,value); return context.lookup('self').get(); })",context));
+			function setButton() {
+				var button = document.getElementById('auth_button');
+				button.style.visibility="visible";
+				button.addEventListener('click', authorize);
+			}
 			
-		context.get('List').set('count', CreateMethod(
-			'count',"(function () {return context.lookup('self').get().length; })",context));
-		
-		context.get('List').set('removeAt:', CreateMethod(
-			'removeAt:',"(function (index) {var s =context.lookup('self').get(); s.remove(index); return s; })",context));
-		compiler.evaluate('List addMethod:[pop| r:= self at:(self count-1). self removeAt:(self count-1). r].List addMethod:[push: value| self at:(self count) put: value].');
-		
-	}
-	function InitializeOthers(){
-		 
-		compiler.evaluate("true := ((object basicNew addMethod:[ifTrue:aBlock| aBlock value]) addMethod:[ifFalse:aBlock| ]) addMethod:[ifTrue: aBlock ifFalse: anotherBlock| aBlock value]");
-		compiler.evaluate("true addMethod:[toString|'true']. true addMethod:[value|true]");
-		compiler.evaluate("false := ((object basicNew addMethod:[ifTrue:aBlock| ]) addMethod:[ifFalse:aBlock| aBlock value]) addMethod:[ifTrue: aBlock ifFalse: anotherBlock| anotherBlock value]");
-		compiler.evaluate("false addMethod:[toString|'false']. false addMethod:[value|false]")
-		
-		//logical operators
-		compiler.evaluate("true addMethod:[Not| false]. true addMethod:[And: other| other value]. true addMethod:[Or: other| true].");
-		compiler.evaluate("false addMethod:[Not| true]. false addMethod:[And: other| false]. false addMethod:[Or: other| other value].");
-		
-		
-	}
-    </script>
-	<script>
-	function HiveEval(context, str) {
-		return eval(str);
-	}
-	
-	function CreateString( str)
-	{return model.createString(str);}
-	function CreateMethod(selector,func,context)
-	{ 
-		var method= model.createMap();
-		method.set('context',context);
-		method.set('source',func);
-		method.set("selector",selector);
-		method.set("value",method);
-		
-		var valctx = CreateContext(context);
-		valctx.set('self',method);
-		var valWithArgs =model.createMap();
-		valWithArgs.set('context',valctx);
-		valWithArgs.set('selector', 'valWithArguments:');
-		valWithArgs.set('source', "(function (args) {var s =context.lookup('self').get(); var func = HiveEval(context,s.get('source'));return func.apply(this,args.asArray());})");
-		method.set('valueWithArguments:',valWithArgs);
-		return method;
-	}
-
-	function CreateContext(parent)
-	{
-		var context = model.createMap();
-		
-		if(parent!=null)
-		{
-			context.set('parent',parent);
-		}
-		
+			function unSetButton() {
+				var button = document.getElementById('auth_button');
+				button.style.visibility="hidden";
+			}
+			
+			function authorize() {
+				// Attempt to authorize
+				realtimeUtils.authorize(function(response) {
+					if(response.error) {
+						// Authorization failed because this is the first time the user has used your application,
+						// show the authorize button to prompt them to authorize manually.
+						setButton();
+					} else {
+						unSetButton();
+						start(hiveLoaded);
+					}
+				}, true);
+			}
+			
+			authCallback = authorize;
 	 
-		return context;
-	}
-	
+			function hiveLoaded(model) {
+				if(model.getRoot().get('context') == null) {
+					initializeObjects();
+				} else { 
+					context = model.getRoot().get('context');
+				}
+				openModelViewer();
+				loaded = true;
+			}
+						
+			// startups the system
+			function initializeObjects() {
+			  
+				context = CreateContext();
+				 
+				model.getRoot().set('context',context);
+				
+				context.set('object', model.createMap());
+			 
+				context.get('object').set('basicNew', CreateMethod(
+					'basicNew',"(function () { var self = model.createMap();context.set('self',self); initObject(self,context);return self;})",context));
+				
+				compiler.evaluate("null := (object basicNew addMethod:[isNull| true]) addMethod:[toString|'null']")
+				InitializeNumbers();
+				InitializeStrings();
+				InitializeLists();
+				InitializeOthers();
+			}
+			
+			function initObject(obj,context) {
+				obj.set('addMethod:',CreateMethod(
+					'addMethod:',"(function(b){context.lookup('self').get().set(b.get('selector'),b); return context.lookup('self').get();})",context));
+				obj.set('toString',CreateMethod('toString',"(function(){ return CreateString('An Object');})",context));
+				obj.set('Equals:',CreateMethod(
+					'Equals:',"(function(other){if(context.lookup('self').get()==other){return context.lookup('true').get();}else{return context.lookup('false').get();}})",context));
+				
+				obj.set('isNull',CreateMethod('isNull',"(function(){ return context.lookup('false').get();})",context));		
+			}
+			
+			function InitializeNumbers() {
+				compiler.evaluate("Number := object basicNew");
+				
+				compiler.evaluate("Number addMethod:[value | self]");
+				context.get('Number').set('+', CreateMethod(
+					'+',"(function (b) {return (context.lookup('self').get() + b);})",context));
+				context.get('Number').set('/', CreateMethod(
+					'/',"(function (b) {return (context.lookup('self').get() / b);})",context));
+				
+
+				compiler.evaluate("Number addMethod:[* b | self / (1/b) ]");
+				compiler.evaluate("Number addMethod:[- b | self + (-1 * b) ]");
+				
+				context.get('Number').set('>', CreateMethod(
+					'>',"(function (b) {if(context.lookup('self').get() > b){return context.lookup('true').get();}else{return context.lookup('false').get();}})",context));
+				context.get('Number').set('<', CreateMethod(
+					'<',"(function (b) {if(context.lookup('self').get() < b){return context.lookup('true').get();}else{return context.lookup('false').get();}})",context));
+				
+				compiler.evaluate("Number addMethod:[>= b | (self < b) Not ]");
+				
+				compiler.evaluate("Number addMethod:[<= b | (self > b) Not ]");
+				compiler.evaluate("Number addMethod:[=b | self Equals:b]");
+				context.get('Number').set('toString',CreateMethod('toString',"(function(){ return CreateString(context.lookup('self').get().toString());})",context));
+			}
+			
+			function InitializeStrings() {
+				compiler.evaluate("String := object basicNew");
+				compiler.evaluate("String addMethod:[toString | self]");
+				compiler.evaluate("String addMethod:[value | self]");
+				
+				//concat
+				context.get('String').set('+', CreateMethod(
+					'+',"(function (b) {return (model.createString(context.lookup('self').get().toString() + b.receive('toString')().text));})",context));  
+				//append
+				context.get('String').set('+=', CreateMethod(
+					'+=',"(function (b) {context.lookup('self').get().append(b.receive('toString')().text);return (context.lookup('self').get());})",context)); 
+				//length
+				context.get('String').set('length', CreateMethod(
+					'length',"(function () {return (context.lookup('self').get().length);})",context)); 
+				//toList
+				context.get('String').set('toList', CreateMethod(
+					'toList',"(function () {return (model.createList(context.lookup('self').get().text));})",context)); 			
+			}
+			
+			function InitializeLists() {
+				compiler.evaluate("List := object basicNew");
+			
+				context.get('List').set('at:', CreateMethod(
+					'at:',"(function (index) {var s=context.lookup('self').get(); if(index>=s.length){return context.lookup('null').get();} return s.get(index); })",context));
+				
+				context.get('List').set('at:put:', CreateMethod(
+					'at:put:',"(function (index,value) { var s=context.lookup('self').get(); while(index>=s.length){s.push(context.lookup('null').get());} context.lookup('self').get().set(index,value); return context.lookup('self').get(); })",context));
+					
+				context.get('List').set('count', CreateMethod(
+					'count',"(function () {return context.lookup('self').get().length; })",context));
+				
+				context.get('List').set('removeAt:', CreateMethod(
+					'removeAt:',"(function (index) {var s =context.lookup('self').get(); s.remove(index); return s; })",context));
+				compiler.evaluate('List addMethod:[pop| r:= self at:(self count-1). self removeAt:(self count-1). r].List addMethod:[push: value| self at:(self count) put: value].');				
+			}
+			
+			function InitializeOthers() {		 
+				compiler.evaluate("true := ((object basicNew addMethod:[ifTrue:aBlock| aBlock value]) addMethod:[ifFalse:aBlock| ]) addMethod:[ifTrue: aBlock ifFalse: anotherBlock| aBlock value]");
+				compiler.evaluate("true addMethod:[toString|'true']. true addMethod:[value|true]");
+				compiler.evaluate("false := ((object basicNew addMethod:[ifTrue:aBlock| ]) addMethod:[ifFalse:aBlock| aBlock value]) addMethod:[ifTrue: aBlock ifFalse: anotherBlock| anotherBlock value]");
+				compiler.evaluate("false addMethod:[toString|'false']. false addMethod:[value|false]")
+				
+				//logical operators
+				compiler.evaluate("true addMethod:[Not| false]. true addMethod:[And: other| other value]. true addMethod:[Or: other| true].");
+				compiler.evaluate("false addMethod:[Not| true]. false addMethod:[And: other| false]. false addMethod:[Or: other| other value].");		
+			}
+		</script>
+		<script>
+			function HiveEval(context, str) {
+				return eval(str);
+			}
 		
-	</script>
+			function CreateString(str) {
+				return model.createString(str);
+			}
+		
+			function CreateMethod(selector,func,context) { 
+				var method= model.createMap();
+				method.set('context', context);
+				method.set('source', func);
+				method.set("selector", selector);
+				method.set("value", method);
+				
+				var valctx = CreateContext(context);
+				valctx.set('self',method);
+				var valWithArgs = model.createMap();
+				valWithArgs.set('context', valctx);
+				valWithArgs.set('selector', 'valWithArguments:');
+				valWithArgs.set('source', "(function (args) {var s =context.lookup('self').get(); var func = HiveEval(context,s.get('source'));return func.apply(this,args.asArray());})");
+				method.set('valueWithArguments:', valWithArgs);
+				return method;
+			}
+
+			function CreateContext(parent) {
+				var context = model.createMap();
+				if(parent!=null) {
+					context.set('parent',parent);
+				}
+				return context;
+			}
+		</script>
 	</body>
 </html>

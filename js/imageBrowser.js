@@ -131,7 +131,7 @@
 				}
 					
 			});
-			$('#loadingModal').modal('toggle');
+			hideLoading();
 		 });
 	}
 	/*
@@ -149,7 +149,7 @@
 	*Creates a new file on the current folder.
 	*/
 	function createFile(){
-		$('#loadingModal').modal('toggle');
+		showLoading();
 		var metadata = {
 			'title': 'New Hive Image',
 			'mimeType': hiveMimeType,
@@ -159,13 +159,13 @@
 	}
 	function deleteFile(fileId)
 	{
-		$('#loadingModal').modal('toggle')
+		showLoading();
 		var request = gapi.client.drive.files.delete({'fileId': fileId});
 		request.execute(updateState);
 	}
 	function cloneFile(fileId)
 	{
-		$('#loadingModal').modal('toggle')
+		showLoading();
 		gapi.client.drive.files.get({'fileId':fileId}).execute(function (res){
 			var metadata = {
 				'title': res.title,
@@ -176,7 +176,9 @@
 				gapi.drive.realtime.load(fileId, function(doc) {
 					var originalModel=doc.getModel();
 					var newDoc = gapi.drive.realtime.loadFromJson(originalModel.toJson());
+					doc.close();
 					newDoc.saveAs(cres.id);
+					newDoc.close();
 					console.log("Compressed from " + originalModel.bytesUsed + " To "+ newDoc.getModel().bytesUsed);
 					//the saveAs actually takes some time, and if while it happens i refresh the page then i have some issues because asking for weight 
 					//initializes the file and starts giving that annoying concurrent exception.
@@ -187,7 +189,7 @@
 	}	
 	function collectFile(fileId)
 	{
-		$('#loadingModal').modal('toggle')
+		showLoading();
 		gapi.client.drive.files.get({'fileId':fileId}).execute(function (res){
 			var metadata = {
 				'title': res.title,
@@ -198,7 +200,9 @@
 				gapi.drive.realtime.load(fileId, function(doc) {
 					var originalModel=doc.getModel();
 					var newDoc = gapi.drive.realtime.loadFromJson(originalModel.toJson());
+					doc.close();
 					newDoc.saveAs(cres.id);
+					newDoc.close();
 					console.log("Compressed from " + originalModel.bytesUsed + " To "+ newDoc.getModel().bytesUsed);
 					//the saveAs actually takes some time, and if while it happens i refresh the page then i have some issues because asking for weight 
 					//initializes the file and starts giving that annoying concurrent exception.
@@ -223,7 +227,7 @@
 		});
 	}
 	function openFolder(id) {
-		$('#loadingModal').modal('toggle');
+		showLoading();
 		var state = {
 			folder: id
 		};
@@ -244,4 +248,17 @@
 		if (e.state !== null) {
 			updateState(e.state);
 		}
+	}
+	var loading=false;
+	function showLoading(){
+		if(!loading){
+			loading=true;
+			$('#loadingModal').modal('toggle');
+		}
+	}
+	function hideLoading(){
+		if(loading){
+			loading=false;
+			$('#loadingModal').modal('toggle');
+		}	
 	}

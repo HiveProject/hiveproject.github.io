@@ -140,6 +140,7 @@
 	function appendActionButtons(node,fileId){
 		node.append('<a class="btn btn-info" id="rename" onclick="renameFile(\''+fileId+'\')"><i class="fa fa-pencil fa-lg"></i></a>');
 		node.append('<a class="btn btn-warning" id="collect" onclick="collectFile(\''+fileId+'\')"><i class="fa fa-recycle fa-lg"></i></a>');
+		node.append('<a class="btn btn-primary" id="clone" onclick="cloneFile(\''+fileId+'\')"><i class="fa fa-files-o fa-lg"></i></a>');
 		node.append('<a class="btn btn-danger" id="delete" onclick="deleteFile(\''+fileId+'\')"><i class="fa fa-trash fa-lg"></i></a>');
 		
 		return node;
@@ -162,7 +163,7 @@
 		var request = gapi.client.drive.files.delete({'fileId': fileId});
 		request.execute(updateState);
 	}
-	function collectFile(fileId)
+	function cloneFile(fileId)
 	{
 		$('#loadingModal').modal('toggle')
 		gapi.client.drive.files.get({'fileId':fileId}).execute(function (res){
@@ -181,8 +182,30 @@
 					//initializes the file and starts giving that annoying concurrent exception.
 					setTimeout(function(){updateState([]);} , 8000); 
 				} );
-			});
-			
+			}); 
+		});
+	}	
+	function collectFile(fileId)
+	{
+		$('#loadingModal').modal('toggle')
+		gapi.client.drive.files.get({'fileId':fileId}).execute(function (res){
+			var metadata = {
+				'title': res.title,
+				'mimeType': hiveMimeType,
+				'parents':[{"id":baseFolder}] 
+			};
+			gapi.client.drive.files.insert(metadata).execute(function (cres){
+				gapi.drive.realtime.load(fileId, function(doc) {
+					var originalModel=doc.getModel();
+					var newDoc = gapi.drive.realtime.loadFromJson(originalModel.toJson());
+					newDoc.saveAs(cres.id);
+					console.log("Compressed from " + originalModel.bytesUsed + " To "+ newDoc.getModel().bytesUsed);
+					//the saveAs actually takes some time, and if while it happens i refresh the page then i have some issues because asking for weight 
+					//initializes the file and starts giving that annoying concurrent exception.
+					$('#loadingModal').modal('toggle')
+					setTimeout(function(){deleteFile(fileId);} , 8000); 
+				} );
+			}); 
 		});
 	}
 	function renameFile(fileId)

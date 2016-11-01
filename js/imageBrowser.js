@@ -7,7 +7,7 @@
 	//HiveProject folder.
 	var baseFolder= '0B7Fr-eaQNfHDOU81U2VJRU5VbGc'
 	var folder = baseFolder;
-	
+	var hiveMimeType='application/vnd.google-apps.drive-sdk'; //i think we can change this.
 	/**
 	 * Check if current user has authorized this application.
 	 */
@@ -108,8 +108,14 @@
 									openFolder(file.id);
 									return false;
 								} else {
-									// Let the browser handle it...
-									return true;
+									if(file.mimeType===hiveMimeType){
+										//i need to open the image.
+										openImage(file.id);
+										return false;
+									} else {
+										// Let the browser handle it...
+										return true;
+									}
 								}
 							}));
 				row.append($("<td>")
@@ -140,7 +146,7 @@
 	function createFile(){
 		var metadata = {
 			'title': 'New Hive Image',
-			'mimeType': 'application/vnd.google-apps.drive-sdk', //i think we can change this.
+			'mimeType': hiveMimeType,
 			'parents':[{"id":baseFolder}] 
 			};
 		gapi.client.drive.files.insert(metadata).execute(updateState);
@@ -176,7 +182,9 @@
 		}
 		updateState(state);
 	}
-	
+	function openImage(id){
+		window.location.href = '/image.html?id='+id;
+	}
 	function updateState(state) {		
 		folder = state.folder || folder;
 		listFiles();

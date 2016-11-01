@@ -131,6 +131,7 @@
 				}
 					
 			});
+			$('#loadingModal').modal('toggle');
 		 });
 	}
 	/*
@@ -147,6 +148,7 @@
 	*Creates a new file on the current folder.
 	*/
 	function createFile(){
+		$('#loadingModal').modal('toggle');
 		var metadata = {
 			'title': 'New Hive Image',
 			'mimeType': hiveMimeType,
@@ -156,11 +158,13 @@
 	}
 	function deleteFile(fileId)
 	{
+		$('#loadingModal').modal('toggle')
 		var request = gapi.client.drive.files.delete({'fileId': fileId});
 		request.execute(updateState);
 	}
 	function collectFile(fileId)
 	{
+		$('#loadingModal').modal('toggle')
 		gapi.client.drive.files.get({'fileId':fileId}).execute(function (res){
 			var metadata = {
 				'title': res.title,
@@ -175,7 +179,7 @@
 					console.log("Compressed from " + originalModel.bytesUsed + " To "+ newDoc.getModel().bytesUsed);
 					//the saveAs actually takes some time, and if while it happens i refresh the page then i have some issues because asking for weight 
 					//initializes the file and starts giving that annoying concurrent exception.
-					setTimeout(function(){updateState([])} , 8000); 
+					setTimeout(function(){updateState([]);} , 8000); 
 				} );
 			});
 			
@@ -196,6 +200,7 @@
 		});
 	}
 	function openFolder(id) {
+		$('#loadingModal').modal('toggle');
 		var state = {
 			folder: id
 		};

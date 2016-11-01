@@ -128,6 +128,8 @@
 	*Creates the buttons to handle the actions on a single file
 	*/
 	function appendActionButtons(node,fileId){
+		node.append('<a class="btn btn-info" id="rename" onclick="renameFile(\''+fileId+'\')"><i class="fa fa-pencil fa-lg"></i></a>');
+		node.append('<a class="btn btn-warning" id="collect" onclick="collectFile(\''+fileId+'\')"><i class="fa fa-recycle fa-lg"></i></a>');
 		node.append('<a class="btn btn-danger" id="delete" onclick="deleteFile(\''+fileId+'\')"><i class="fa fa-trash fa-lg"></i></a>');
 		
 		return node;
@@ -147,6 +149,13 @@
 	{
 		var request = gapi.client.drive.files.delete({'fileId': fileId});
 		request.execute(updateState);
+	}
+	function collectFile(fileId)
+	{
+		 alert("not yet implemented");
+	}function renameFile(fileId)
+	{
+		 alert("not yet implemented");
 	}
 	/*
 	*Gets the total realtime bytes used for the given file

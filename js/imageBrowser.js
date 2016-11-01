@@ -108,8 +108,8 @@
 									openFolder(file.id);
 									return false;
 								} else {
-									if(file.mimeType===hiveMimeType){
-										//i need to open the image.
+									if(file.mimeType.startsWith(hiveMimeType)){
+										//i need to open the image. The real mimeType is something like "application/vnd.google-apps.drive-sdk.763227956228". Those numbers appear as soon as realtime initializes the file.
 										openImage(file.id);
 										return false;
 									} else {

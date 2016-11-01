@@ -66,12 +66,21 @@
 					.map(function (param) { return param.split("="); })
 					.find(function (param) { return param[0] === "id"; });
 				if (param === undefined) { param = [] };
+				$('#add').onClick=createFile;
 				openFolder(param[1] || folder);
 			});
 		});
 		
 	}
-
+	function createFile(){
+		var metadata = {
+			'title': 'New Hive Image',
+			'mimeType': 'application/vnd.google-apps.drive-sdk', //i think we can change this.
+			'parents':[{"id":baseFolder}] 
+			};
+		gapi.client.drive.files.insert(metadata).execute(updateState);
+		
+	}
 	/**
 	 * Print files.
 	 */
@@ -92,6 +101,7 @@
 						"<th>Owner</th>" +
 						"<th>File size</th>" +
 						"<th>Last modified</th>" +
+						"<th>Actions</th>"+
 					"</tr>" +
 				"</thead>");
 			resp.items.forEach(function (file) {
@@ -118,12 +128,14 @@
 				row.append(sizeNode);						
 				row.append($("<td>")
 						.append("<span>" + file.modifiedDate + "</span>"));
-				
+				row.append(appendActionButtons($("<td>"),file.id));
 				table.append(row)
 			});
 		 });
 	}
-	
+	function appendActionButtons(node,fileId){
+		
+	}
 	function getBytes(file,callback){
 		gapi.drive.realtime.load(file.id,function(doc){
 			var size = doc.getModel().bytesUsed

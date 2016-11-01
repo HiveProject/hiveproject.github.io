@@ -172,10 +172,10 @@
 					var originalModel=doc.getModel();
 					var newDoc = gapi.drive.realtime.loadFromJson(originalModel.toJson());
 					newDoc.saveAs(cres.id);
-					console.log("Compressed from " + originalModel.bytesUsed + " To "+ newDoc.bytesUsed);
+					console.log("Compressed from " + originalModel.bytesUsed + " To "+ newDoc.getModel().bytesUsed);
 					//the saveAs actually takes some time, and if while it happens i refresh the page then i have some issues because asking for weight 
 					//initializes the file and starts giving that annoying concurrent exception.
-					setTimeout(function(){updateState([])} , 2000); 
+					setTimeout(function(){updateState([])} , 8000); 
 				} );
 			});
 			

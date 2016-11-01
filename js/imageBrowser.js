@@ -158,8 +158,24 @@
 	}
 	function collectFile(fileId)
 	{
-		 alert("not yet implemented");
-	}function renameFile(fileId)
+		gapi.client.drive.files.get({'fileId':fileId}).execute(function (res){
+			var metadata = {
+				'title': res.title,
+				'mimeType': hiveMimeType,
+				'parents':[{"id":baseFolder}] 
+			};
+			gapi.client.drive.files.insert(metadata).execute(function (cres){
+				gapi.drive.realtime.load(fileId, function(doc) {
+					var originalModel=doc.getModel();
+					var newDoc = gapi.drive.realtime.loadFromJson(originalModel.toJson());
+					newDoc.saveAs(cres.id);
+					updateState([]);
+				} );
+			});
+			
+		});
+	}
+	function renameFile(fileId)
 	{
 		 alert("not yet implemented");
 	}

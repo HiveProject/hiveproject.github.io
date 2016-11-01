@@ -39,17 +39,18 @@
 	</head>
 	<body>
 	
-		<button id="auth_button">Authorize</button>
-		<a class="btn btn-default" href="index.html"><i class="fa fa-folder-open fa-lg"></i>Back</a>
+		<a class="btn btn-default" href="index.html"><i class="fa fa-folder-open fa-lg"></i> Back</a>
+		<a id="auth_button" class="btn btn-default" ><i class="fa fa-key fa-lg"></i> Authorize</a> 
 		<div id="controls">
 			<p>
 				<textarea id="repl_in" type="text" rows="5"
 					onkeypress="if(event.which === 10 && event.ctrlKey) repl_eval();"></textarea>
 			</p>
 			<p>
-				<input type="button" value="Parse" onclick="repl_parse();"></input>
-				<input type="button" value="Compile" onclick="repl_compile();"></input>
-				<input type="button" value="Eval" onclick="repl_eval();"></input>
+			
+				<a class="btn btn-default"onclick="repl_parse()" ><i class="fa fa-align-justify fa-lg"></i> Parse</a> 
+			 	<a class="btn btn-default"onclick="repl_compile()" ><i class="fa fa-list fa-lg"></i> Compile</a> 
+			 	<a class="btn btn-default"onclick="repl_eval()" ><i class="fa fa-indent fa-lg"></i> Eval</a>  
 			</p>
         </div>
         <p id="repl_out"></p>  

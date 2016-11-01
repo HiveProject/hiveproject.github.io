@@ -72,15 +72,6 @@
 		});
 		
 	}
-	function createFile(){
-		var metadata = {
-			'title': 'New Hive Image',
-			'mimeType': 'application/vnd.google-apps.drive-sdk', //i think we can change this.
-			'parents':[{"id":baseFolder}] 
-			};
-		gapi.client.drive.files.insert(metadata).execute(updateState);
-		
-	}
 	/**
 	 * Print files.
 	 */
@@ -133,17 +124,39 @@
 			});
 		 });
 	}
+	/*
+	*Creates the buttons to handle the actions on a single file
+	*/
 	function appendActionButtons(node,fileId){
+		node.append('<a class="btn btn-danger" id="delete" onclick="deleteFile(\''+fileId+'\'"><i class="fa fa-trash fa-lg"></i></a>');
 		
+		return node;
 	}
+	/*
+	*Creates a new file on the current folder.
+	*/
+	function createFile(){
+		var metadata = {
+			'title': 'New Hive Image',
+			'mimeType': 'application/vnd.google-apps.drive-sdk', //i think we can change this.
+			'parents':[{"id":baseFolder}] 
+			};
+		gapi.client.drive.files.insert(metadata).execute(updateState);
+	}
+	function deleteFile(fileId)
+	{
+		var request = gapi.client.drive.files.delete({'fileId': fileId});
+		request.execute(updateState);
+	}
+	/*
+	*Gets the total realtime bytes used for the given file
+	*/
 	function getBytes(file,callback){
 		gapi.drive.realtime.load(file.id,function(doc){
 			var size = doc.getModel().bytesUsed
 			doc.close();
 			callback(size);
 		});
-		
-		
 	}
 	function openFolder(id) {
 		var state = {

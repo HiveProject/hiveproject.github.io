@@ -66,7 +66,7 @@
 					.map(function (param) { return param.split("="); })
 					.find(function (param) { return param[0] === "id"; });
 				if (param === undefined) { param = [] };
-				$('#add').onClick=createFile;
+				document.getElementById('add').onclick =createFile;
 				openFolder(param[1] || folder);
 			});
 		});

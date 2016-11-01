@@ -177,12 +177,11 @@
 					var originalModel=doc.getModel();
 					var newDoc = gapi.drive.realtime.loadFromJson(originalModel.toJson());
 					doc.close();
-					newDoc.saveAs(cres.id);
-					newDoc.close();
+					newDoc.saveAs(cres.id);					
 					console.log("Compressed from " + originalModel.bytesUsed + " To "+ newDoc.getModel().bytesUsed);
 					//the saveAs actually takes some time, and if while it happens i refresh the page then i have some issues because asking for weight 
 					//initializes the file and starts giving that annoying concurrent exception.
-					setTimeout(function(){updateState([]);} , 8000); 
+					setTimeout(function(){newDoc.close();updateState([]);} , 8000); 
 				} );
 			}); 
 		});
@@ -202,12 +201,11 @@
 					var newDoc = gapi.drive.realtime.loadFromJson(originalModel.toJson());
 					doc.close();
 					newDoc.saveAs(cres.id);
-					newDoc.close();
 					console.log("Compressed from " + originalModel.bytesUsed + " To "+ newDoc.getModel().bytesUsed);
 					//the saveAs actually takes some time, and if while it happens i refresh the page then i have some issues because asking for weight 
 					//initializes the file and starts giving that annoying concurrent exception.
 					$('#loadingModal').modal('toggle')
-					setTimeout(function(){deleteFile(fileId);} , 8000); 
+					setTimeout(function(){newDoc.close();updateState([]);} , 8000);  
 				} );
 			}); 
 		});

@@ -128,7 +128,7 @@
 	*Creates the buttons to handle the actions on a single file
 	*/
 	function appendActionButtons(node,fileId){
-		node.append('<a class="btn btn-danger" id="delete" onclick="deleteFile(\''+fileId+'\'"><i class="fa fa-trash fa-lg"></i></a>');
+		node.append('<a class="btn btn-danger" id="delete" onclick="deleteFile(\''+fileId+'\')"><i class="fa fa-trash fa-lg"></i></a>');
 		
 		return node;
 	}

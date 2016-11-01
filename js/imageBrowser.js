@@ -205,7 +205,7 @@
 					//the saveAs actually takes some time, and if while it happens i refresh the page then i have some issues because asking for weight 
 					//initializes the file and starts giving that annoying concurrent exception.
 					$('#loadingModal').modal('toggle')
-					setTimeout(function(){newDoc.close();updateState([]);} , 8000);  
+					setTimeout(function(){newDoc.close();deleteFile(fileId);} , 8000);  
 				} );
 			}); 
 		});

@@ -39,23 +39,30 @@ function Initialize() {
 
 // Create a new instance of the realtime utility with your client ID.
 var realtimeUtils;
-
+function getParam(urlParam) {
+	var regExp = new RegExp(urlParam + '=(.*?)($|&)', 'g');
+	var match = window.location.search.match(regExp);
+	if (match && match.length) {
+		match = match[0];
+		match = match.replace(urlParam + '=', '').replace('&', '');
+	} else {
+		match = null;
+	}
+	return match;	
+}
 var loadedCallback = undefined;
 function start(callback) {
 	openModelViewer = gapi.drive.realtime.debug;
 	// With auth taken care of, load a file, or create one if there
 	// is not an id in the URL.
-	var id = '0B7ZKBc-ke8aocW1ZYXJLdGpXdUE';
+	var id = getParam('id');
 	loadedCallback = callback;
 	if (id) {
 		// Load the document id from the URL
 		realtimeUtils.load(id.replace('/', ''), onFileLoaded, onFileInitialize);
 	} else {
-		// Create a new document, add it to the URL
-		realtimeUtils.createRealtimeFile('Hive image', function(createResponse) {
-			window.history.pushState(null, null, '?id=' + createResponse.id);
-			realtimeUtils.load(createResponse.id, onFileLoaded, onFileInitialize);
-		});
+		// Create a new document, add it to the URL 
+		window.location.href = '/index.html';
 	}
 }
  

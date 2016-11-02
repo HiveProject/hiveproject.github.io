@@ -8,6 +8,12 @@ var REPL = (function () {
 	function init(in_textArea, out_div) {
 		repl_in = in_textArea;
 		repl_out = out_div;
+		
+		repl_in.onkeypress = function () {
+			if (event.which === 10 && event.ctrlKey) {
+				REPL.evaluate();
+			}
+		}
 	}	
 
 	function parse(src) {

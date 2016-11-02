@@ -192,9 +192,14 @@
 				context.get('Number').set('/', CreateMethod(
 					'/',"(function (b) {return (context.lookup('self').get() / b);})",context));
 				
+				context.get('Number').set('+', CreateMethod(
+					'-',"(function (b) {return (context.lookup('self').get() - b);})",context));
+				context.get('Number').set('/', CreateMethod(
+					'*',"(function (b) {return (context.lookup('self').get() * b);})",context));
+				
 
-				compiler.evaluate("Number addMethod:[* b | self / (1/b) ]");
-				compiler.evaluate("Number addMethod:[- b | self + (-1 * b) ]");
+				//compiler.evaluate("Number addMethod:[* b | self / (1/b) ]");
+				//compiler.evaluate("Number addMethod:[- b | self + (-1 * b) ]");
 				
 				context.get('Number').set('>', CreateMethod(
 					'>',"(function (b) {if(context.lookup('self').get() > b){return context.lookup('true').get();}else{return context.lookup('false').get();}})",context));

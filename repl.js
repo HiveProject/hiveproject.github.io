@@ -36,9 +36,13 @@ var REPL = (function () {
 	
 	function update() {
 		if (evalList.length === 0) return;
-		evalIndex = evalIndex % evalList.length;
+		evalIndex = positiveMod(evalIndex, evalList.length);
 		repl_in.value = evalList[evalIndex];
 	}
+	
+	function positiveMod(a, b) {
+		return ((a%b)+b)%b;
+	}	
 
 	function parse(src) {
 		if (src === undefined) {

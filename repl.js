@@ -82,7 +82,7 @@ var REPL = (function () {
 	}
 
 	function show(expr, result) {
-		if (expr.length > 0) {
+		if (expr.length > 0 && expr !== evalList[evalList.length - 1]) {
 			evalList.push(expr);
 			evalIndex = evalList.length;
 		}

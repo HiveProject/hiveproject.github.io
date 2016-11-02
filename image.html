@@ -87,8 +87,9 @@
 					repl_in.value = "";
 				}
 				try {
-					repl_show(src, compiler.evaluate(src).toString());
+					repl_show(src, compiler.evaluate(src).receive('toString').toString());
 				} catch (ex) {
+					console.log(ex);
 					repl_show(src, ex.toString());
 				}
 			}

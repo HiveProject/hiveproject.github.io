@@ -27,15 +27,15 @@ var REPL = (function () {
 	}
 				
 	function evaluate(src) {
+		if (src === undefined) {
+			src = repl_in.value;
+			repl_in.value = "";
+		}
 		if (!ready) {
 			var msg = "The system is not initialized yet.";
 			console.log(msg);
 			show(src, msg);
 			return;
-		}
-		if (src === undefined) {
-			src = repl_in.value;
-			repl_in.value = "";
 		}
 		try {
 			var result = compiler.evaluate(src);

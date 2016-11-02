@@ -130,9 +130,9 @@
 		context.get('Number').set('/', CreateMethod(
 			'/',"(function (b) {return (context.lookup('self').get() / b);})",context));
 		
-		context.get('Number').set('+', CreateMethod(
+		context.get('Number').set('-', CreateMethod(
 			'-',"(function (b) {return (context.lookup('self').get() - b);})",context));
-		context.get('Number').set('/', CreateMethod(
+		context.get('Number').set('*', CreateMethod(
 			'*',"(function (b) {return (context.lookup('self').get() * b);})",context));
 		
 

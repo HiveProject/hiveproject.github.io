@@ -211,7 +211,7 @@
 				
 				compiler.evaluate("Number addMethod:[<= b | (self > b) Not ]");
 				compiler.evaluate("Number addMethod:[=b | self Equals:b]");
-				context.get('Number').set('toString',CreateMethod('toString',"(function(){ return CreateString(context.lookup('self').get().toString());})",context));
+				context.get('Number').set('toString',CreateMethod('toString',"(function(){ var self = context.lookup('self').get(); return CreateString(self ? self.toString() : 'Number');})",context));
 			}
 			
 			function InitializeStrings() {

@@ -247,6 +247,11 @@
 				context.get('List').set('removeAt:', CreateMethod(
 					'removeAt:',"(function (index) {var s =context.lookup('self').get(); s.remove(index); return s; })",context));
 				compiler.evaluate('List addMethod:[pop| r:= self at:(self count-1). self removeAt:(self count-1). r].List addMethod:[push: value| self at:(self count) put: value].');				
+				
+				
+				context.get('List').set('do:', CreateMethod(
+					'do:',"(function (aBlock) {var s =context.lookup('self').get(); for(var i=0;i<s.length;i++){ aBlock.receive('valueWithArguments:')(model.createList([s.get(i)]));} return s; })",context));
+				compiler.evaluate(" List addMethod:[select: aBlock | |temp|  temp := {}.  self do:[:each | temp push:( aBlock valueWithArguments: {each})]]");
 			}
 			
 			function InitializeOthers() {		 

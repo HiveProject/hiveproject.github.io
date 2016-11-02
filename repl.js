@@ -3,18 +3,42 @@ var REPL = (function () {
 	
 	var repl_in;
 	var repl_out;
-	var ready = false;	
+	var ready = false;
+	
+	var evalList = [];
+	var evalIndex = 0;
 	
 	function init(in_textArea, out_div) {
 		repl_in = in_textArea;
 		repl_out = out_div;
 		
+		// INFO(Richo): 
+		// For some reason, the ENTER key must be handled with onkeypress but the
+		// arrow keys must be handled with onkeyup...
 		repl_in.onkeypress = function () {
 			if (event.which === 10 && event.ctrlKey) {
+				// ENTER
 				REPL.evaluate();
 			}
-		}
-	}	
+		};
+		repl_in.onkeyup = function () {
+			if (event.which === 38 && event.ctrlKey) {
+				// UP
+				evalIndex--;
+				update();
+			} else if (event.which === 40 && event.ctrlKey) {
+				// DOWN
+				evalIndex++;
+				update();
+			}
+		};
+	}
+	
+	function update() {
+		if (evalList.length === 0) return;
+		evalIndex = evalIndex % evalList.length;
+		repl_in.value = evalList[evalIndex];
+	}
 
 	function parse(src) {
 		if (src === undefined) {
@@ -54,6 +78,9 @@ var REPL = (function () {
 	}
 
 	function show(expr, result) {
+		evalList.push(expr);
+		evalIndex = evalList.length;
+		
 		var p = document.createElement("p");
 		split(expr).forEach(function (line, index) {				
 			var exprDiv = document.createElement("div");

@@ -74,7 +74,6 @@
 	var context;
 	var model;
 	var doc;
-	var loaded=false;
 	function loadDocument(documentId){
 		gapi.drive.realtime.load(documentId, function(loadedDoc) {
 			doc=loadedDoc;
@@ -90,7 +89,7 @@
 			context = model.getRoot().get('context');
 		}
 		openModelViewer();
-		loaded = true;
+		REPL.start();
 	}
 				
 	// startups the system

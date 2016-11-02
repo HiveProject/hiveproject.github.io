@@ -52,7 +52,7 @@
 	$( document ).ready(function() {
 		handleAuthClick();
 	});
-	
+	var openModelViewer;
 	function loadDriveApi() {
 		//load realtime api.
 		
@@ -62,7 +62,8 @@
 				var param = location.search.substring(1).split("&")
 					.map(function (param) { return param.split("="); })
 					.find(function (param) { return param[0] === "id"; });
-				loadDocument(param);
+				openModelViewer=gapi.drive.realtime.debug;
+				loadDocument(param[1]);
 				
 			});
 		});

@@ -130,9 +130,9 @@
 		context.get('Number').set('/', CreateMethod(
 			'/',"(function (b) {return (context.lookup('self').get() / b);})",context));
 		
-		context.get('Number').set('+', CreateMethod(
+		context.get('Number').set('-', CreateMethod(
 			'-',"(function (b) {return (context.lookup('self').get() - b);})",context));
-		context.get('Number').set('/', CreateMethod(
+		context.get('Number').set('*', CreateMethod(
 			'*',"(function (b) {return (context.lookup('self').get() * b);})",context));
 		
 
@@ -148,8 +148,8 @@
 		
 		compiler.evaluate("Number addMethod:[<= b | (self > b) Not ]");
 		compiler.evaluate("Number addMethod:[=b | self Equals:b]");
-		context.get('Number').set('toString',CreateMethod('toString',"(function(){ return CreateString(context.lookup('self').get().toString());})",context));
-	}
+		context.get('Number').set('toString',CreateMethod('toString',"(function(){ var self = context.lookup('self').get(); return CreateString(self ? self.toString() : 'Number');})",context));
+  	}
 	
 	function InitializeStrings() {
 		compiler.evaluate("String := object basicNew");
@@ -190,7 +190,8 @@
 		context.get('List').set('do:', CreateMethod(
 			'do:',"(function (aBlock) {var s =context.lookup('self').get(); for(var i=0;i<s.length;i++){ aBlock.receive('valueWithArguments:')(model.createList([s.get(i)]));} return s; })",context));
 		compiler.evaluate(" List addMethod:[select: aBlock | |temp|  temp := {}.  self do:[:each | temp push:( aBlock valueWithArguments: {each})]]");
-	}
+		compiler.evaluate("List addMethod: [toString || str index | str := '{'. index := 0. self do: [:each | index = 0 ifFalse: [str += ' . ']. str += each toString. index := index + 1]. str += '}'. str]");
+  	}
 	
 	function InitializeOthers() {		 
 		compiler.evaluate("true := ((object basicNew addMethod:[ifTrue:aBlock| aBlock value]) addMethod:[ifFalse:aBlock| ]) addMethod:[ifTrue: aBlock ifFalse: anotherBlock| aBlock value]");

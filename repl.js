@@ -82,8 +82,10 @@ var REPL = (function () {
 	}
 
 	function show(expr, result) {
-		evalList.push(expr);
-		evalIndex = evalList.length;
+		if (expr.length > 0) {
+			evalList.push(expr);
+			evalIndex = evalList.length;
+		}
 		
 		var p = document.createElement("p");
 		split(expr).forEach(function (line, index) {				

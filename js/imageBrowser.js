@@ -212,7 +212,7 @@
 	function renameFile(fileId)
 	{
 		gapi.client.drive.files.get({'fileId':fileId}).execute(function (res){
-			$("#renameBox").text=res.title;
+			$("#renameBox").val(res.title);
 			$('#renameModal').modal('toggle');	
 		});
 	}

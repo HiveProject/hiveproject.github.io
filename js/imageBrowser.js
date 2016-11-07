@@ -213,13 +213,20 @@
 	{
 		gapi.client.drive.files.get({'fileId':fileId}).execute(function (res){
 			$("#renameBox").val(res.title);
+			$("#renameId").val(fileId);
 			$('#renameModal').modal('toggle');	
 		});
 	}
 	function doRename(modal)
 	{
+		$('#renameModal').modal('toggle');	
+		showLoading();
 		
-		
+		var body = {'title': $("#renameBox").val()};
+		gapi.client.drive.files.patch({
+			'fileId': $("#renameId").val(),
+			'resource': body
+			}).execute(updateState); 		
 	}
 	/*
 	*Gets the total realtime bytes used for the given file

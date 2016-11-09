@@ -167,7 +167,7 @@
 			'length',"(function () {return (context.lookup('self').get().length);})",context)); 
 		//toList
 		context.get('String').set('toList', CreateMethod(
-			'toList',"(function () {return (model.createList(context.lookup('self').get().text));})",context)); 			
+			'toList',"(function () {return (model.createList(context.lookup('self').get().text.split('').map(e=>CreateString(e)));})",context)); 			
 	}
 	
 	function InitializeLists() {

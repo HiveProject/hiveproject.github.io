@@ -99,12 +99,12 @@
 		 
 		model.getRoot().set('context',context);
 		
-		context.set('Object', model.createMap());
+		context.set('object', model.createMap());
 	 
-		context.get('Object').set('basicNew', CreateMethod(
+		context.get('object').set('basicNew', CreateMethod(
 			'basicNew',"(function () { var self = model.createMap();context.set('self',self); initObject(self,context);return self;})",context));
 		
-		compiler.evaluate("null := (Object basicNew addMethod:[isNull| true]) addMethod:[toString|'null']")
+		compiler.evaluate("null := (object basicNew addMethod:[isNull| true]) addMethod:[toString|'null']")
 		InitializeNumbers();
 		InitializeStrings();
 		InitializeLists();
@@ -115,14 +115,14 @@
 		obj.set('addMethod:',CreateMethod(
 			'addMethod:',"(function(b){context.lookup('self').get().set(b.get('selector'),b); return context.lookup('self').get();})",context));
 		obj.set('toString',CreateMethod('toString',"(function(){ return CreateString('An Object');})",context));
-		obj.set('equals:',CreateMethod(
-			'equals:',"(function(other){if(context.lookup('self').get()==other){return context.lookup('true').get();}else{return context.lookup('false').get();}})",context));
+		obj.set('Equals:',CreateMethod(
+			'Equals:',"(function(other){if(context.lookup('self').get()==other){return context.lookup('true').get();}else{return context.lookup('false').get();}})",context));
 		
 		obj.set('isNull',CreateMethod('isNull',"(function(){ return context.lookup('false').get();})",context));		
 	}
 	
 	function InitializeNumbers() {
-		compiler.evaluate("Number := Object basicNew");
+		compiler.evaluate("Number := object basicNew");
 		
 		compiler.evaluate("Number addMethod:[value | self]");
 		context.get('Number').set('+', CreateMethod(
@@ -144,34 +144,34 @@
 		context.get('Number').set('<', CreateMethod(
 			'<',"(function (b) {if(context.lookup('self').get() < b){return context.lookup('true').get();}else{return context.lookup('false').get();}})",context));
 		
-		compiler.evaluate("Number addMethod:[>= b | (self < b) not ]");
+		compiler.evaluate("Number addMethod:[>= b | (self < b) Not ]");
 		
-		compiler.evaluate("Number addMethod:[<= b | (self > b) not ]");
-		compiler.evaluate("Number addMethod:[=b | self equals:b]");
+		compiler.evaluate("Number addMethod:[<= b | (self > b) Not ]");
+		compiler.evaluate("Number addMethod:[=b | self Equals:b]");
 		context.get('Number').set('toString',CreateMethod('toString',"(function(){ var self = context.lookup('self').get(); return CreateString(self ? self.toString() : 'Number');})",context));
   	}
 	
 	function InitializeStrings() {
-		compiler.evaluate("String := Object basicNew");
+		compiler.evaluate("String := object basicNew");
 		compiler.evaluate("String addMethod:[toString | self]");
 		compiler.evaluate("String addMethod:[value | self]");
 		
 		//concat
 		context.get('String').set('+', CreateMethod(
 			'+',"(function (b) {return (model.createString(context.lookup('self').get().toString() + b.receive('toString')().text));})",context));  
-		//append:
-		context.get('String').set('append:', CreateMethod(
-			'append:',"(function (b) {context.lookup('self').get().append:(b.receive('toString')().text);return (context.lookup('self').get());})",context)); 
+		//append
+		context.get('String').set('+=', CreateMethod(
+			'+=',"(function (b) {context.lookup('self').get().append(b.receive('toString')().text);return (context.lookup('self').get());})",context)); 
 		//length
-		context.get('String').set('size', CreateMethod(
-			'size',"(function () {return (context.lookup('self').get().length);})",context)); 
+		context.get('String').set('length', CreateMethod(
+			'length',"(function () {return (context.lookup('self').get().length);})",context)); 
 		//toList
 		context.get('String').set('toList', CreateMethod(
 			'toList',"(function () {return (model.createList(context.lookup('self').get().text));})",context)); 			
 	}
 	
 	function InitializeLists() {
-		compiler.evaluate("List := Object basicNew");
+		compiler.evaluate("List := object basicNew");
 	
 		context.get('List').set('at:', CreateMethod(
 			'at:',"(function (index) {var s=context.lookup('self').get(); if(index>=s.length){return context.lookup('null').get();} return s.get(index); })",context));
@@ -190,17 +190,17 @@
 		context.get('List').set('do:', CreateMethod(
 			'do:',"(function (aBlock) {var s =context.lookup('self').get(); for(var i=0;i<s.length;i++){ aBlock.receive('valueWithArguments:')(model.createList([s.get(i)]));} return s; })",context));
 		compiler.evaluate(" List addMethod:[select: aBlock | |temp|  temp := {}.  self do:[:each | temp push:( aBlock valueWithArguments: {each})]]");
-		compiler.evaluate("List addMethod: [toString || str index | str := '{'. index := 0. self do: [:each | index = 0 ifFalse: [str append: ' . ']. str append: each toString. index := index + 1]. str append: '}'. str]");
+		compiler.evaluate("List addMethod: [toString || str index | str := '{'. index := 0. self do: [:each | index = 0 ifFalse: [str += ' . ']. str += each toString. index := index + 1]. str += '}'. str]");
   	}
 	
 	function InitializeOthers() {		 
-		compiler.evaluate("true := ((Object basicNew addMethod:[ifTrue:aBlock| aBlock value]) addMethod:[ifFalse:aBlock| ]) addMethod:[ifTrue: aBlock ifFalse: anotherBlock| aBlock value]");
+		compiler.evaluate("true := ((object basicNew addMethod:[ifTrue:aBlock| aBlock value]) addMethod:[ifFalse:aBlock| ]) addMethod:[ifTrue: aBlock ifFalse: anotherBlock| aBlock value]");
 		compiler.evaluate("true addMethod:[toString|'true']. true addMethod:[value|true]");
-		compiler.evaluate("false := ((Object basicNew addMethod:[ifTrue:aBlock| ]) addMethod:[ifFalse:aBlock| aBlock value]) addMethod:[ifTrue: aBlock ifFalse: anotherBlock| anotherBlock value]");
+		compiler.evaluate("false := ((object basicNew addMethod:[ifTrue:aBlock| ]) addMethod:[ifFalse:aBlock| aBlock value]) addMethod:[ifTrue: aBlock ifFalse: anotherBlock| anotherBlock value]");
 		compiler.evaluate("false addMethod:[toString|'false']. false addMethod:[value|false]")
 		
 		//logical operators
-		compiler.evaluate("true addMethod:[not| false]. true addMethod:[and: other| other value]. true addMethod:[or: other| true].");
-		compiler.evaluate("false addMethod:[not| true]. false addMethod:[and: other| false]. false addMethod:[or: other| other value].");		
+		compiler.evaluate("true addMethod:[Not| false]. true addMethod:[And: other| other value]. true addMethod:[Or: other| true].");
+		compiler.evaluate("false addMethod:[Not| true]. false addMethod:[And: other| false]. false addMethod:[Or: other| other value].");		
 	}
 		

@@ -144,9 +144,9 @@
 		context.get('Number').set('<', CreateMethod(
 			'<',"(function (b) {if(context.lookup('self').get() < b){return context.lookup('true').get();}else{return context.lookup('false').get();}})",context));
 		
-		compiler.evaluate("Number addMethod:[>= b | (self < b) Not ]");
+		compiler.evaluate("Number addMethod:[>= b | (self < b) not ]");
 		
-		compiler.evaluate("Number addMethod:[<= b | (self > b) Not ]");
+		compiler.evaluate("Number addMethod:[<= b | (self > b) not ]");
 		compiler.evaluate("Number addMethod:[=b | self Equals:b]");
 		context.get('Number').set('toString',CreateMethod('toString',"(function(){ var self = context.lookup('self').get(); return CreateString(self ? self.toString() : 'Number');})",context));
   	}
@@ -200,7 +200,7 @@
 		compiler.evaluate("false addMethod:[toString|'false']. false addMethod:[value|false]")
 		
 		//logical operators
-		compiler.evaluate("true addMethod:[Not| false]. true addMethod:[And: other| other value]. true addMethod:[Or: other| true].");
-		compiler.evaluate("false addMethod:[Not| true]. false addMethod:[And: other| false]. false addMethod:[Or: other| other value].");		
+		compiler.evaluate("true addMethod:[not| false]. true addMethod:[and: other| other value]. true addMethod:[or: other| true].");
+		compiler.evaluate("false addMethod:[not| true]. false addMethod:[and: other| false]. false addMethod:[or: other| other value].");		
 	}
 		

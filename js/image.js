@@ -160,8 +160,8 @@
 		context.get('String').set('+', CreateMethod(
 			'+',"(function (b) {return (model.createString(context.lookup('self').get().toString() + b.receive('toString')().text));})",context));  
 		//append
-		context.get('String').set('+=', CreateMethod(
-			'+=',"(function (b) {context.lookup('self').get().append(b.receive('toString')().text);return (context.lookup('self').get());})",context)); 
+		context.get('String').set('append:', CreateMethod(
+			'append:',"(function (b) {context.lookup('self').get().append(b.receive('toString')().text);return (context.lookup('self').get());})",context)); 
 		//length
 		context.get('String').set('length', CreateMethod(
 			'length',"(function () {return (context.lookup('self').get().length);})",context)); 
@@ -190,7 +190,7 @@
 		context.get('List').set('do:', CreateMethod(
 			'do:',"(function (aBlock) {var s =context.lookup('self').get(); for(var i=0;i<s.length;i++){ aBlock.receive('valueWithArguments:')(model.createList([s.get(i)]));} return s; })",context));
 		compiler.evaluate(" List addMethod:[select: aBlock | |temp|  temp := {}.  self do:[:each | temp push:( aBlock valueWithArguments: {each})]]");
-		compiler.evaluate("List addMethod: [toString || str index | str := '{'. index := 0. self do: [:each | index = 0 ifFalse: [str += ' . ']. str += each toString. index := index + 1]. str += '}'. str]");
+		compiler.evaluate("List addMethod: [toString || str index | str := '{'. index := 0. self do: [:each | index = 0 ifFalse: [str append: ' . ']. str append: each toString. index := index + 1]. str append: '}'. str]");
   	}
 	
 	function InitializeOthers() {		 

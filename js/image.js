@@ -162,9 +162,9 @@
 		//append
 		context.get('String').set('append:', CreateMethod(
 			'append:',"(function (b) {context.lookup('self').get().append(b.receive('toString')().text);return (context.lookup('self').get());})",context)); 
-		//length
-		context.get('String').set('length', CreateMethod(
-			'length',"(function () {return (context.lookup('self').get().length);})",context)); 
+		//size
+		context.get('String').set('size', CreateMethod(
+			'size',"(function () {return (context.lookup('self').get().length);})",context)); 
 		//toList
 		context.get('String').set('toList', CreateMethod(
 			'toList',"(function () {return (model.createList(context.lookup('self').get().text.split('').map(e=>CreateString(e))));})",context)); 			

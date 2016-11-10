@@ -148,7 +148,7 @@
 		
 		compiler.evaluate("Number addMethod:[<= b | (self > b) not ]");
 		compiler.evaluate("Number addMethod:[=b | self Equals:b]");
-		context.get('Number').set('toString',CreateMethod('toString',"(function(){ var self = context.lookup('self').get(); return CreateString(self ? self.toString() : 'Number');})",context));
+		context.get('Number').set('toString',CreateMethod('toString',"(function(){ var self = context.lookup('self').get(); return CreateString((self!=null) ? self.toString() : 'Number');})",context));
   	}
 	
 	function InitializeStrings() {

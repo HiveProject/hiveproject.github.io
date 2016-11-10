@@ -189,7 +189,7 @@
 		
 		context.get('List').set('do:', CreateMethod(
 			'do:',"(function (aBlock) {var s =context.lookup('self').get(); for(var i=0;i<s.length;i++){ aBlock.receive('valueWithArguments:')(model.createList([s.get(i)]));} return s; })",context));
-		compiler.evaluate("List addMethod:[select: aBlock | |temp|  temp := {}.  self do:[:each | temp push:( aBlock valueWithArguments: {each})]. temp]");
+		compiler.evaluate("List addMethod:[collect: aBlock | |temp|  temp := {}.  self do:[:each | temp push:( aBlock valueWithArguments: {each})]. temp]");
 		compiler.evaluate("List addMethod: [toString || str index | str := '{'. index := 0. self do: [:each | index = 0 ifFalse: [str append: ' . ']. str append: each toString. index := index + 1]. str append: '}'. str]");
   	}
 	

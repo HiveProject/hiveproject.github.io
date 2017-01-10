@@ -4,7 +4,17 @@
 <script src="https://www.gstatic.com/firebasejs/3.6.2/firebase.js"></script>
 <script src="https://www.gstatic.com/firebasejs/3.6.2/firebase-app.js"></script>
 <script src="https://www.gstatic.com/firebasejs/3.6.2/firebase-database.js"></script>
+<script src="watch.js" type="text/javascript"></script>
 <script>
+
+Map.prototype.getKey=function(inputValue)
+{
+	for (var [key, value] of this) { 
+		if(value==inputValue) return key
+	}
+	return undefined;
+}
+
   // Set the configuration for your app
   // TODO: Replace with your project's config object
   var config = {
@@ -18,11 +28,27 @@
   // Get a reference to the database service
   var database = firebase.database();
   var loadedObjects= new Map();
+  function Remove(obj)
+  {
+	if(loadedObjects.has(obj))
+	{ 
+		database.ref('test/' +loadedObjects.getKey(obj)).set(null);
+	}
+  }
   function Add(obj){
 	if(loadedObjects.has(obj))
 	{
 		return loadedObjects.get(obj);
 	}
+	//watching.
+	
+	watch(obj,
+	function(fieldName,operation,newValue,oldValue){
+		 if(newValue!=oldValue){
+			WatchJS.noMore = true; 
+		 	UpdateField(this,fieldName);
+		 }
+	});
 	var key= database.ref("test").push().key; 
 	loadedObjects.set(obj,key);
 	var data = {};
@@ -32,6 +58,7 @@
 				type:obj[k].constructor.name 
 			};
 			if(data[k].type=="Object"){
+			
 				data[k].value=	Add(obj[k]);
 			}else if(data[k]!="Function"){
 				data[k].value=obj[k];
@@ -66,6 +93,7 @@ function childAdded(dataSnapshot)
 }
 function childRemoved(oldDataSnapshot)
 {
+	unwatch(loadedObjects.get(oldDataSnapshot.key));
 	loadedObjects.delete(oldDataSnapshot.key);
 }
 function childChanged(dataSnapshot)
@@ -86,6 +114,26 @@ function childChanged(dataSnapshot)
 				{obj[k]=received[k].value;}
 			}
 		} 
+	}
+}
+
+function UpdateField(obj,fieldName)
+{
+	var upd={};
+	var id = loadedObjects.getKey(obj);
+	if(id)
+	{		
+		var basePath = "/"+id+"/"+fieldName+"/"; 
+		var type = obj[fieldName].constructor.name;
+		
+		upd[basePath+"type"]=type;
+		if(type=="Object")
+		{
+			upd[basePath+"value"]=Add(obj[fieldName]);
+		}else{
+			upd[basePath+"value"]=obj[fieldName]; 
+		}
+		database.ref("test").update(upd);
 	}
 }
 database.ref("test").on("child_added",childAdded);

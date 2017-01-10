@@ -23,7 +23,8 @@
 	{
 		return loadedObjects.get(obj);
 	}
-	var key= database.ref("test").push().key;
+	var key= database.ref("test").push().key; 
+	loadedObjects.set(obj,key);
 	var data = {};
 	for (var k in obj) {
 		if(obj[k]!=null){
@@ -40,10 +41,39 @@
 		}
     }
 	database.ref("test/"+key ).set(data);
-	loadedObjects.set(obj,key);
 	return key;	
 }
+function childAdded(dataSnapshot)
+{
+	if(!loadedObjects.has(dataSnapshot.key))
+	{
+		var obj = {};
+		var received=dataSnapshot.val();
+		for (var k in received) {
+			if(received[k]!=null){
+				if(received[k].type=="Object")
+				{ 
+					//if the object is not in my cache, i might have some sync issues here.
+					obj[k]=loadedObjects.get(received[k].value);
+				}else{
+					//let's say this is a literal for now.
+					obj[k]=received[k].value;
+				}
+			} 
+		}
+		loadedObjects.set(dataSnapshot.key,obj);
+	}
+}
+function childRemoved(oldDataSnapshot)
+{
+	loadedObjects.delete(oldDataSnapshot.key);
+}
+function childChanged(dataSnapshot)
+{
 
-
+}
+database.ref("test").on("child_added",childAdded);
+database.ref("test").on("child_removed",childRemoved);
+database.ref("test").on("child_changed",childChanged);
 </script>
 </body></html>

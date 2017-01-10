@@ -90,6 +90,13 @@ function childAdded(dataSnapshot)
 			} 
 		}
 		loadedObjects.set(dataSnapshot.key,obj);
+			watch(obj,
+				function(fieldName,operation,newValue,oldValue){
+					if(newValue!=oldValue){
+						WatchJS.noMore = true; 
+						UpdateField(this,fieldName);
+					}
+				});
 	}
 }
 function childRemoved(oldDataSnapshot)

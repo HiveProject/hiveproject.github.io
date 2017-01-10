@@ -37,15 +37,15 @@ Map.prototype.getKey=function(inputValue)
 	}
   }
   function Add(obj){
-	if(loadedObjects.has(obj))
-	{
-		return loadedObjects.get(obj);
-	}
+	var id = loadedObjects.getKey(obj);
+	if(id){
+		return id;
+	} 
 	//watching.
 	
 	enableWatch(obj);
 	var key= database.ref("test").push().key; 
-	loadedObjects.set(obj,key);
+	loadedObjects.set(key,obj);
 	var data = {};
 	for (var k in obj) {
 		if(obj[k]!=null){

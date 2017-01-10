@@ -76,7 +76,10 @@ function childAdded(dataSnapshot)
 				if(received[k].type=="Object")
 				{ 
 					//if the object is not in my cache, i might have some sync issues here.
-					obj[k]=loadedObjects.get(received[k].value);
+					var  other =loadedObjects.get(received[k].value); 
+					if(!other)
+						{debugger;}
+					obj[k]=other;
 				}else{
 					//let's say this is a literal for now.
 					obj[k]=received[k].value;
@@ -112,6 +115,8 @@ function childChanged(dataSnapshot)
 			{ 
 				//if the object is not in my cache, i might have some sync issues here.
 				var other = loadedObjects.get(received[k].value);
+				if(!other)
+				{debugger;}
 				if(obj[k]!=other)
 				{obj[k]=other;}
 			}else{

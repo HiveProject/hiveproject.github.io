@@ -112,7 +112,7 @@ function childChanged(dataSnapshot)
 			{ 
 				//if the object is not in my cache, i might have some sync issues here.
 				var other = loadedObjects.get(received[k].value);
-				if(obj[k]!=other);
+				if(obj[k]!=other)
 				{obj[k]=other;}
 			}else{
 				//let's say this is a literal for now.

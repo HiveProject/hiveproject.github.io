@@ -93,7 +93,6 @@ function enableWatch(obj)
 	watch(obj,
 	function(fieldName,operation,newValue,oldValue){
 		if(newValue!=oldValue){
-			WatchJS.noMore = true; 
 			UpdateField(this,fieldName);
 		}
 	});
@@ -119,9 +118,9 @@ function childChanged(dataSnapshot)
 				//let's say this is a literal for now.
 				if(obj[k]!=received[k].value)
 				{
-					unwatch(obj);
+				//	unwatch(obj);
 					obj[k]=received[k].value;
-					enableWatch(obj);
+				//	enableWatch(obj);
 				}
 			}
 		} 

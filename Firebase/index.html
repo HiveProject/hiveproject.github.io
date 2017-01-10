@@ -70,7 +70,23 @@ function childRemoved(oldDataSnapshot)
 }
 function childChanged(dataSnapshot)
 {
-debugger;
+	var obj = loadedObjects.get(dataSnapshot.key);
+	var received=dataSnapshot.val();
+	for (var k in received) {
+		if(received[k]!=null){
+			if(received[k].type=="Object")
+			{ 
+				//if the object is not in my cache, i might have some sync issues here.
+				var other = loadedObjects.get(received[k].value);
+				if(obj[k]!=other);
+				{obj[k]=other;}
+			}else{
+				//let's say this is a literal for now.
+				if(obj[k]!=received[k].value);
+				{obj[k]=received[k].value;}
+			}
+		} 
+	}
 }
 database.ref("test").on("child_added",childAdded);
 database.ref("test").on("child_removed",childRemoved);

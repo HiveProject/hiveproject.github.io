@@ -17,5 +17,33 @@
 
   // Get a reference to the database service
   var database = firebase.database();
+  var loadedObjects= new Map();
+  function Add(obj){
+	if(loadedObjects.has(obj))
+	{
+		return loadedObjects.get(obj);
+	}
+	var key= database.ref("test").push().key;
+	var data = {};
+	for (var k in obj) {
+		if(obj[k]!=null){
+			data[k] = {
+				type:obj[k].constructor.name 
+			};
+			if(data[k].type=="Object"){
+				data[k].value=	Add(obj[k]);
+			}else if(data[k]!="Function"){
+				data[k].value=obj[k];
+			}else{
+				
+			}
+		}
+    }
+	database.ref("test/"+key ).set(data);
+	loadedObjects.set(obj,key);
+	return key;	
+}
+
+
 </script>
 </body></html>

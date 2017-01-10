@@ -43,13 +43,7 @@ Map.prototype.getKey=function(inputValue)
 	}
 	//watching.
 	
-	watch(obj,
-	function(fieldName,operation,newValue,oldValue){
-		 if(newValue!=oldValue){
-			WatchJS.noMore = true; 
-		 	UpdateField(this,fieldName);
-		 }
-	});
+	enableWatch(obj);
 	var key= database.ref("test").push().key; 
 	loadedObjects.set(obj,key);
 	var data = {};
@@ -90,14 +84,19 @@ function childAdded(dataSnapshot)
 			} 
 		}
 		loadedObjects.set(dataSnapshot.key,obj);
-			watch(obj,
-				function(fieldName,operation,newValue,oldValue){
-					if(newValue!=oldValue){
-						WatchJS.noMore = true; 
-						UpdateField(this,fieldName);
-					}
-				});
+		enableWatch(obj);
 	}
+}
+
+function enableWatch(obj)
+{
+	watch(obj,
+	function(fieldName,operation,newValue,oldValue){
+		if(newValue!=oldValue){
+			WatchJS.noMore = true; 
+			UpdateField(this,fieldName);
+		}
+	});
 }
 function childRemoved(oldDataSnapshot)
 {
@@ -118,8 +117,12 @@ function childChanged(dataSnapshot)
 				{obj[k]=other;}
 			}else{
 				//let's say this is a literal for now.
-				if(obj[k]!=received[k].value);
-				{obj[k]=received[k].value;}
+				if(obj[k]!=received[k].value)
+				{
+					unwatch(obj);
+					obj[k]=received[k].value;
+					enableWatch(obj);
+				}
 			}
 		} 
 	}

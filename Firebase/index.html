@@ -30,9 +30,10 @@ Map.prototype.getKey=function(inputValue)
   var loadedObjects= new Map();
   function Remove(obj)
   {
-	if(loadedObjects.has(obj))
+	var id= loadedObjects.getKey(obj);
+	if(id)
 	{ 
-		database.ref('test/' +loadedObjects.getKey(obj)).set(null);
+		database.ref('test/' +id).set(null);
 	}
   }
   function Add(obj){

@@ -75,12 +75,12 @@ var hive = (function () {
 	module.elements=function()
 	{
 		var result=[];
-		loadedObjects.foreach(function(item){result.push(item);})
+		loadedObjects.forEach(function(item){result.push(item);})
 		return result;
 	}
-	module.foreach=function(callback)
+	module.forEach=function(callback)
 	{
-		loadedObjects.foreach(function (item,key){callback(key,item);});
+		loadedObjects.forEach(function (item,key){callback(key,item);});
 		return module;
 	}
 //internal stuff

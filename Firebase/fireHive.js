@@ -62,7 +62,7 @@ var hive = (function () {
 				};
 				if (data[k].type == "Object") {
 
-					data[k].value = Add(obj[k]);
+					data[k].value = module.add(obj[k]);
 				} else if (data[k] != "Function") {
 					data[k].value = obj[k];
 				} else {}
@@ -112,13 +112,13 @@ var hive = (function () {
 		watch(obj,
 			function (fieldName, operation, newValue, oldValue) {
 			if (newValue != oldValue) {
-				UpdateField(this, fieldName);
+				updateField(this, fieldName);
 			}
 		});
 	}
 	function childRemoved(oldDataSnapshot) {
 		unwatch(loadedObjects.get(oldDataSnapshot.key));
-		loadedObjects.delete (oldDataSnapshot.key);
+		loadedObjects.delete(oldDataSnapshot.key);
 	}
 	function childChanged(dataSnapshot) {
 		var obj = loadedObjects.get(dataSnapshot.key);
@@ -146,7 +146,7 @@ var hive = (function () {
 		}
 	}
 
-	function UpdateField(obj, fieldName) {
+	function updateField(obj, fieldName) {
 		var upd = {};
 		var id = loadedObjects.getKey(obj);
 		if (id) {

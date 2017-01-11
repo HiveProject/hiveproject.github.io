@@ -121,7 +121,7 @@ var hive = (function () {
 	{
 		//to use.
 		var toExecute = missingReferences.filter(function(item){return item.key==key;});
-		missingReferences=missingReferences.fieldName(function(item){return item.key!=key;});
+		missingReferences=missingReferences.filter(function(item){return item.key!=key;});
 		toExecute.forEach(function (item){
 			item.action(obj);
 		}); 
@@ -178,7 +178,7 @@ var hive = (function () {
 
 			upd[basePath + "type"] = type;
 			if (type == "Object") {
-				upd[basePath + "value"] = Add(obj[fieldName]);
+				upd[basePath + "value"] = module.add(obj[fieldName]);
 			} else {
 				upd[basePath + "value"] = obj[fieldName];
 			}

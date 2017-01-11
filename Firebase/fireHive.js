@@ -83,7 +83,9 @@ var hive = (function () {
 		loadedObjects.forEach(function (item,key){callback(key,item);});
 		return module;
 	}
-//internal stuff
+	//internal stuff
+	//this is to hold the unloaded childs.
+	var missingReferences=[]
 	function childAdded(dataSnapshot) {
 		if (!loadedObjects.has(dataSnapshot.key)) {
 			var obj = {};
@@ -94,7 +96,14 @@ var hive = (function () {
 						//if the object is not in my cache, i might have some sync issues here.
 						var other = loadedObjects.get(received[k].value);
 						if (!other) {
-							debugger;
+							//i am suposed to have a reference to an object that i do not have yet.
+							//this is either because i got a dangling pointer  of some sorts, or because the object is about to arrive.
+							missingReferences.push({
+								key:received[k].value,
+								action:function(child){
+									obj[k] = child; 
+								} 
+							});
 						}
 						obj[k] = other;
 					} else {
@@ -105,9 +114,18 @@ var hive = (function () {
 			}
 			loadedObjects.set(dataSnapshot.key, obj);
 			enableWatch(obj);
+			checkForRefrences(dataSnapshot.key, obj);
 		}
 	}
-
+	function checkForRefrences(key,obj)
+	{
+		//to use.
+		var toExecute = missingReferences.filter(function(item){return item.key==key;});
+		missingReferences=missingReferences.fieldName(function(item){return item.key!=key;});
+		toExecute.forEach(item){
+			item.action(obj);
+		} 
+	}
 	function enableWatch(obj) {
 		watch(obj,
 			function (fieldName, operation, newValue, oldValue) {
@@ -129,7 +147,12 @@ var hive = (function () {
 					//if the object is not in my cache, i might have some sync issues here.
 					var other = loadedObjects.get(received[k].value);
 					if (!other) {
-						debugger;
+						missingReferences.push({
+								key:received[k].value,
+								action:function(child){
+									obj[k] = child; 
+								} 
+							});
 					}
 					if (obj[k] != other) {
 						obj[k] = other;

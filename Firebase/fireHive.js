@@ -30,9 +30,12 @@ var hive = (function () {
 		loadedObjects.clear();
 		firebase.initializeApp(module.config);
 		database = firebase.database();
+		database.ref("test").on("child_added", childAdded);
+		database.ref("test").on("child_removed", childRemoved);
+		database.ref("test").on("child_changed", childChanged);
 		return module;
 	}
-
+	
 	module.remove = function (obj) {
 		var id = loadedObjects.getKey(obj);
 		if (id) {
@@ -159,8 +162,6 @@ var hive = (function () {
 			database.ref("test").update(upd);
 		}
 	}
-	database.ref("test").on("child_added", childAdded);
-	database.ref("test").on("child_removed", childRemoved);
-	database.ref("test").on("child_changed", childChanged);
+	
 	return module;
 }().start());

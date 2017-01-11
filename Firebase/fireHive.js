@@ -122,9 +122,9 @@ var hive = (function () {
 		//to use.
 		var toExecute = missingReferences.filter(function(item){return item.key==key;});
 		missingReferences=missingReferences.fieldName(function(item){return item.key!=key;});
-		toExecute.forEach(item){
+		toExecute.forEach(function (item){
 			item.action(obj);
-		} 
+		}); 
 	}
 	function enableWatch(obj) {
 		watch(obj,

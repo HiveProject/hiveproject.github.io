@@ -2,7 +2,7 @@ var hive = (function () {
 	if (!firebase) {
 		//firebase should be included.
 		debugger;
-	}	
+	}
 	if (!watch) {
 		//firebase should be included.
 		debugger;
@@ -16,11 +16,11 @@ var hive = (function () {
 		return undefined;
 	}
 	var module = {
-		config : {
-			apiKey : " AIzaSyA-Y_mz58xgvGkQNK_tQCXQiG3q1mlA6hM",
-			authDomain : "hive-1336.firebaseapp.com",
-			databaseURL : "https://hive-1336.firebaseio.com/",
-			storageBucket : "hive-1336.appspot.com"
+		config: {
+			apiKey: " AIzaSyA-Y_mz58xgvGkQNK_tQCXQiG3q1mlA6hM",
+			authDomain: "hive-1336.firebaseapp.com",
+			databaseURL: "https://hive-1336.firebaseio.com/",
+			storageBucket: "hive-1336.appspot.com"
 		}
 	};
 	var database = null;
@@ -35,7 +35,7 @@ var hive = (function () {
 		database.ref("test").on("child_changed", childChanged);
 		return module;
 	}
-	
+
 	module.remove = function (obj) {
 		var id = loadedObjects.getKey(obj);
 		if (id) {
@@ -55,7 +55,7 @@ var hive = (function () {
 		for (var k in obj) {
 			if (obj[k] != null) {
 				data[k] = {
-					type : obj[k].constructor.name
+					type: obj[k].constructor.name
 				};
 				if (data[k].type == "Object") {
 
@@ -65,39 +65,41 @@ var hive = (function () {
 				} else {
 					//to do.
 					debugger;
-					
+
 				}
 			}
 		}
 		//watching.
 
-		try	{
-			enableWatch(obj);			
+		try {
+			enableWatch(obj);
 			database.ref("test/" + key).set(data);
-		}catch(err){
+		} catch (err) {
 			//on error i have to remove it from the local cache.
 			unwatch(obj);
-			loadedObjects.delete(key); 
-			throw(err);
+			loadedObjects.delete (key);
+			throw (err);
 		}
-		
+
 		return key;
 	}
 
-	module.elements=function()
-	{
-		var result=[];
-		loadedObjects.forEach(function(item){result.push(item);})
+	module.elements = function () {
+		var result = [];
+		loadedObjects.forEach(function (item) {
+			result.push(item);
+		})
 		return result;
 	}
-	module.forEach=function(callback)
-	{
-		loadedObjects.forEach(function (item,key){callback(key,item);});
+	module.forEach = function (callback) {
+		loadedObjects.forEach(function (item, key) {
+			callback(key, item);
+		});
 		return module;
 	}
 	//internal stuff
 	//this is to hold the unloaded childs.
-	var missingReferences=[]
+	var missingReferences = [];
 	function childAdded(dataSnapshot) {
 		if (!loadedObjects.has(dataSnapshot.key)) {
 			var obj = {};
@@ -112,17 +114,17 @@ var hive = (function () {
 							//i am suposed to have a reference to an object that i do not have yet.
 							//this is either because i got a dangling pointer  of some sorts, or because the object is about to arrive.
 							missingReferences.push({
-								key:received[k].value,
-								action:function(child){
-									obj[k] = child; 
-								} 
+								key: received[k].value,
+								action: function (child) {
+									obj[k] = child;
+								}
 							});
 						}
 						obj[k] = other;
-					} else if(received[k].type == "Function"){
+					} else if (received[k].type == "Function") {
 						//you should not be here.
 						debugger;
-					}else{}
+					} else {
 						//let's say this is a literal for now.
 						obj[k] = received[k].value;
 					}
@@ -132,14 +134,17 @@ var hive = (function () {
 			checkForRefrences(dataSnapshot.key, obj);
 		}
 	}
-	function checkForRefrences(key,obj)
-	{
+	function checkForRefrences(key, obj) {
 		//to use.
-		var toExecute = missingReferences.filter(function(item){return item.key==key;});
-		missingReferences=missingReferences.filter(function(item){return item.key!=key;});
-		toExecute.forEach(function (item){
+		var toExecute = missingReferences.filter(function (item) {
+				return item.key == key;
+			});
+		missingReferences = missingReferences.filter(function (item) {
+				return item.key != key;
+			});
+		toExecute.forEach(function (item) {
 			item.action(obj);
-		}); 
+		});
 	}
 	function enableWatch(obj) {
 		watch(obj,
@@ -147,12 +152,12 @@ var hive = (function () {
 			if (newValue != oldValue) {
 				updateField(this, fieldName);
 			}
-		},0 //this is to prevent it to crawl the object. only attributes that are local to it will trigger the event
+		}, 0 //this is to prevent it to crawl the object. only attributes that are local to it will trigger the event
 		);
 	}
 	function childRemoved(oldDataSnapshot) {
 		unwatch(loadedObjects.get(oldDataSnapshot.key));
-		loadedObjects.delete(oldDataSnapshot.key);
+		loadedObjects.delete (oldDataSnapshot.key);
 	}
 	function childChanged(dataSnapshot) {
 		var obj = loadedObjects.get(dataSnapshot.key);
@@ -164,11 +169,11 @@ var hive = (function () {
 					var other = loadedObjects.get(received[k].value);
 					if (!other) {
 						missingReferences.push({
-								key:received[k].value,
-								action:function(child){
-									obj[k] = child; 
-								} 
-							});
+							key: received[k].value,
+							action: function (child) {
+								obj[k] = child;
+							}
+						});
 					}
 					if (obj[k] != other) {
 						obj[k] = other;
@@ -201,6 +206,7 @@ var hive = (function () {
 			database.ref("test").update(upd);
 		}
 	}
-	
+
 	return module;
-}().start());
+}
+	().start());

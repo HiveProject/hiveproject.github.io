@@ -49,9 +49,6 @@ var hive = (function () {
 		if (id) {
 			return id;
 		}
-		//watching.
-
-		enableWatch(obj);
 		var key = database.ref("test").push().key;
 		loadedObjects.set(key, obj);
 		var data = {};
@@ -68,6 +65,9 @@ var hive = (function () {
 				} else {}
 			}
 		}
+		//watching.
+
+		enableWatch(obj);
 		database.ref("test/" + key).set(data);
 		return key;
 	}
@@ -90,6 +90,7 @@ var hive = (function () {
 		if (!loadedObjects.has(dataSnapshot.key)) {
 			var obj = {};
 			var received = dataSnapshot.val();
+			loadedObjects.set(dataSnapshot.key, obj);
 			for (var k in received) {
 				if (received[k] != null) {
 					if (received[k].type == "Object") {
@@ -112,7 +113,6 @@ var hive = (function () {
 					}
 				}
 			}
-			loadedObjects.set(dataSnapshot.key, obj);
 			enableWatch(obj);
 			checkForRefrences(dataSnapshot.key, obj);
 		}

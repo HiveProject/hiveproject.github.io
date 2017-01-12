@@ -132,7 +132,8 @@ var hive = (function () {
 			if (newValue != oldValue) {
 				updateField(this, fieldName);
 			}
-		});
+		},0 //this is to prevent it to crawl the object. only attributes that are local to it will trigger the event
+		);
 	}
 	function childRemoved(oldDataSnapshot) {
 		unwatch(loadedObjects.get(oldDataSnapshot.key));

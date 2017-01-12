@@ -60,15 +60,27 @@ var hive = (function () {
 				if (data[k].type == "Object") {
 
 					data[k].value = module.add(obj[k]);
-				} else if (data[k] != "Function") {
+				} else if (data[k].type != "Function") {
 					data[k].value = obj[k];
-				} else {}
+				} else {
+					//to do.
+					debugger;
+					
+				}
 			}
 		}
 		//watching.
 
-		enableWatch(obj);
-		database.ref("test/" + key).set(data);
+		try	{
+			enableWatch(obj);			
+			database.ref("test/" + key).set(data);
+		}catch(err){
+			//on error i have to remove it from the local cache.
+			unwatch(obj);
+			loadedObjects.delete(key); 
+			throw(err);
+		}
+		
 		return key;
 	}
 
@@ -107,7 +119,10 @@ var hive = (function () {
 							});
 						}
 						obj[k] = other;
-					} else {
+					} else if(received[k].type == "Function"){
+						//you should not be here.
+						debugger;
+					}else{}
 						//let's say this is a literal for now.
 						obj[k] = received[k].value;
 					}

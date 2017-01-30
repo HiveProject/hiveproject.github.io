@@ -46,7 +46,7 @@ var hive = (function () {
 		var id = loadedObjects.getKey(obj);
 		if (id) {
 			database.ref("roots/" + id).set(null);
-			//todo: GC
+			doGC();
 		} 
 	}
 	module.add =function(obj){
@@ -245,6 +245,49 @@ var hive = (function () {
 	function rootRemoved(oldDataSnapshot) {
 		roots=roots.filter(function (item){return item!=oldDataSnapshot.key}); 
 	} 
+	
+	
+	
+	//GC
+	function doGC(){
+		var touchedElements=[];
+		module.elements().forEach(function (obj){mark(obj,touchedElements);});
+		sweep(touchedElements);
+	};
+	function mark(obj,arr)
+	{
+		var type = obj[fieldName].constructor.name;
+		if (type == "Object") {
+			var id = loadedObjects.getKey(obj);
+			if (id) {
+				if(!arr.some(function(k){return k===id;})){
+					arr.push(id);
+					for (var k in obj) {
+						if (obj[k]) {
+							mark(obj[k],arr);
+						}
+					}
+				}
+			} 
+		} else if(type=="Array") {
+			debugger; //todo
+		}else{
+			//do nothing.
+		} 
+	};
+	function sweep(aliveObjects)
+	{	var upd = {};
+		//todo: optimize.
+		Array.from(loadedObjects.keys()).forEach(function(key){
+			if(aliveObjects.indexOf(key)!=-1){
+				upd["/"+key]=null;
+			}
+		});
+		database.ref("objects").update(upd);
+	};
+	//GC 
+	
+	
 	return module;
 }
 	().start());

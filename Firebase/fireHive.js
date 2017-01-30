@@ -30,16 +30,16 @@ var hive = (function () {
 		loadedObjects.clear();
 		firebase.initializeApp(module.config);
 		database = firebase.database();
-		database.ref("test").on("child_added", childAdded);
-		database.ref("test").on("child_removed", childRemoved);
-		database.ref("test").on("child_changed", childChanged);
+		database.ref("objects").on("child_added", childAdded);
+		database.ref("objects").on("child_removed", childRemoved);
+		database.ref("objects").on("child_changed", childChanged);
 		return module;
 	}
 	
 	module.remove = function (obj) {
 		var id = loadedObjects.getKey(obj);
 		if (id) {
-			database.ref('test/' + id).set(null);
+			database.ref('objects/' + id).set(null);
 			return id;
 		}
 		return null;
@@ -52,7 +52,7 @@ var hive = (function () {
 		//watching.
 
 		enableWatch(obj);
-		var key = database.ref("test").push().key;
+		var key = database.ref("objects").push().key;
 		loadedObjects.set(key, obj);
 		var data = {};
 		for (var k in obj) {
@@ -68,7 +68,7 @@ var hive = (function () {
 				} else {}
 			}
 		}
-		database.ref("test/" + key).set(data);
+		database.ref("objects/" + key).set(data);
 		return key;
 	}
 
@@ -182,7 +182,7 @@ var hive = (function () {
 			} else {
 				upd[basePath + "value"] = obj[fieldName];
 			}
-			database.ref("test").update(upd);
+			database.ref("objects").update(upd);
 		}
 	}
 	

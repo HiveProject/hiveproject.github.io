@@ -25,11 +25,17 @@ var hive = (function () {
 	};
 	var database = null;
 	var loadedObjects = new Map();
-
+	var roots = [];
+	
 	module.start = function () {
+		roots=[];
 		loadedObjects.clear();
 		firebase.initializeApp(module.config);
 		database = firebase.database();
+		
+		database.ref("roots").on("child_added", rootAdded);
+		database.ref("roots").on("child_removed", rootRemoved); 
+		
 		database.ref("objects").on("child_added", childAdded);
 		database.ref("objects").on("child_removed", childRemoved);
 		database.ref("objects").on("child_changed", childChanged);
@@ -39,12 +45,45 @@ var hive = (function () {
 	module.remove = function (obj) {
 		var id = loadedObjects.getKey(obj);
 		if (id) {
+			database.ref("roots/" + id).set(null);
+			//todo: GC
+		} 
+	}
+	module.add =function(obj){
+		var id = loadedObjects.getKey(obj);
+		if (!id) {
+			id=innerAdd(obj);
+		} 
+		database.ref("roots/" + id).set(1);
+	};
+	
+	module.elements=function()
+	{
+		var result=[];
+		roots.forEach(function(key){
+			result.push(loadedObjects[key]);
+		}); 
+		return result;
+	};
+	module.forEach=function(callback)
+	{
+		roots.forEach(function(key){
+			callback(key,loadedObjects[key]);
+		}); 
+		
+		return module;
+	};
+	//internal stuff
+	function innerRemove(obj)
+	{
+		var id = loadedObjects.getKey(obj);
+		if (id) {
 			database.ref('objects/' + id).set(null);
 			return id;
 		}
-		return null;
-	}
-	module.add = function (obj) {
+		return null;	
+	};
+	function innerAdd (obj) {
 		var id = loadedObjects.getKey(obj);
 		if (id) {
 			return id;
@@ -62,7 +101,7 @@ var hive = (function () {
 				};
 				if (data[k].type == "Object") {
 
-					data[k].value = module.add(obj[k]);
+					data[k].value = innerAdd(obj[k]);
 				} else if (data[k] != "Function") {
 					data[k].value = obj[k];
 				} else {}
@@ -70,22 +109,11 @@ var hive = (function () {
 		}
 		database.ref("objects/" + key).set(data);
 		return key;
-	}
+	};
 
-	module.elements=function()
-	{
-		var result=[];
-		loadedObjects.forEach(function(item){result.push(item);})
-		return result;
-	}
-	module.forEach=function(callback)
-	{
-		loadedObjects.forEach(function (item,key){callback(key,item);});
-		return module;
-	}
-	//internal stuff
+
 	//this is to hold the unloaded childs.
-	var missingReferences=[]
+	var missingReferences=[];
 	function childAdded(dataSnapshot) {
 		if (!loadedObjects.has(dataSnapshot.key)) {
 			var obj = {};
@@ -178,7 +206,7 @@ var hive = (function () {
 
 			upd[basePath + "type"] = type;
 			if (type == "Object") {
-				upd[basePath + "value"] = module.add(obj[fieldName]);
+				upd[basePath + "value"] = innerAdd(obj[fieldName]);
 			} else {
 				upd[basePath + "value"] = obj[fieldName];
 			}
@@ -186,5 +214,14 @@ var hive = (function () {
 		}
 	}
 	
+	function rootAdded(dataSnapshot){
+		if(!roots.find( function(item){return item==dataSnapshot.key;}))
+		{
+			roots.push(dataSnapshot.key)			
+		} 
+	}
+	function rootRemoved(oldDataSnapshot) {
+		roots=roots.filter(function (item){return item!=oldDataSnapshot.key}); 
+	} 
 	return module;
 }().start());

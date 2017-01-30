@@ -74,15 +74,6 @@ var hive = (function () {
 		return module;
 	};
 	//internal stuff
-	function innerRemove(obj)
-	{
-		var id = loadedObjects.getKey(obj);
-		if (id) {
-			database.ref('objects/' + id).set(null);
-			return id;
-		}
-		return null;	
-	};
 	function innerAdd (obj) {
 		var id = loadedObjects.getKey(obj);
 		if (id) {
@@ -279,8 +270,9 @@ var hive = (function () {
 	{	var upd = {};
 		//todo: optimize.
 		Array.from(loadedObjects.keys()).forEach(function(key){
-			if(aliveObjects.indexOf(key)!=-1){
+			if(aliveObjects.indexOf(key)==-1){
 				upd["/"+key]=null;
+				unwatch(loadedObjects.get(key));
 			}
 		});
 		database.ref("objects").update(upd);

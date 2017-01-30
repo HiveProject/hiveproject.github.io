@@ -61,14 +61,14 @@ var hive = (function () {
 	{
 		var result=[];
 		roots.forEach(function(key){
-			result.push(loadedObjects[key]);
+			result.push(loadedObjects.get(key));
 		}); 
 		return result;
 	};
 	module.forEach=function(callback)
 	{
 		roots.forEach(function(key){
-			callback(key,loadedObjects[key]);
+			callback(key,loadedObjects.get(key));
 		}); 
 		
 		return module;

@@ -247,7 +247,7 @@ var hive = (function () {
 	};
 	function mark(obj,arr)
 	{
-		var type = obj[fieldName].constructor.name;
+		var type = obj.constructor.name;
 		if (type == "Object") {
 			var id = loadedObjects.getKey(obj);
 			if (id) {

@@ -170,7 +170,7 @@ var hive = (function () {
 	function enableWatch(obj) {
 		watch(obj,
 			function (fieldName, operation, newValue, oldValue) {
-			if (newValue != oldValue) {
+			if (newValue.valueOf() != oldValue.valueOf()) {
 				updateField(this, fieldName);
 			}
 		}, 0 //this is to prevent it to crawl the object. only attributes that are local to it will trigger the event

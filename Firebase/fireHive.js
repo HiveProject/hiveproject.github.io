@@ -140,7 +140,9 @@ var hive = (function () {
 							});
 						}
 						obj[k] = other;
-					} else if (received[k].type == "Function") {
+					}  else if(received[k].type == "Date"){
+						obj[k]=new Date(JSON.parse(received[k].value));
+					}else if (received[k].type == "Function") {
 						//you should not be here.
 						debugger;
 					} else {

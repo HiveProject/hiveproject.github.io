@@ -252,13 +252,10 @@ var hive = (function () {
 	}
 	
 	function rootAdded(dataSnapshot){
-		if(!roots.find( function(item){return item==dataSnapshot.key;}))
-		{
-			roots.set(dataSnapshot.key,dataSnapshot.val());			
-		} 
+		 	roots.set(dataSnapshot.key,dataSnapshot.val());	 
 	}
 	function rootRemoved(oldDataSnapshot) {
-		roots=roots.filter(function (item){return item!=oldDataSnapshot.key}); 
+		roots.delete(oldDataSnapshot.key);
 	} 
 	
 	

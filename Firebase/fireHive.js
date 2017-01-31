@@ -126,6 +126,8 @@ var hive = (function () {
 			loadedObjects.set(dataSnapshot.key, obj);
 			for (var k in received) {
 				if (received[k] != null) {
+					if(!received[k].value)
+					{debugger;}
 					if (received[k].type == "Object") {
 						//if the object is not in my cache, i might have some sync issues here.
 						var other = loadedObjects.get(received[k].value);
@@ -185,6 +187,8 @@ var hive = (function () {
 		var received = dataSnapshot.val();
 		for (var k in received) {
 			if (received[k] != null) {
+				if(!received[k].value)
+				{debugger;}
 				if (received[k].type == "Object") {
 					//if the object is not in my cache, i might have some sync issues here.
 					var other = loadedObjects.get(received[k].value);

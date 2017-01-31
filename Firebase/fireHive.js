@@ -228,7 +228,9 @@ var hive = (function () {
 			upd[basePath + "type"] = type;
 			if (type == "Object") {
 				upd[basePath + "value"] = innerAdd(obj[fieldName]);
-			} else {
+			} else if (type=="Date"){
+				upd[basePath+"value"]=obj[fieldName].toJSON();
+			}else {
 				upd[basePath + "value"] = obj[fieldName];
 			}
 			database.ref("objects").update(upd);

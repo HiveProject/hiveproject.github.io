@@ -25,10 +25,10 @@ var hive = (function () {
 	};
 	var database = null;
 	var loadedObjects = new Map();
-	var roots = [];
+	var roots = new Map();
 	
 	module.start = function () {
-		roots=[];
+		roots.clear();
 		loadedObjects.clear();
 		firebase.initializeApp(module.config);
 		database = firebase.database();
@@ -42,33 +42,47 @@ var hive = (function () {
 		return module;
 	}
 
-	module.remove = function (obj) {
+	module.remove = function (key) {
+		database.ref("roots/" + key).set(null);
+		doGC();
+	}
+	module.removeElement = function (obj) {
 		var id = loadedObjects.getKey(obj);
 		if (id) {
-			database.ref("roots/" + id).set(null);
-			doGC();
-		} 
+			var key = roots.getKey(id);
+			if(key){
+				module.remove(key);
+			} 
+		}
 	}
-	module.add =function(obj){
+	module.add =function(key,obj){
 		var id = loadedObjects.getKey(obj);
 		if (!id) {
 			id=innerAdd(obj);
 		} 
-		database.ref("roots/" + id).set(1);
+		database.ref("roots/" + key).set(id);
 	};
-	
+	module.at=function(key)
+	{
+		return loadedObjects.get(roots.get(key));
+	};
+	module.keys=function()
+	{
+		return roots.keys();
+	};
 	module.elements=function()
 	{
-		var result=[];
-		roots.forEach(function(key){
-			result.push(loadedObjects.get(key));
+		var result=new Map();
+		roots.keys().forEach(function(key){
+			result.set(key,loadedObjects.get(root.get(key))); 
 		}); 
 		return result;
 	};
+	
 	module.forEach=function(callback)
 	{
-		roots.forEach(function(key){
-			callback(key,loadedObjects.get(key));
+		roots.keys.forEach(function(key){
+			callback(key,loadedObjects.get(roots.get(key)));
 		}); 
 		
 		return module;
@@ -240,7 +254,7 @@ var hive = (function () {
 	function rootAdded(dataSnapshot){
 		if(!roots.find( function(item){return item==dataSnapshot.key;}))
 		{
-			roots.push(dataSnapshot.key)			
+			roots.set(dataSnapshot.key,dataSnapshot.val());			
 		} 
 	}
 	function rootRemoved(oldDataSnapshot) {

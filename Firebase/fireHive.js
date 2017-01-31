@@ -68,12 +68,12 @@ var hive = (function () {
 	};
 	module.keys=function()
 	{
-		return roots.keys();
+		return Array.from(roots.keys());
 	};
 	module.elements=function()
 	{
 		var result=new Map();
-		new Array(roots.keys()).forEach(function(key){
+		 Array.from(roots.keys()).forEach(function(key){
 			result.set(key,loadedObjects.get(roots.get(key))); 
 		}); 
 		return result;
@@ -81,7 +81,7 @@ var hive = (function () {
 	
 	module.forEach=function(callback)
 	{
-		roots.keys.forEach(function(key){
+		Array.from(roots.keys()).forEach(function(key){
 			callback(key,loadedObjects.get(roots.get(key)));
 		}); 
 		

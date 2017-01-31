@@ -74,7 +74,7 @@ var hive = (function () {
 	{
 		var result=new Map();
 		new Array(roots.keys()).forEach(function(key){
-			result.set(key,loadedObjects.get(root.get(key))); 
+			result.set(key,loadedObjects.get(roots.get(key))); 
 		}); 
 		return result;
 	};

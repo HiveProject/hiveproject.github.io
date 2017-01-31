@@ -34,6 +34,7 @@ var hive = (function () {
 		database = firebase.database();
 		
 		database.ref("roots").on("child_added", rootAdded);
+		database.ref("roots").on("child_changed", rootAdded);
 		database.ref("roots").on("child_removed", rootRemoved); 
 		
 		database.ref("objects").on("child_added", childAdded);
@@ -252,7 +253,7 @@ var hive = (function () {
 	}
 	
 	function rootAdded(dataSnapshot){
-		 	roots.set(dataSnapshot.key,dataSnapshot.val());	 
+		 roots.set(dataSnapshot.key,dataSnapshot.val());	 
 	}
 	function rootRemoved(oldDataSnapshot) {
 		roots.delete(oldDataSnapshot.key);

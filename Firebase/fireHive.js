@@ -198,7 +198,7 @@ var hive = (function () {
 						obj[k] = other;
 					}
 				} else if(received[k].type == "Date"){
-					obj[k]=new Date(received[k].value);
+					obj[k]=new Date(JSON.parse(received[k].value));
 					
 				}else{
 					//let's say this is a literal for now.

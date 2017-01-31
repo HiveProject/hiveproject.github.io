@@ -73,7 +73,7 @@ var hive = (function () {
 	module.elements=function()
 	{
 		var result=new Map();
-		roots.keys().forEach(function(key){
+		new Array(roots.keys()).forEach(function(key){
 			result.set(key,loadedObjects.get(root.get(key))); 
 		}); 
 		return result;

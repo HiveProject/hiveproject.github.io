@@ -81,7 +81,6 @@ var hive = (function () {
 		}
 		//watching.
 
-		enableWatch(obj);
 		var key = database.ref("objects").push().key;
 		loadedObjects.set(key, obj);
 		var data = {};
@@ -198,7 +197,10 @@ var hive = (function () {
 					if (obj[k] != other) {
 						obj[k] = other;
 					}
-				} else {
+				} else if(received[k].type == "Date"){
+					obj[k]=new Date(received[k].value);
+					
+				}else{
 					//let's say this is a literal for now.
 					if (obj[k] != received[k].value) {
 						//	unwatch(obj);

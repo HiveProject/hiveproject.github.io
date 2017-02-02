@@ -3,8 +3,13 @@ var hive = (function () {
 		//firebase should be included.
 		debugger;
 	}
-	if (!watch) {
-		//firebase should be included.
+	if (!Proxy) {
+		//i need proxy to work .
+		debugger;
+	}
+	if(!Map)
+	{
+		//i need Map to work.
 		debugger;
 	}
 	//set new method to Map
@@ -15,6 +20,7 @@ var hive = (function () {
 		}
 		return undefined;
 	}
+	
 	var module = {
 		config: {
 			apiKey: " AIzaSyA-Y_mz58xgvGkQNK_tQCXQiG3q1mlA6hM",
@@ -27,11 +33,22 @@ var hive = (function () {
 	var loadedObjects = new Map();
 	var roots = new Map();
 	
+	//this map contains obj -> proxy
+	var proxies = new Map();
+	//this map contains proxy -> handler
+	var handlers = new Map();
+	
 	module.start = function () {
 		roots.clear();
 		loadedObjects.clear();
 		firebase.initializeApp(module.config);
 		database = firebase.database();
+		handlers.forEach( function(value,key){
+			unsuscribeProxy(key);			
+		});
+		proxies.clear();
+		handlers.clear();
+		
 		
 		database.ref("roots").on("child_added", rootAdded);
 		database.ref("roots").on("child_changed", rootAdded);
@@ -62,10 +79,11 @@ var hive = (function () {
 			id=innerAdd(obj);
 		} 
 		database.ref("roots/" + key).set(id);
+		return getProxy(obj); 
 	};
 	module.at=function(key)
 	{
-		return loadedObjects.get(roots.get(key));
+		return getProxy(loadedObjects.get(roots.get(key)));
 	};
 	module.keys=function()
 	{
@@ -75,7 +93,7 @@ var hive = (function () {
 	{
 		var result=new Map();
 		 Array.from(roots.keys()).forEach(function(key){
-			result.set(key,loadedObjects.get(roots.get(key))); 
+			result.set(key,getProxy( loadedObjects.get(roots.get(key)))); 
 		}); 
 		return result;
 	};
@@ -83,7 +101,7 @@ var hive = (function () {
 	module.forEach=function(callback)
 	{
 		Array.from(roots.keys()).forEach(function(key){
-			callback(key,loadedObjects.get(roots.get(key)));
+			callback(key,getProxy(loadedObjects.get(roots.get(key))));
 		}); 
 		
 		return module;
@@ -118,12 +136,10 @@ var hive = (function () {
 		}
 		//watching.
 
-		try {
-			enableWatch(obj);
+		try { 
 			database.ref("objects/" + key).set(data);
 		} catch (err) {
-			//on error i have to remove it from the local cache.
-			unwatch(obj);
+			//on error i have to remove it from the local cache. 
 			loadedObjects.delete (key);
 			throw (err);
 		}
@@ -167,8 +183,7 @@ var hive = (function () {
 						obj[k] = received[k].value;
 					}
 				}
-			}
-			enableWatch(obj);
+			} 
 			checkForRefrences(dataSnapshot.key, obj);
 		}
 	}
@@ -184,17 +199,9 @@ var hive = (function () {
 			item.action(obj);
 		});
 	}
-	function enableWatch(obj) {
-		watch(obj,
-			function (fieldName, operation, newValue, oldValue) {
-			if (newValue.valueOf() != oldValue.valueOf()) {
-				updateField(this, fieldName);
-			}
-		}, 0 //this is to prevent it to crawl the object. only attributes that are local to it will trigger the event
-		);
-	}
-	function childRemoved(oldDataSnapshot) {
-		unwatch(loadedObjects.get(oldDataSnapshot.key));
+	
+
+	function childRemoved(oldDataSnapshot) { 
 		loadedObjects.delete (oldDataSnapshot.key);
 	}
 	function childChanged(dataSnapshot) {
@@ -223,10 +230,8 @@ var hive = (function () {
 					
 				}else{
 					//let's say this is a literal for now.
-					if (obj[k] != received[k].value) {
-						//	unwatch(obj);
-						obj[k] = received[k].value;
-						//	enableWatch(obj);
+					if (obj[k] != received[k].value) { 
+						obj[k] = received[k].value; 
 					}
 				}
 			}
@@ -259,7 +264,14 @@ var hive = (function () {
 		roots.delete(oldDataSnapshot.key);
 	} 
 	
-	
+	function getProxy(obj)
+	{
+		
+	}
+	function unsuscribeProxy(obj)
+	{
+		
+	}
 	
 	//GC
 	function doGC(){
@@ -293,8 +305,7 @@ var hive = (function () {
 		//todo: optimize.
 		Array.from(loadedObjects.keys()).forEach(function(key){
 			if(aliveObjects.indexOf(key)==-1){
-				upd["/"+key]=null;
-				unwatch(loadedObjects.get(key));
+				upd["/"+key]=null; 
 			}
 		});
 		database.ref("objects").update(upd);

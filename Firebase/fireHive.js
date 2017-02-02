@@ -139,8 +139,9 @@ let hive = (function () {
 	
 	function childAdded(dataSnapshot) {
 		if (!loadedObjects.has(dataSnapshot.key)) {
-			let obj = {};
+			let obj = null;
 			let received = dataSnapshot.val();
+			if(received.type=="Array"){obj=[]}else{obj={};}
 			loadedObjects.set(dataSnapshot.key, obj);
 			mapSnapshotToObject(obj,received);
 			checkForRefrences(dataSnapshot.key, obj);
@@ -225,6 +226,19 @@ let hive = (function () {
 			database.ref("objects").update(upd);
 		}
 	}
+	function removeElementsFromArray(obj,oldLength)
+	{
+		let upd = {};
+		let id = loadedObjects.getKey(obj);
+		if (id) {
+			let basePath = "/" + id + "/data/";
+			for(let i = oldLength; i>obj.length; i--)
+			{
+				upd[basePath+i]=null;
+			}
+			database.ref("objects").update(upd);
+		}
+	}
 	function updateField(obj, fieldName) {
 		updateFields(obj,[fieldName]);
 	}
@@ -246,12 +260,21 @@ let hive = (function () {
 			if(!handler.get)
 			{
 				handler.get=getExecuted;
-				handler.set=setExecuted;
+				if(obj.constructor.name=="Array")
+				{
+					handler.set=arraySetExecuted;
+				}else{
+					handler.set=setExecuted;
+				}
 			}
 			return proxy;
 		} 
 		//create handler
 		let handler = {get:getExecuted,set:setExecuted};
+		if(obj.constructor.name=="Array")
+		{
+			handler.set=arraySetExecuted;
+		}
 		let proxy= new Proxy(obj,handler);
 		proxies.set(obj,proxy);
 		handlers.set(proxy,handler);
@@ -292,7 +315,24 @@ let hive = (function () {
 			}
 		return true;
 	}
-	
+	function arraySetExecuted(target,property,value,rcvr)
+	{
+		//if the Length is being set under my current length, it is a delete
+		if(property=="Length")
+		{
+			let oldLength=target[property];	
+			target[property]=value;
+			if(value<oldLength)
+			{
+				//removed elements.
+				removeElementsFromArray(target,oldLength);
+			}
+		}else{
+			//i have set a value into the array.
+			target[property]=value;
+			updateField(target,property);
+		}
+	}
 	
 	
 	

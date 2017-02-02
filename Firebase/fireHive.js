@@ -116,26 +116,7 @@ var hive = (function () {
 		} 
 		var key = database.ref("objects").push().key;
 		loadedObjects.set(key, obj);
-		var data = {};
-		for (var k in obj) {
-			if (obj[k] != null) {
-				data[k] = {
-					type: obj[k].constructor.name
-				};
-				if (data[k].type == "Object") {
-
-					data[k].value = innerAdd(obj[k]);
-				} else if (data[k] != "Function") {
-					data[k].value = obj[k];
-				} else {
-					//to do.
-					debugger;
-
-				}
-			}
-		} 
- 
-			database.ref("objects/" + key).set(data); 
+		updateFields(obj,Object.keys(obj));
 		return key;
 	};
 
@@ -212,24 +193,29 @@ var hive = (function () {
 			}
 		}
 	}
-	
-	function updateField(obj, fieldName) {
+	function updateFields(obj,fieldNames){
 		var upd = {};
 		var id = loadedObjects.getKey(obj);
 		if (id) {
-			var basePath = "/" + id + "/" + fieldName + "/";
-			var type = obj[fieldName].constructor.name;
+			for(var fieldName in fieldNames)
+			{
+				var basePath = "/" + id + "/" + fieldName + "/";
+				var type = obj[fieldName].constructor.name;
 
-			upd[basePath + "type"] = type;
-			if (type == "Object") {
-				upd[basePath + "value"] = innerAdd(obj[fieldName]);
-			} else if (type=="Date"){
-				upd[basePath+"value"]=obj[fieldName].toJSON();
-			}else {
-				upd[basePath + "value"] = obj[fieldName];
-			}
+				upd[basePath + "type"] = type;
+				if (type == "Object") {
+					upd[basePath + "value"] = innerAdd(obj[fieldName]);
+				} else if (type=="Date"){
+					upd[basePath+"value"]=obj[fieldName].toJSON();
+				}else {
+					upd[basePath + "value"] = obj[fieldName];
+				}
+			} 
 			database.ref("objects").update(upd);
 		}
+	}
+	function updateField(obj, fieldName) {
+		updateFields(obj,[fieldName]);
 	}
 	
 	function rootAdded(dataSnapshot){

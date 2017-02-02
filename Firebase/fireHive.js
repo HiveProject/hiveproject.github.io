@@ -281,7 +281,7 @@ let hive = (function () {
 		if(target[property]== null ||target[property]== undefined 
 			||value== null||value==undefined){
 				//if they are different.
-				if(target[property]!=value)
+				if(target[property]!=value|| !(property in target))
 				{
 					target[property]=value;
 					updateField(target, property);

@@ -66,8 +66,9 @@ var hive = (function () {
 		database.ref("roots/" + key).set(null);
 		doGC();
 	}
-	module.removeElement = function (obj) {
-		var id = loadedObjects.getKey(obj);
+	module.removeElement = function (proxy) {
+		//the obj i get here should be a proxy.
+		var id = loadedObjects.getKey(proxies.getKey(proxy));
 		if (id) {
 			var key = roots.getKey(id);
 			if(key){

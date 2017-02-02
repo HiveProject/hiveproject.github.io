@@ -166,9 +166,11 @@ var hive = (function () {
 		for (var k in received) {
 			if (received[k] != null) {
 				//todo: this fails if the value is something that would trigger this condition
-				if(!received[k].value)
-				{debugger;}
-				if (received[k].type == "Object") {
+				
+				if (received[k].type=="null"){
+					//i have a null here
+					obj[k]=null;
+				}else if(received[k].type == "Object") {
 					//if the object is not in my cache, i might have some sync issues here.
 					var other = loadedObjects.get(received[k].value);
 					if (!other) {
@@ -201,16 +203,25 @@ var hive = (function () {
 			fieldNames.forEach(function(fieldName) 
 			{
 				var basePath = "/" + id + "/" + fieldName + "/";
-				var type = obj[fieldName].constructor.name;
-
-				upd[basePath + "type"] = type;
-				if (type == "Object") {
-					upd[basePath + "value"] = innerAdd(obj[fieldName]);
-				} else if (type=="Date"){
-					upd[basePath+"value"]=obj[fieldName].toJSON();
-				}else {
-					upd[basePath + "value"] = obj[fieldName];
+				//first of all i need to see if the value is either null or undefined.
+				var value=obj[fieldName];
+				if(value==null || value==undefined)
+				{
+					obj[fieldName]=null;//this is just to ensure that no undefined is left here.
+					upd[basePath+"type"]="null";
+					upd[basePath+"value"]=null;
+				}else{
+					var type = value.constructor.name;
+					upd[basePath + "type"] = type;
+					if (type == "Object") {
+						upd[basePath + "value"] = innerAdd(value);
+					} else if (type=="Date"){
+						upd[basePath+"value"]=value.toJSON();
+					}else {
+						upd[basePath + "value"] = value;
+					}
 				}
+		
 			} );
 			database.ref("objects").update(upd);
 		}

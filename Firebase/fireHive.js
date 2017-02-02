@@ -287,7 +287,7 @@ var hive = (function () {
 					updateField(target, property);
 				}
 			}
-		if (target[property].valueOf() != value.valueOf()) {
+		else if (target[property].valueOf() != value.valueOf()) {
 				target[property]=value;
 				updateField(target, property);
 			}

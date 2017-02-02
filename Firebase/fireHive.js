@@ -1,4 +1,4 @@
-var hive = (function () {
+let hive = (function () {
 	if (!firebase) {
 		//firebase should be included.
 		debugger;
@@ -14,14 +14,14 @@ var hive = (function () {
 	}
 	//set new method to Map
 	Map.prototype.getKey = function (inputValue) {
-		for (var[key, value]of this) {
+		for (let[key, value]of this) {
 			if (value == inputValue)
 				return key
 		}
 		return undefined;
 	}
 	
-	var module = {
+	let module = {
 		config: {
 			apiKey: " AIzaSyA-Y_mz58xgvGkQNK_tQCXQiG3q1mlA6hM",
 			authDomain: "hive-1336.firebaseapp.com",
@@ -29,16 +29,16 @@ var hive = (function () {
 			storageBucket: "hive-1336.appspot.com"
 		}
 	};
-	var database = null;
+	let database = null;
 	//this map contains key -> obj
-	var loadedObjects = new Map();
+	let loadedObjects = new Map();
 	//this map contains root name -> key
-	var roots = new Map();
+	let roots = new Map();
 	
 	//this map contains obj -> proxy
-	var proxies = new Map();
+	let proxies = new Map();
 	//this map contains proxy -> handler
-	var handlers = new Map();
+	let handlers = new Map();
 	
 	module.start = function () {
 		roots.clear();
@@ -68,16 +68,16 @@ var hive = (function () {
 	}
 	module.removeElement = function (proxy) {
 		//the obj i get here should be a proxy.
-		var id = loadedObjects.getKey(proxies.getKey(proxy));
+		let id = loadedObjects.getKey(proxies.getKey(proxy));
 		if (id) {
-			var key = roots.getKey(id);
+			let key = roots.getKey(id);
 			if(key){
 				module.remove(key);
 			} 
 		}
 	}
 	module.set =function(key,obj){
-		var id = loadedObjects.getKey(obj);
+		let id = loadedObjects.getKey(obj);
 		if (!id) {
 			id=innerAdd(obj);
 		} 
@@ -94,7 +94,7 @@ var hive = (function () {
 	};
 	module.elements=function()
 	{
-		var result=new Map();
+		let result=new Map();
 		 Array.from(roots.keys()).forEach(function(key){
 			result.set(key,getProxy( loadedObjects.get(roots.get(key)))); 
 		}); 
@@ -111,11 +111,11 @@ var hive = (function () {
 	};
 	//internal stuff
 	function innerAdd (obj) {
-		var id = loadedObjects.getKey(obj);
+		let id = loadedObjects.getKey(obj);
 		if (id) {
 			return id;
 		} 
-		var key = database.ref("objects").push().key;
+		let key = database.ref("objects").push().key;
 		loadedObjects.set(key, obj);
 		updateFields(obj,Object.keys(obj));
 		return key;
@@ -123,11 +123,11 @@ var hive = (function () {
 
 
 	//this is to hold the unloaded childs.
-	var missingReferences=[];
+	let missingReferences=[];
 	
 	function checkForRefrences(key, obj) {
 		//to use.
-		var toExecute = missingReferences.filter(function (item) {
+		let toExecute = missingReferences.filter(function (item) {
 				return item.key == key;
 			});
 		missingReferences = missingReferences.filter(function (item) {
@@ -140,8 +140,8 @@ var hive = (function () {
 	
 	function childAdded(dataSnapshot) {
 		if (!loadedObjects.has(dataSnapshot.key)) {
-			var obj = {};
-			var received = dataSnapshot.val();
+			let obj = {};
+			let received = dataSnapshot.val();
 			loadedObjects.set(dataSnapshot.key, obj);
 			mapSnapshotToObject(obj,received);
 			checkForRefrences(dataSnapshot.key, obj);
@@ -149,21 +149,21 @@ var hive = (function () {
 	}
 
 	function childRemoved(oldDataSnapshot) { 
-		var obj= loadedObjects.get(oldDataSnapshot.key);
+		let obj= loadedObjects.get(oldDataSnapshot.key);
 		unsuscribeProxy(proxies.get(obj));
 		handlers.delete(proxies.get(obj));
 		proxies.delete(obj); 
 		loadedObjects.delete (oldDataSnapshot.key);
 	}
 	function childChanged(dataSnapshot) {
-		var obj = loadedObjects.get(dataSnapshot.key);
-		var received = dataSnapshot.val();
+		let obj = loadedObjects.get(dataSnapshot.key);
+		let received = dataSnapshot.val();
 		mapSnapshotToObject(obj,received);
 	}
 	
 	function mapSnapshotToObject(obj,received)
 	{
-		for (var k in received) {
+		for (let k in received) {
 			if (received[k] != null) {
 				//todo: this fails if the value is something that would trigger this condition
 				
@@ -172,7 +172,7 @@ var hive = (function () {
 					obj[k]=null;
 				}else if(received[k].type == "Object") {
 					//if the object is not in my cache, i might have some sync issues here.
-					var other = loadedObjects.get(received[k].value);
+					let other = loadedObjects.get(received[k].value);
 					if (!other) {
 						missingReferences.push({
 							key: received[k].value,
@@ -197,21 +197,21 @@ var hive = (function () {
 		}
 	}
 	function updateFields(obj,fieldNames){
-		var upd = {};
-		var id = loadedObjects.getKey(obj);
+		let upd = {};
+		let id = loadedObjects.getKey(obj);
 		if (id) {
 			fieldNames.forEach(function(fieldName) 
 			{
-				var basePath = "/" + id + "/" + fieldName + "/";
+				let basePath = "/" + id + "/" + fieldName + "/";
 				//first of all i need to see if the value is either null or undefined.
-				var value=obj[fieldName];
+				let value=obj[fieldName];
 				if(value==null || value==undefined)
 				{
 					obj[fieldName]=null;//this is just to ensure that no undefined is left here.
 					upd[basePath+"type"]="null";
 					upd[basePath+"value"]=null;
 				}else{
-					var type = value.constructor.name;
+					let type = value.constructor.name;
 					upd[basePath + "type"] = type;
 					if (type == "Object") {
 						upd[basePath + "value"] = innerAdd(value);
@@ -241,8 +241,8 @@ var hive = (function () {
 	{
 		if(proxies.has(obj))
 		{
-			var proxy=proxies.get(obj);
-			var handler=handlers.get(proxy);
+			let proxy=proxies.get(obj);
+			let handler=handlers.get(proxy);
 			//ensure the handler is enabled.
 			if(!handler.get)
 			{
@@ -252,8 +252,8 @@ var hive = (function () {
 			return proxy;
 		} 
 		//create handler
-		var handler = {get:getExecuted,set:setExecuted};
-		var proxy= new Proxy(obj,handler);
+		let handler = {get:getExecuted,set:setExecuted};
+		let proxy= new Proxy(obj,handler);
 		proxies.set(obj,proxy);
 		handlers.set(proxy,handler);
 		return proxy;
@@ -262,7 +262,7 @@ var hive = (function () {
 	{
 		if(handlers.has(proxy))
 		{
-			var handler = handlers.get(proxy);
+			let handler = handlers.get(proxy);
 			handler.get=undefined;
 			handler.set=undefined;
 		}
@@ -270,7 +270,7 @@ var hive = (function () {
 	
 	function getExecuted(target,property,rcvr)
 	{
-		var result =target[property];
+		let result =target[property];
 		if(result.constructor.name=="Object")
 			return getProxy(result);
 		return result;
@@ -298,12 +298,12 @@ var hive = (function () {
 	
 	
 	//GC
-	var initializedGC=false;
+	let initializedGC=false;
 	function doGC(){
 		if(!initializedGC)
 		{
 			initializedGC=true;		
-			var touchedElements=[];
+			let touchedElements=[];
 			setTimeout(function(){ 
 				roots.forEach(function(value,key){mark(loadedObjects.get(value),touchedElements);});
 				sweep(touchedElements);	 
@@ -314,13 +314,13 @@ var hive = (function () {
 	};
 	function mark(obj,arr)
 	{
-		var type = obj.constructor.name;
+		let type = obj.constructor.name;
 		if (type == "Object") {
-			var id = loadedObjects.getKey(obj);
+			let id = loadedObjects.getKey(obj);
 			if (id) {
 				if(!arr.some(function(k){return k===id;})){
 					arr.push(id);
-					for (var k in obj) {
+					for (let k in obj) {
 						if (obj[k]) {
 							mark(obj[k],arr);
 						}
@@ -334,7 +334,7 @@ var hive = (function () {
 		} 
 	};
 	function sweep(aliveObjects)
-	{	var upd = {};
+	{	let upd = {};
 		//todo: optimize.
 		Array.from(loadedObjects.keys()).forEach(function(key){
 			if(aliveObjects.indexOf(key)==-1){

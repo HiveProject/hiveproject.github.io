@@ -111,9 +111,7 @@ var hive = (function () {
 		var id = loadedObjects.getKey(obj);
 		if (id) {
 			return id;
-		}
-		//watching.
-
+		} 
 		var key = database.ref("objects").push().key;
 		loadedObjects.set(key, obj);
 		var data = {};
@@ -133,17 +131,9 @@ var hive = (function () {
 
 				}
 			}
-		}
-		//watching.
-
-		try { 
-			database.ref("objects/" + key).set(data);
-		} catch (err) {
-			//on error i have to remove it from the local cache. 
-			loadedObjects.delete (key);
-			throw (err);
-		}
-
+		} 
+ 
+			database.ref("objects/" + key).set(data); 
 		return key;
 	};
 
@@ -157,6 +147,7 @@ var hive = (function () {
 			loadedObjects.set(dataSnapshot.key, obj);
 			for (var k in received) {
 				if (received[k] != null) {
+				//todo: this fails if the value is something that would trigger this condition
 					if(!received[k].value)
 					{debugger;}
 					if (received[k].type == "Object") {
@@ -202,6 +193,10 @@ var hive = (function () {
 	
 
 	function childRemoved(oldDataSnapshot) { 
+		var obj= loadedObjects.get(oldDataSnapshot.key);
+		unsuscribeProxy(proxies.get(obj));
+		handlers.delete(proxies.get(obj));
+		proxies.delete(obj); 
 		loadedObjects.delete (oldDataSnapshot.key);
 	}
 	function childChanged(dataSnapshot) {
@@ -209,6 +204,7 @@ var hive = (function () {
 		var received = dataSnapshot.val();
 		for (var k in received) {
 			if (received[k] != null) {
+				//todo: this fails if the value is something that would trigger this condition
 				if(!received[k].value)
 				{debugger;}
 				if (received[k].type == "Object") {
@@ -266,12 +262,52 @@ var hive = (function () {
 	
 	function getProxy(obj)
 	{
-		
+		if(proxies.has(obj))
+		{
+			var proxy=proxies.get(obj);
+			var handler=handlers.get(proxy);
+			//ensure the handler is enabled.
+			if(!handler.get)
+			{
+				handler.get=getExecuted;
+				handler.set=setExecuted;
+			}
+			return proxy;
+		} 
+		//create handler
+		var handler = {get:getExecuted,set:setExecuted};
+		var proxy= new Proxy(obj,handler);
+		proxies.set(obj,proxy);
+		handlers.set(proxy,handler);
+		return proxy;
 	}
 	function unsuscribeProxy(obj)
 	{
-		
+		if(proxies.has(obj))
+		{
+			var handler = handlers.get(proxies.get(obj));
+			handler.get=undefined;
+			handler.set=undefined;
+		}
 	}
+	
+	function getExecuted(target,property,rcvr)
+	{
+		var result =target[property];
+		if(result.constructor.name=="Object")
+			return getProxy(result);
+		return result;
+	}
+	function setExecuted(target,property,value,rcvr)
+	{
+		//todo: if value is null or undefined this fails.
+		if (target[property].valueOf() != value.valueOf()) {
+				updateField(target, property);
+			}
+	}
+	
+	
+	
 	
 	//GC
 	function doGC(){

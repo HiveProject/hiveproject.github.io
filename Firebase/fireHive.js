@@ -265,8 +265,17 @@ var hive = (function () {
 		return result;
 	}
 	function setExecuted(target,property,value,rcvr)
-	{
-		//todo: if value is null or undefined this fails.
+	{ 
+		//if i have something null/undefined, then valueOf will fail
+		if(target[property]== null ||target[property]== undefined 
+			||value== null||value==undefined){
+				//if they are different.
+				if(target[property]!=value)
+				{
+					target[property]=value;
+					updateField(target, property);
+				}
+			}
 		if (target[property].valueOf() != value.valueOf()) {
 				target[property]=value;
 				updateField(target, property);

@@ -140,44 +140,7 @@ var hive = (function () {
 
 	//this is to hold the unloaded childs.
 	var missingReferences=[];
-	function childAdded(dataSnapshot) {
-		if (!loadedObjects.has(dataSnapshot.key)) {
-			var obj = {};
-			var received = dataSnapshot.val();
-			loadedObjects.set(dataSnapshot.key, obj);
-			for (var k in received) {
-				if (received[k] != null) {
-				//todo: this fails if the value is something that would trigger this condition
-					if(!received[k].value)
-					{debugger;}
-					if (received[k].type == "Object") {
-						//if the object is not in my cache, i might have some sync issues here.
-						var other = loadedObjects.get(received[k].value);
-						if (!other) {
-							//i am suposed to have a reference to an object that i do not have yet.
-							//this is either because i got a dangling pointer  of some sorts, or because the object is about to arrive.
-							missingReferences.push({
-								key: received[k].value,
-								action: function (child) {
-									obj[k] = child;
-								}
-							});
-						}
-						obj[k] = other;
-					}  else if(received[k].type == "Date"){
-						obj[k]=new Date(received[k].value);
-					}else if (received[k].type == "Function") {
-						//you should not be here.
-						debugger;
-					} else {
-						//let's say this is a literal for now.
-						obj[k] = received[k].value;
-					}
-				}
-			} 
-			checkForRefrences(dataSnapshot.key, obj);
-		}
-	}
+	
 	function checkForRefrences(key, obj) {
 		//to use.
 		var toExecute = missingReferences.filter(function (item) {
@@ -191,6 +154,15 @@ var hive = (function () {
 		});
 	}
 	
+	function childAdded(dataSnapshot) {
+		if (!loadedObjects.has(dataSnapshot.key)) {
+			var obj = {};
+			var received = dataSnapshot.val();
+			loadedObjects.set(dataSnapshot.key, obj);
+			mapSnapshotToObject(obj,received);
+			checkForRefrences(dataSnapshot.key, obj);
+		}
+	}
 
 	function childRemoved(oldDataSnapshot) { 
 		var obj= loadedObjects.get(oldDataSnapshot.key);
@@ -202,6 +174,11 @@ var hive = (function () {
 	function childChanged(dataSnapshot) {
 		var obj = loadedObjects.get(dataSnapshot.key);
 		var received = dataSnapshot.val();
+		mapSnapshotToObject(obj,received);
+	}
+	
+	function mapSnapshotToObject(obj,received)
+	{
 		for (var k in received) {
 			if (received[k] != null) {
 				//todo: this fails if the value is something that would trigger this condition
@@ -233,7 +210,7 @@ var hive = (function () {
 			}
 		}
 	}
-
+	
 	function updateField(obj, fieldName) {
 		var upd = {};
 		var id = loadedObjects.getKey(obj);

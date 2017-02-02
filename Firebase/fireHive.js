@@ -197,7 +197,7 @@ var hive = (function () {
 		var upd = {};
 		var id = loadedObjects.getKey(obj);
 		if (id) {
-			for(var fieldName in fieldNames)
+			fieldNames.forEach(function(fieldName) 
 			{
 				var basePath = "/" + id + "/" + fieldName + "/";
 				var type = obj[fieldName].constructor.name;
@@ -210,7 +210,7 @@ var hive = (function () {
 				}else {
 					upd[basePath + "value"] = obj[fieldName];
 				}
-			} 
+			} );
 			database.ref("objects").update(upd);
 		}
 	}

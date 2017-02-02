@@ -289,10 +289,19 @@ var hive = (function () {
 	
 	
 	//GC
+	var initializedGC=false;
 	function doGC(){
-		var touchedElements=[];
-		module.elements().forEach(function (obj){mark(obj,touchedElements);});
-		sweep(touchedElements);
+		if(!initializedGC)
+		{
+			initializedGC=true;		
+			var touchedElements=[];
+			setTimeout(function(){ 
+				module.elements().forEach(function (obj){mark(obj,touchedElements);});
+				sweep(touchedElements);	 
+				initializedGC=false;
+			}, 2000);	
+			
+		}
 	};
 	function mark(obj,arr)
 	{

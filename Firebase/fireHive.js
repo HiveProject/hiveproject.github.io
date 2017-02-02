@@ -30,7 +30,9 @@ var hive = (function () {
 		}
 	};
 	var database = null;
+	//this map contains key -> obj
 	var loadedObjects = new Map();
+	//this map contains root name -> key
 	var roots = new Map();
 	
 	//this map contains obj -> proxy
@@ -73,7 +75,7 @@ var hive = (function () {
 			} 
 		}
 	}
-	module.add =function(key,obj){
+	module.set =function(key,obj){
 		var id = loadedObjects.getKey(obj);
 		if (!id) {
 			id=innerAdd(obj);
@@ -81,7 +83,7 @@ var hive = (function () {
 		database.ref("roots/" + key).set(id);
 		return getProxy(obj); 
 	};
-	module.at=function(key)
+	module.get=function(key)
 	{
 		return getProxy(loadedObjects.get(roots.get(key)));
 	};

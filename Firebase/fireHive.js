@@ -270,8 +270,8 @@ let hive = (function () {
 	
 	function getExecuted(target,property,rcvr)
 	{
-		let result =target[property];
-		if(result.constructor.name=="Object")
+		let result =target[property]; 
+		if(result==null && result.constructor.name=="Object")
 			return getProxy(result);
 		return result;
 	}

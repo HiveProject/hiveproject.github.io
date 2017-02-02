@@ -296,7 +296,7 @@ var hive = (function () {
 			initializedGC=true;		
 			var touchedElements=[];
 			setTimeout(function(){ 
-				loadedObjects.forEach(function(value,key){mark(value,touchedElements);});
+				roots.forEach(function(value,key){mark(loadedObjects.get(value),touchedElements);});
 				sweep(touchedElements);	 
 				initializedGC=false;
 			}, 2000);	

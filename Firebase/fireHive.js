@@ -302,8 +302,10 @@ var hive = (function () {
 	{
 		//todo: if value is null or undefined this fails.
 		if (target[property].valueOf() != value.valueOf()) {
+				target[property]=value;
 				updateField(target, property);
 			}
+		return true;
 	}
 	
 	

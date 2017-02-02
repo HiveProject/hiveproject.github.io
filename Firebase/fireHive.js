@@ -281,11 +281,11 @@ var hive = (function () {
 		handlers.set(proxy,handler);
 		return proxy;
 	}
-	function unsuscribeProxy(obj)
+	function unsuscribeProxy(proxy)
 	{
-		if(proxies.has(obj))
+		if(handlers.has(proxy))
 		{
-			var handler = handlers.get(proxies.get(obj));
+			var handler = handlers.get(proxy);
 			handler.get=undefined;
 			handler.set=undefined;
 		}

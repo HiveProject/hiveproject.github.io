@@ -162,7 +162,7 @@ let hive = (function () {
 	
 	function mapSnapshotToObject(obj,received)
 	{
-		for (let k in received) {
+		for (let k in received.data) {
 			if (received.data[k] != null) {
 				//todo: this fails if the value is something that would trigger this condition
 				if (received.data[k].type=="null"){

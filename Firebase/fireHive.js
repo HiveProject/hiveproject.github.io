@@ -51,7 +51,6 @@ let hive = (function () {
 		proxies.clear();
 		handlers.clear();
 		
-		
 		database.ref("roots").on("child_added", rootAdded);
 		database.ref("roots").on("child_changed", rootAdded);
 		database.ref("roots").on("child_removed", rootRemoved); 
@@ -164,18 +163,17 @@ let hive = (function () {
 	function mapSnapshotToObject(obj,received)
 	{
 		for (let k in received) {
-			if (received[k] != null) {
+			if (received.data[k] != null) {
 				//todo: this fails if the value is something that would trigger this condition
-				
-				if (received[k].type=="null"){
+				if (received.data[k].type=="null"){
 					//i have a null here
 					obj[k]=null;
-				}else if(received[k].type == "Object") {
+				}else if(received.data[k].type == "Object") {
 					//if the object is not in my cache, i might have some sync issues here.
-					let other = loadedObjects.get(received[k].value);
+					let other = loadedObjects.get(received.data[k].value);
 					if (!other) {
 						missingReferences.push({
-							key: received[k].value,
+							key: received.data[k].value,
 							action: function (child) {
 								obj[k] = child;
 							}
@@ -184,13 +182,13 @@ let hive = (function () {
 					if (obj[k] != other) {
 						obj[k] = other;
 					}
-				} else if(received[k].type == "Date"){
-					obj[k]=new Date(received[k].value);
+				} else if(received.data[k].type == "Date"){
+					obj[k]=new Date(received.data[k].value);
 					
 				}else{
 					//let's say this is a literal for now.
-					if (obj[k] != received[k].value) { 
-						obj[k] = received[k].value; 
+					if (obj[k] != received.data[k].value) { 
+						obj[k] = received.data[k].value; 
 					}
 				}
 			}
@@ -200,9 +198,10 @@ let hive = (function () {
 		let upd = {};
 		let id = loadedObjects.getKey(obj);
 		if (id) {
+			upd["/" + id + "/type/"]=obj.constructor.name;
 			fieldNames.forEach(function(fieldName) 
 			{
-				let basePath = "/" + id + "/" + fieldName + "/";
+				let basePath = "/" + id + "/data/" + fieldName + "/";
 				//first of all i need to see if the value is either null or undefined.
 				let value=obj[fieldName];
 				if(value==null || value==undefined)

@@ -158,9 +158,20 @@ let hive = (function () {
 		if (!loadedObjects.has(dataSnapshot.key)) {
 			let obj = null;
 			let received = dataSnapshot.val();
-			if(received.type=="Array"){obj=[]}else{obj={};}
-			loadedObjects.set(dataSnapshot.key, obj);
-			mapSnapshotToObject(obj,received);
+			if(isPrimitiveTypeName(received.type)){
+				if(received.type == "Date"){
+					obj=new Date(received.data[k].value);
+				}else{
+					//let's say this is a literal for now.
+					obj = received.data.value; 
+				}
+				loadedObjects.set(dataSnapshot.key,obj);
+			}else{
+				if(received.type=="Array"){obj=[]}else{obj={};}
+				loadedObjects.set(dataSnapshot.key, obj);
+				mapSnapshotToObject(obj,received);
+			}
+			
 			checkForRefrences(dataSnapshot.key, obj);
 		}
 	}
@@ -173,6 +184,7 @@ let hive = (function () {
 		loadedObjects.delete (oldDataSnapshot.key);
 	}
 	function childChanged(dataSnapshot) {
+//todo: this has some issues if i have an array and transform it into an object or something like that.
 		let obj = loadedObjects.get(dataSnapshot.key);
 		let received = dataSnapshot.val();
 		mapSnapshotToObject(obj,received);
@@ -274,10 +286,14 @@ let hive = (function () {
 	{
 		if(obj==null || obj==undefined)
 		{return false;}
-		return obj.constructor.name=="Number" || 
-			obj.constructor.name=="Date" ||
-			obj.constructor.name=="Boolean" ||
-			obj.constructor.name=="String" ;
+		return isPrimitiveTypeName(obj.constructor.name);
+	}
+	function isPrimitiveTypeName(name)
+	{
+		return name=="Number" || 
+			name=="Date" ||
+			name=="Boolean" ||
+			name=="String" ;
 	}
 	function getProxy(obj)
 	{		

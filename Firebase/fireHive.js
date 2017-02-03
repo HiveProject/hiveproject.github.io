@@ -332,6 +332,7 @@ let hive = (function () {
 			target[property]=value;
 			updateField(target,property);
 		}
+		return true;
 	}
 	
 	

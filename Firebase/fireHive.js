@@ -124,7 +124,7 @@ let hive = (function () {
 			let upd={};
 			var type=obj.constructor.name;
 			upd["/" + key + "/type/"]=type;
-			let basePath = "/" + id + "/data/";
+			let basePath = "/" + key + "/data/";
 			//first of all i need to see if the value is either null or undefined.
 			if (type=="Date"){
 				upd[basePath+"value"]=value.toJSON();

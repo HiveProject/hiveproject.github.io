@@ -251,7 +251,14 @@ let hive = (function () {
 	} 
 	
 	function getProxy(obj)
-	{
+	{		
+		if(obj==null  )
+		{return obj;}
+		if(obj.constructor.name=="Number" || 
+			obj.constructor.name=="Date" ||
+			obj.constructor.name=="Boolean" ||
+			obj.constructor.name=="String" )
+			{return obj;}
 		if(proxies.has(obj))
 		{
 			let proxy=proxies.get(obj);
@@ -292,10 +299,7 @@ let hive = (function () {
 	
 	function getExecuted(target,property,rcvr)
 	{
-		let result =target[property]; 
-		if(result!=null && result.constructor.name=="Object")
-			return getProxy(result);
-		return result;
+		return getProxy(target[property]); 
 	}
 	function setExecuted(target,property,value,rcvr)
 	{ 

@@ -318,7 +318,7 @@ let hive = (function () {
 	function arraySetExecuted(target,property,value,rcvr)
 	{
 		//if the Length is being set under my current length, it is a delete
-		if(property=="Length")
+		if(property=="length")
 		{
 			let oldLength=target[property];	
 			target[property]=value;

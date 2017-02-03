@@ -232,7 +232,7 @@ let hive = (function () {
 		let id = loadedObjects.getKey(obj);
 		if (id) {
 			let basePath = "/" + id + "/data/";
-			for(let i = oldLength; i>obj.length; i--)
+			for(let i = oldLength-1; i>obj.length-1; i--)
 			{
 				upd[basePath+i]=null;
 			}

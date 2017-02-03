@@ -127,9 +127,9 @@ let hive = (function () {
 			let basePath = "/" + key + "/data/";
 			//first of all i need to see if the value is either null or undefined.
 			if (type=="Date"){
-				upd[basePath+"value"]=value.toJSON();
+				upd[basePath+"value"]=obj.toJSON();
 			}else {
-				upd[basePath + "value"] = value;
+				upd[basePath + "value"] = obj;
 			}
 			database.ref("objects").update(upd);
 		}

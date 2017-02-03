@@ -114,9 +114,25 @@ let hive = (function () {
 		if (id) {
 			return id;
 		} 
+		//now there is a thing, what if this is a primitive object, it needs boxing and unboxing.
 		let key = database.ref("objects").push().key;
 		loadedObjects.set(key, obj);
-		updateFields(obj,Object.keys(obj));
+		//if they wanted me to add something that is a primitive value this will fail.
+		if(!isPrimitive(obj)){
+			updateFields(obj,Object.keys(obj));
+		}else{
+			let upd={};
+			upd["/" + id + "/type/"]=obj.constructor.name;
+			let basePath = "/" + id + "/data/";
+			//first of all i need to see if the value is either null or undefined.
+			if (type=="Date"){
+				upd[basePath+"value"]=value.toJSON();
+			}else {
+				upd[basePath + "value"] = value;
+			}
+			database.ref("objects").update(upd);
+		}
+		
 		return key;
 	};
 
@@ -165,7 +181,6 @@ let hive = (function () {
 	{
 		for (let k in received.data) {
 			if (received.data[k] != null) {
-				//todo: this fails if the value is something that would trigger this condition
 				if (received.data[k].type=="null"){
 					//i have a null here
 					obj[k]=null;
@@ -213,12 +228,17 @@ let hive = (function () {
 				}else{
 					let type = value.constructor.name;
 					upd[basePath + "type"] = type;
-					if (type == "Object" || type == "Array") {
-						upd[basePath + "value"] = innerAdd(value);
-					} else if (type=="Date"){
-						upd[basePath+"value"]=value.toJSON();
-					}else {
-						upd[basePath + "value"] = value;
+					if(isPrimitive(value))
+					{
+						if (type=="Date"){
+							upd[basePath+"value"]=value.toJSON();
+						}else {
+							upd[basePath + "value"] = value;
+						}
+					}else{
+						if (type == "Object" || type == "Array") {
+							upd[basePath + "value"] = innerAdd(value);
+							} else {debugger;}
 					}
 				}
 		
@@ -249,16 +269,21 @@ let hive = (function () {
 	function rootRemoved(oldDataSnapshot) {
 		roots.delete(oldDataSnapshot.key);
 	} 
-	
-	function getProxy(obj)
-	{		
-		if(obj==null  )
-		{return obj;}
-		if(obj.constructor.name=="Number" || 
+	function isPrimitive(obj)
+	{
+		if(obj==null || obj==undefined)
+		{return false;}
+		return obj.constructor.name=="Number" || 
 			obj.constructor.name=="Date" ||
 			obj.constructor.name=="Boolean" ||
-			obj.constructor.name=="String" )
-			{return obj;}
+			obj.constructor.name=="String" ;
+	}
+	function getProxy(obj)
+	{		
+		if(obj==null)
+		{return obj;}
+		if(isPrimitive(obj))
+		{return obj;}
 		if(proxies.has(obj))
 		{
 			let proxy=proxies.get(obj);

@@ -122,7 +122,8 @@ let hive = (function () {
 			updateFields(obj,Object.keys(obj));
 		}else{
 			let upd={};
-			upd["/" + id + "/type/"]=obj.constructor.name;
+			var type=obj.constructor.name;
+			upd["/" + key + "/type/"]=type;
 			let basePath = "/" + id + "/data/";
 			//first of all i need to see if the value is either null or undefined.
 			if (type=="Date"){

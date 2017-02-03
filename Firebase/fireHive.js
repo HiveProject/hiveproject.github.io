@@ -169,7 +169,7 @@ let hive = (function () {
 				if (received.data[k].type=="null"){
 					//i have a null here
 					obj[k]=null;
-				}else if(received.data[k].type == "Object" || received.data[k].type=="Array"}) {
+				}else if(received.data[k].type == "Object" || received.data[k].type=="Array") {
 					//if the object is not in my cache, i might have some sync issues here.
 					let other = loadedObjects.get(received.data[k].value);
 					if (!other) {

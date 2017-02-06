@@ -127,6 +127,7 @@ let hive = (function () {
 			let upd={};
 			var type=obj.constructor.name;
 			upd["/" + key + "/type/"]="null";
+			upd["/" + key + "/value/"]=null;
 			database.ref("objects").update(upd);
 			
 		}

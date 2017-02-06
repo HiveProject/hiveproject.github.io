@@ -120,11 +120,18 @@ let hive = (function () {
 		if (id) {
 			return id;
 		} 
-		//now there is a thing, what if this is a primitive object, it needs boxing and unboxing.
 		let key = database.ref("objects").push().key;
 		loadedObjects.set(key, obj);
-		//if they wanted me to add something that is a primitive value this will fail.
-		if(!isPrimitive(obj)){
+		if(value==null || value==undefined)
+		{
+			let upd={};
+			var type=obj.constructor.name;
+			upd["/" + key + "/type/"]="null";
+			database.ref("objects").update(upd);
+			
+		}
+		else if(!isPrimitive(obj)){
+			//now there is a thing, what if this is a primitive object, it needs boxing and unboxing.
 			updateFields(obj,Object.keys(obj));
 		}else{
 			let upd={};
@@ -172,6 +179,8 @@ let hive = (function () {
 					obj = received.data.value; 
 				}
 				loadedObjects.set(dataSnapshot.key,obj);
+			}else if(received.type==="null"){
+				loadedObjects.set(dataSnapshot.key,null);
 			}else{
 				if(received.type=="Array"){obj=[]}else{obj={};}
 				loadedObjects.set(dataSnapshot.key, obj);

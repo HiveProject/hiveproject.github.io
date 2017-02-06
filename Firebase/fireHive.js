@@ -198,11 +198,11 @@ let hive = (function () {
 					//i have a null here
 					obj[k]=null;
 				}else if(isPrimitiveTypeName(received.data[k].type)){
-					if(received.type == "Date"){
-						obj[k]=new Date(received.data.value);
+					if(received.data[k].type == "Date"){
+						obj[k]=new Date(received.data[k].value);
 					}else{
 						//let's say this is a literal for now.
-						obj[k] = received.data.value; 
+						obj[k] = received.data[k].value; 
 					}					
 				} else if(received.data[k].type == "Function"){
 					debugger;

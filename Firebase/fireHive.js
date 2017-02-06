@@ -197,7 +197,16 @@ let hive = (function () {
 				if (received.data[k].type=="null"){
 					//i have a null here
 					obj[k]=null;
-				}else if(received.data[k].type == "Object" || received.data[k].type=="Array") {
+				}else if(isPrimitiveTypeName(received.data[k].type)){
+					if(received.type == "Date"){
+						obj[k]=new Date(received.data.value);
+					}else{
+						//let's say this is a literal for now.
+						obj[k] = received.data.value; 
+					}					
+				} else if(received.data[k].type == "Function"){
+					debugger;
+				}else{ //object or array
 					//if the object is not in my cache, i might have some sync issues here.
 					let other = loadedObjects.get(received.data[k].value);
 					if (!other) {
@@ -210,14 +219,6 @@ let hive = (function () {
 					}
 					if (obj[k] != other) {
 						obj[k] = other;
-					}
-				} else if(received.data[k].type == "Date"){
-					obj[k]=new Date(received.data[k].value);
-					
-				}else{
-					//let's say this is a literal for now.
-					if (obj[k] != received.data[k].value) { 
-						obj[k] = received.data[k].value; 
 					}
 				}
 			}

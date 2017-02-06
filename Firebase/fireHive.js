@@ -76,6 +76,10 @@ let hive = (function () {
 		}
 	}
 	module.set =function(key,obj){
+		if(key.constructor.name != "String" || key.constructor.name !=  Number)
+		{
+			throw "The key must be either string or number";
+		}
 		let id = loadedObjects.getKey(obj);
 		if (!id) {
 			id=innerAdd(obj);
@@ -85,6 +89,8 @@ let hive = (function () {
 	};
 	module.get=function(key)
 	{
+		if(!roots.has(key))
+		{throw "Key not found in Hive Roots";}
 		return getProxy(loadedObjects.get(roots.get(key)));
 	};
 	module.keys=function()

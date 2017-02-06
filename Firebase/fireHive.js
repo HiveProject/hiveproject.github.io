@@ -250,6 +250,11 @@ let hive = (function () {
 							upd[basePath + "value"] = value;
 						}
 					}else{
+						//sanitize the object to ensure no proxies are really in it, this object should have a reference to the real thing
+						if(handlers.has(obj[fieldName]}))
+						{
+							obj[fieldName]=proxies.getKey(value);
+						}
 						if (type == "Object" || type == "Array") {
 							upd[basePath + "value"] = innerAdd(value);
 							} else {debugger;}

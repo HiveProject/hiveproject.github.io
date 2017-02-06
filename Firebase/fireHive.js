@@ -160,7 +160,7 @@ let hive = (function () {
 			let received = dataSnapshot.val();
 			if(isPrimitiveTypeName(received.type)){
 				if(received.type == "Date"){
-					obj=new Date(received.data[k].value);
+					obj=new Date(received.data.value);
 				}else{
 					//let's say this is a literal for now.
 					obj = received.data.value; 

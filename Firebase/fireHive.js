@@ -122,7 +122,7 @@ let hive = (function () {
 		} 
 		let key = database.ref("objects").push().key;
 		loadedObjects.set(key, obj);
-		if(value==null || value==undefined)
+		if(obj==null || obj==undefined)
 		{
 			let upd={};
 			var type=obj.constructor.name;

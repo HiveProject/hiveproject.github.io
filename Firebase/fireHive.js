@@ -424,7 +424,24 @@ let hive = (function () {
 	function mark(obj,arr)
 	{
 		let type = obj.constructor.name;
-		if (type == "Object") {
+		if(isPrimitiveTypeName(type))
+		{
+			//do nothing
+		}else if(type=="Function")
+		{
+			//do nothing for now, if i have ever a clojure this should change.
+		}
+		else if(type=="Array") {
+			let id = loadedObjects.getKey(obj);
+			if(id){
+				if(!arr.some(function(k){return k===id;})){
+					arr.push(id);
+					obj.forEach(function(item){
+						mark(item,arr);
+					});					
+				}
+			}
+		}else{ //object.
 			let id = loadedObjects.getKey(obj);
 			if (id) {
 				if(!arr.some(function(k){return k===id;})){
@@ -436,11 +453,7 @@ let hive = (function () {
 					}
 				}
 			} 
-		} else if(type=="Array") {
-			debugger; //todo
-		}else{
-			//do nothing.
-		} 
+		}  
 	};
 	function sweep(aliveObjects)
 	{	let upd = {};

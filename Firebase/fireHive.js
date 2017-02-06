@@ -346,6 +346,11 @@ let hive = (function () {
 	}
 	function setExecuted(target,property,value,rcvr)
 	{ 
+		//if what they are setting is a proxy, i need to actually set the real object.
+		if(handlers.has(value))
+		{
+			value=proxies.getKey(value);
+		}
 		//if i have something null/undefined, then valueOf will fail
 		if(target[property]== null ||target[property]== undefined 
 			||value== null||value==undefined){
@@ -364,6 +369,11 @@ let hive = (function () {
 	}
 	function arraySetExecuted(target,property,value,rcvr)
 	{
+		//if what they are setting is a proxy, i need to actually set the real object.
+		if(handlers.has(value))
+		{
+			value=proxies.getKey(value);
+		}
 		//if the Length is being set under my current length, it is a delete
 		if(property=="length")
 		{

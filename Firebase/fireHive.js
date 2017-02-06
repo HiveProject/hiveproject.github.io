@@ -76,9 +76,9 @@ let hive = (function () {
 		}
 	}
 	module.set =function(key,obj){
-		if(key.constructor.name != "String" || key.constructor.name !=  Number)
+		if(key.constructor.name != "String" )
 		{
-			throw "The key must be either string or number";
+			throw "The key must be a string ";
 		}
 		let id = loadedObjects.getKey(obj);
 		if (!id) {

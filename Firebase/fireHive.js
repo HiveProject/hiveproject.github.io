@@ -254,6 +254,7 @@ let hive = (function () {
 						if(handlers.has(obj[fieldName]))
 						{
 							obj[fieldName]=proxies.getKey(value);
+							value=obj[fieldName];
 						}
 						if (type == "Object" || type == "Array") {
 							upd[basePath + "value"] = innerAdd(value);

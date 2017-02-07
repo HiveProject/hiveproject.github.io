@@ -182,7 +182,7 @@ let hive = (function () {
 			}else if(received.type==="null"){
 				loadedObjects.set(dataSnapshot.key,null);
 			}else{
-				if(received.type=="Array"){obj=[]}else{obj={};}
+				obj=eval("new "+received.type+"();");
 				loadedObjects.set(dataSnapshot.key, obj);
 				mapSnapshotToObject(obj,received);
 			}

@@ -137,7 +137,7 @@ let hive = (function () {
 			let upd={};
 			var type=obj.constructor.name;
 			upd["/" + key + "/type/"]=type;
-			let basePath = "/" + key + "/data/";
+			let basePath = "/" + key + "/";
 			//first of all i need to see if the value is either null or undefined.
 			if (type=="Date"){
 				upd[basePath+"value"]=obj.toJSON();
@@ -173,10 +173,10 @@ let hive = (function () {
 			let received = dataSnapshot.val();
 			if(isPrimitiveTypeName(received.type)){
 				if(received.type == "Date"){
-					obj=new Date(received.data.value);
+					obj=new Date(received.value);
 				}else{
 					//let's say this is a literal for now.
-					obj = received.data.value; 
+					obj = received.value; 
 				}
 				loadedObjects.set(dataSnapshot.key,obj);
 			}else if(received.type==="null"){

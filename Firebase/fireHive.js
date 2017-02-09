@@ -423,16 +423,17 @@ let hive = (function () {
 		if(!initializedGC)
 		{
 			initializedGC=true;		
-			let touchedElements=[];
+			//i am going to list all the elements i should actually delete.
+			let untouchedSet=new Set(loadedObjects.keys());
 			setTimeout(function(){ 
-				roots.forEach(function(value,key){mark(loadedObjects.get(value),touchedElements);});
-				sweep(touchedElements);	 
+				roots.forEach(function(value,key){mark(loadedObjects.get(value),untouchedSet);});
+				sweep(untouchedSet);	 
 				initializedGC=false;
 			}, 2000);	
 			
 		}
 	};
-	function mark(obj,arr)
+	function mark(obj,untouchedSet)
 	{
 		let type = obj.constructor.name;
 		if(isPrimitiveTypeName(type))
@@ -445,34 +446,36 @@ let hive = (function () {
 		else if(type=="Array") {
 			let id = loadedObjects.getKey(obj);
 			if(id){
-				if(!arr.some(function(k){return k===id;})){
-					arr.push(id);
-					obj.forEach(function(item){
-						mark(item,arr);
-					});					
-				}
+				if(!untouchedSet.has(id)){
+					//if i have already visited this node, do nothing.
+					return;
+				} 
+				untouchedSet.delete(id);
+				obj.forEach(function(item){
+					mark(item,untouchedSet);
+				});
 			}
 		}else{ //object.
 			let id = loadedObjects.getKey(obj);
 			if (id) {
-				if(!arr.some(function(k){return k===id;})){
-					arr.push(id);
-					for (let k in obj) {
-						if (obj[k]) {
-							mark(obj[k],arr);
-						}
+				if(!untouchedSet.has(id)){
+					//if i have already visited this node, do nothing.
+					return;
+				} 
+				untouchedSet.delete(id);
+				for (let k in obj) {
+					if (obj[k]) {
+						mark(obj[k],untouchedSet);
 					}
 				}
 			} 
 		}  
 	};
-	function sweep(aliveObjects)
+	function sweep(untouchedSet)
 	{	let upd = {};
 		//todo: optimize.
-		Array.from(loadedObjects.keys()).forEach(function(key){
-			if(aliveObjects.indexOf(key)==-1){
-				upd["/"+key]=null; 
-			}
+		untouchedSet.forEach(function(key){
+			upd["/"+key]=null; 
 		});
 		database.ref("objects").update(upd);
 	};

@@ -1,0 +1,28 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio 14
+VisualStudioVersion = 14.0.25420.1
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FireHive", "FireHive\FireHive.csproj", "{137DDA4F-79A3-441D-9B85-97D48925DCD5}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Test.UI", "Test.UI\Test.UI.csproj", "{1142C6ED-94EE-45BB-8293-F5CC58FBB58E}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{137DDA4F-79A3-441D-9B85-97D48925DCD5}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{137DDA4F-79A3-441D-9B85-97D48925DCD5}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{137DDA4F-79A3-441D-9B85-97D48925DCD5}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{137DDA4F-79A3-441D-9B85-97D48925DCD5}.Release|Any CPU.Build.0 = Release|Any CPU
+		{1142C6ED-94EE-45BB-8293-F5CC58FBB58E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{1142C6ED-94EE-45BB-8293-F5CC58FBB58E}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{1142C6ED-94EE-45BB-8293-F5CC58FBB58E}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{1142C6ED-94EE-45BB-8293-F5CC58FBB58E}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+EndGlobal

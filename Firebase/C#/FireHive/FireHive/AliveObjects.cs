@@ -3,8 +3,6 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using Firebase.Database;
-using Firebase.Database.Streaming;
 using System.Dynamic;
 using FireHive.DataTypes;
 
@@ -12,11 +10,11 @@ namespace FireHive
 {
     class AliveObjects : Map<string, object>
     {
-        private FirebaseClient database;
-        public AliveObjects(FirebaseClient database)
+      //  private FirebaseClient database;
+        public AliveObjects(/*FirebaseClient database*/)
         {
             missingReferences = new List<KeyValuePair<string, Action<object>>>();
-            this.database = database;
+           /* this.database = database;
             database.Child("objects").AsObservable<DataTypes.DataObject>().Subscribe(t =>
             {
                 if (t.Key != string.Empty)
@@ -41,54 +39,54 @@ namespace FireHive
                             break;
                     }
 
-            });
+            });*/
         }
 
-        private void childAdded(FirebaseEvent<DataTypes.DataObject> dataSnapshot)
-        {
-            object obj = null;
-            var received = dataSnapshot.Object;
-            var type = received.type;
-            if (isPrimitiveTypeName(type))
-            {
-                if (type == "Date")
-                {
+        //private void childAdded(FirebaseEvent<DataTypes.DataObject> dataSnapshot)
+        //{
+        //    object obj = null;
+        //    var received = dataSnapshot.Object;
+        //    var type = received.type;
+        //    if (isPrimitiveTypeName(type))
+        //    {
+        //        if (type == "Date")
+        //        {
 
-                    obj = ((DateTime)received.value).ToLocalTime();
-                }
-                else
-                {
-                    //let's say this is a literal for now.
-                    obj = received.value;
-                }
-                innerDictionary[dataSnapshot.Key] = obj;
-            }
-            else if (type == "null")
-            {
-                innerDictionary[dataSnapshot.Key] = null;
-            }
-            else
-            {
-                //first version.
-                if (type == "Array")
-                {
-                    obj = new List<Object>();
-                }
-                else
-                {
-                    obj = new ExpandoObject();
-                }
-                // Activator.CreateInstance()
-                //if (eval("typeof(" + received.type + ")") != "undefined")
-                //{
-                //    obj = eval("new " + received.type + "();");
-                //}
-                //else { obj ={ }; }
-                innerDictionary[dataSnapshot.Key] = obj;
-                mapSnapshotToObject(obj, received);
-            }
-            checkForRefrences(dataSnapshot.Key, obj);
-        }
+        //            obj = ((DateTime)received.value).ToLocalTime();
+        //        }
+        //        else
+        //        {
+        //            //let's say this is a literal for now.
+        //            obj = received.value;
+        //        }
+        //        innerDictionary[dataSnapshot.Key] = obj;
+        //    }
+        //    else if (type == "null")
+        //    {
+        //        innerDictionary[dataSnapshot.Key] = null;
+        //    }
+        //    else
+        //    {
+        //        //first version.
+        //        if (type == "Array")
+        //        {
+        //            obj = new List<Object>();
+        //        }
+        //        else
+        //        {
+        //            obj = new ExpandoObject();
+        //        }
+        //        // Activator.CreateInstance()
+        //        //if (eval("typeof(" + received.type + ")") != "undefined")
+        //        //{
+        //        //    obj = eval("new " + received.type + "();");
+        //        //}
+        //        //else { obj ={ }; }
+        //        innerDictionary[dataSnapshot.Key] = obj;
+        //        mapSnapshotToObject(obj, received);
+        //    }
+        //    checkForRefrences(dataSnapshot.Key, obj);
+        //}
 
         private void checkForRefrences(string key, object obj)
         {
@@ -142,21 +140,21 @@ namespace FireHive
 
         }
 
-        private void childChanged(FirebaseEvent<DataTypes.DataObject> t)
-        {
-            if (!isPrimitiveTypeName(t.Object.type))
-            {
-                var obj = innerDictionary[t.Key];
-                //this CANNOT be called for primitive types.
-                mapSnapshotToObject(obj, t.Object);
-            }
-        }
+        //private void childChanged(FirebaseEvent<DataTypes.DataObject> t)
+        //{
+        //    if (!isPrimitiveTypeName(t.Object.type))
+        //    {
+        //        var obj = innerDictionary[t.Key];
+        //        //this CANNOT be called for primitive types.
+        //        mapSnapshotToObject(obj, t.Object);
+        //    }
+        //}
 
 
-        private void childRemoved(FirebaseEvent<DataTypes.DataObject> t)
-        {
-            throw new NotImplementedException();
-        }
+        //private void childRemoved(FirebaseEvent<DataTypes.DataObject> t)
+        //{
+        //    throw new NotImplementedException();
+        //}
 
         bool isPrimitive(object obj)
         {

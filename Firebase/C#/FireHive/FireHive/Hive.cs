@@ -1,10 +1,8 @@
-﻿using Firebase.Database;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using Firebase.Database.Streaming;
 using System.Dynamic;
 using FireHive.DataTypes;
 
@@ -12,12 +10,12 @@ namespace FireHive
 {
     public class Hive
     {
-        FirebaseClient database; 
+        //FirebaseClient database; 
         
         static Hive instance;
         private Roots roots;
         private AliveObjects loadedObjects;
-
+        private Firebase.FirebaseClient client;
         public static Hive Current
         {
             get
@@ -27,11 +25,12 @@ namespace FireHive
             }
         }
         private Hive()
-        {  
-            database = new Firebase.Database.FirebaseClient("https://hive-1336.firebaseio.com/");
-            roots = new Roots(database);
-            loadedObjects = new AliveObjects(database);
-          
+        {
+            //  database = new Firebase.Database.FirebaseClient("https://hive-1336.firebaseio.com/");
+            //  roots = new Roots(database);
+            //     loadedObjects = new AliveObjects(database);
+            client = new Firebase.FirebaseClient("https://hive-1336.firebaseio.com/");
+            client.On("objects", (o) => { Console.WriteLine("dummy"); });
         }
 
 
@@ -47,7 +46,8 @@ namespace FireHive
         }
         public  object Get(string key)
         {
-            return loadedObjects.Get(roots.Get(key));
+            // return loadedObjects.Get(roots.Get(key));
+            return null;
         }
         public  void remove(string key)
         {

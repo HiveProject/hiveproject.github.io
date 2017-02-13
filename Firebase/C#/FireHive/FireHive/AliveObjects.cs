@@ -4,7 +4,6 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Dynamic;
-using FireHive.DataTypes;
 
 namespace FireHive
 {
@@ -99,46 +98,46 @@ namespace FireHive
         }
 
         List<KeyValuePair<string, Action<object>>> missingReferences;
-        private void mapSnapshotToObject(object obj, DataObject input)
-        {
+        //private void mapSnapshotToObject(object obj, DataObject input)
+        //{
 
-            dynamic received = input;
-            IDictionary<string, object> dictionary = (IDictionary<string, object>)obj;
-            foreach (var item in received.data)
-            {
-                if (isPrimitiveTypeName(item.Value.type))
-                {
+        //    dynamic received = input;
+        //    IDictionary<string, object> dictionary = (IDictionary<string, object>)obj;
+        //    foreach (var item in received.data)
+        //    {
+        //        if (isPrimitiveTypeName(item.Value.type))
+        //        {
 
-                    dictionary[item.Key as string] = item.Value.value;
-                }
-                else if (item.Value.type == "null")
-                {
+        //            dictionary[item.Key as string] = item.Value.value;
+        //        }
+        //        else if (item.Value.type == "null")
+        //        {
 
-                    dictionary[item.Key as string] = null;
-                }
-                else
-                {
-                    //object or array.
-                    string otherKey = item.Value.value.ToString();
-                    var other = Get(otherKey);
-                    if (other == null)
-                    {
-                        missingReferences.Add(new KeyValuePair<string, Action<object>>(otherKey, (otherObj) =>
-                        {
-                            dictionary[item.Key as string] = otherObj;
-                        }));
-                    }
-                    else
-                    {
-                        dictionary[item.Key as string] = other;
-                    }
+        //            dictionary[item.Key as string] = null;
+        //        }
+        //        else
+        //        {
+        //            //object or array.
+        //            string otherKey = item.Value.value.ToString();
+        //            var other = Get(otherKey);
+        //            if (other == null)
+        //            {
+        //                missingReferences.Add(new KeyValuePair<string, Action<object>>(otherKey, (otherObj) =>
+        //                {
+        //                    dictionary[item.Key as string] = otherObj;
+        //                }));
+        //            }
+        //            else
+        //            {
+        //                dictionary[item.Key as string] = other;
+        //            }
 
-                }
+        //        }
 
 
-            }
+        //    }
 
-        }
+        //}
 
         //private void childChanged(FirebaseEvent<DataTypes.DataObject> t)
         //{

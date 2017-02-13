@@ -14,34 +14,32 @@ namespace FireHive.Firebase
 
         StringBuilder sb = new StringBuilder();
         Dictionary<string, FirebaseStreamParser> parsers = new Dictionary<string, FirebaseStreamParser>();
-        Dictionary<string, Thread> threads = new Dictionary<string, Thread>();
         public FirebaseClient(string baseURL)
         {
             url = baseURL;
-
+            FirebaseStreamParser.BaseUrl = url;
         }
 
-        public void On(string route, FirebaseEvent evt, Action<object> callback)
+        public void On(string route, FirebaseEvent evt, Action<Dictionary<string,object>> callback)
         {
-            if (parsers.ContainsKey(route))
-            { parsers[route].On(evt, callback); }
-            else {
-                var parser = new FirebaseStreamParser();
-                var th = new Thread(() =>
-                {
-                    var client = new System.Net.WebClient();
-                    client.Headers.Add(System.Net.HttpRequestHeader.Accept, "text/event-stream");
-                    client.OpenReadCompleted += (s, e) =>
-                    {
-                        var sr = new StreamReader(e.Result);
-                        parser.Reader = sr;
-                        parser.Start();
-                    };
-                    client.OpenReadAsync(new Uri(url + route + ".json"));
-                });
-                parsers.Add(route, parser);
-                threads.Add(route, th);
-                th.Start();
+            if (!parsers.ContainsKey(route))
+            {
+                parsers.Add(route, new FirebaseStreamParser(route));
+            }
+            var parser = parsers[route];
+            switch (evt)
+            {
+                case FirebaseEvent.Added:
+                    parser.Added += callback;
+                    break;
+                case FirebaseEvent.Changed:
+                    parser.Changed += callback;
+                    break;
+                case FirebaseEvent.Deleted:
+                    parser.Deleted += callback;
+                    break;
+                default:
+                    break;
             }
         }
 

@@ -4,7 +4,6 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Dynamic;
-using FireHive.DataTypes;
 
 namespace FireHive
 {
@@ -30,7 +29,7 @@ namespace FireHive
             //  roots = new Roots(database);
             //     loadedObjects = new AliveObjects(database);
             client = new Firebase.FirebaseClient("https://hive-1336.firebaseio.com/");
-            client.On("objects", (o) => { Console.WriteLine("dummy"); });
+            client.On("objects",Firebase.FirebaseEvent.Added, (o) => { Console.WriteLine("dummy"); });
         }
 
 

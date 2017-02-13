@@ -1,6 +1,10 @@
 ﻿namespace FireHive.Firebase
 {
-    public class FirebaseEvent
+    public enum FirebaseEvent
     {
+        Added,
+        Changed,
+        Deleted
+
     }
 }

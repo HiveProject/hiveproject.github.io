@@ -13,6 +13,7 @@ namespace FireHive.Firebase
         private WebClient client;
         Thread th;
 
+        HashSet<string> loadedObjects = new HashSet<string>();
         public string Route { get; private set; }
         static public string BaseUrl { get; set; }
         public event Action<string,Dictionary<string, object>> Added;
@@ -86,9 +87,41 @@ namespace FireHive.Firebase
                         var d = (Dictionary<string,object>)(result["data"]);
                         foreach (var item in d.Keys)
                         {
+                            loadedObjects.Add(item);
+                            Added(item,d[item] as Dictionary<string,object>);
 
-                            Added(item,result[item] as Dictionary<string,object>);
-
+                        }
+                        break;
+                    case "patch":
+                        d = (Dictionary<string, object>)(result["data"]);
+                        Dictionary<string, object> toUpdate = new Dictionary<string, object>();
+                        foreach (var item in d.Keys)
+                        {
+                            Queue<string> path = new  Queue<string>(  item.Split('/'));
+                            Dictionary<string, object> current = toUpdate;
+                            while (path.Count > 1)
+                            {
+                                string k = path.Dequeue();
+                                Dictionary<string,object> next = null;
+                                if (!current.ContainsKey(k))
+                                {
+                                    next = new Dictionary<string, object>();
+                                    current[k] = next;
+                                }
+                                current = current[k].asDictionary(); 
+                            }
+                            current[path.Dequeue()] = d[item];
+                            
+                        }
+                        foreach (var item in toUpdate)
+                        {
+                            if (loadedObjects.Contains(item.Key))
+                            {
+                                Changed(item.Key, item.Value as Dictionary<string, object>);
+                            } else {
+                                loadedObjects.Add(item.Key);
+                                Added(item.Key, item.Value as Dictionary<string, object>);
+                            }
                         }
                         break;
                     default:
@@ -113,7 +146,8 @@ namespace FireHive.Firebase
                                               prop => mapJsonToken(prop.Value));
 
                 case JTokenType.Array:
-                    return token.Select(mapJsonToken).ToList();
+                    var i=0;
+                    return token.Select(mapJsonToken).ToDictionary(p => (i++).ToString(), p => p); 
 
                 default:
                     return ((JValue)token).Value;

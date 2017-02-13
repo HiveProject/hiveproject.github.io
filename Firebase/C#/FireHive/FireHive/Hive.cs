@@ -10,7 +10,7 @@ namespace FireHive
     public class Hive
     {
         //FirebaseClient database; 
-        
+
         static Hive instance;
         private Roots roots;
         private AliveObjects loadedObjects;
@@ -27,60 +27,61 @@ namespace FireHive
         {
             //  database = new Firebase.Database.FirebaseClient("https://hive-1336.firebaseio.com/");
             //  roots = new Roots(database);
-            //     loadedObjects = new AliveObjects(database);
+
             client = new Firebase.FirebaseClient("https://hive-1336.firebaseio.com/");
-            client.On("objects",Firebase.FirebaseEvent.Added, (o) => { Console.WriteLine("dummy"); });
+            loadedObjects = new AliveObjects(client);
         }
 
 
-  
-
-   
 
 
 
-        public  object set(string key, object value)
+
+
+
+        public object set(string key, object value)
         {
             return value;
         }
-        public  object Get(string key)
+        public object Get(string key)
         {
             // return loadedObjects.Get(roots.Get(key));
             return null;
         }
-        public  void remove(string key)
+        public void remove(string key)
         {
             loadedObjects.Delete(roots.Get(key));
             roots.Delete(key);
         }
-        public  void removeElement(object value)
+        public void removeElement(object value)
         {
             var k = loadedObjects.GetKey(value);
             var rk = roots.GetKey(k);
             remove(rk);
-            
+
         }
-        public  IEnumerable<string> keys()
+        public IEnumerable<string> keys()
         {
             return roots.Keys();
         }
-        public  Dictionary<string, object> elements()
+        public Dictionary<string, object> elements()
         {
             var result = new Dictionary<string, object>();
             //todo: proxyfy
-            roots.ForEach((k, v) => {
+            roots.ForEach((k, v) =>
+            {
                 result.Add(k, loadedObjects.Get(v));
             });
 
             return result;
         }
-        public  void forEach(Action<string, object> action)
+        public void forEach(Action<string, object> action)
         {
             foreach (var item in elements())
             {
                 action(item.Key, item.Value);
             }
         }
-     
+
     }
 }

@@ -4,16 +4,20 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Dynamic;
+using FireHive.Firebase;
 
 namespace FireHive
 {
     class AliveObjects : Map<string, object>
     {
-      //  private FirebaseClient database;
-        public AliveObjects(/*FirebaseClient database*/)
+        private FirebaseClient client;
+        public AliveObjects(FirebaseClient client)
         {
             missingReferences = new List<KeyValuePair<string, Action<object>>>();
-           /* this.database = database;
+            this.client = client;
+
+            client.On("objects", FirebaseEvent.Added, childAdded);
+           /*  
             database.Child("objects").AsObservable<DataTypes.DataObject>().Subscribe(t =>
             {
                 if (t.Key != string.Empty)
@@ -41,51 +45,51 @@ namespace FireHive
             });*/
         }
 
-        //private void childAdded(FirebaseEvent<DataTypes.DataObject> dataSnapshot)
-        //{
-        //    object obj = null;
-        //    var received = dataSnapshot.Object;
-        //    var type = received.type;
-        //    if (isPrimitiveTypeName(type))
-        //    {
-        //        if (type == "Date")
-        //        {
+        private void childAdded(string Key,Dictionary<string, object> input)
+        {
+            //object obj = null;
+            //var received = (Dictionary<string, object>)input["data"];
+            //var type = received["type"].ToString();
+            //if (isPrimitiveTypeName(type))
+            //{
+            //    if (type == "Date")
+            //    {
 
-        //            obj = ((DateTime)received.value).ToLocalTime();
-        //        }
-        //        else
-        //        {
-        //            //let's say this is a literal for now.
-        //            obj = received.value;
-        //        }
-        //        innerDictionary[dataSnapshot.Key] = obj;
-        //    }
-        //    else if (type == "null")
-        //    {
-        //        innerDictionary[dataSnapshot.Key] = null;
-        //    }
-        //    else
-        //    {
-        //        //first version.
-        //        if (type == "Array")
-        //        {
-        //            obj = new List<Object>();
-        //        }
-        //        else
-        //        {
-        //            obj = new ExpandoObject();
-        //        }
-        //        // Activator.CreateInstance()
-        //        //if (eval("typeof(" + received.type + ")") != "undefined")
-        //        //{
-        //        //    obj = eval("new " + received.type + "();");
-        //        //}
-        //        //else { obj ={ }; }
-        //        innerDictionary[dataSnapshot.Key] = obj;
-        //        mapSnapshotToObject(obj, received);
-        //    }
-        //    checkForRefrences(dataSnapshot.Key, obj);
-        //}
+            //        obj = ((DateTime)received["value"]).ToLocalTime();
+            //    }
+            //    else
+            //    {
+            //        //let's say this is a literal for now.
+            //        obj = received["value"];
+            //    }
+            //    innerDictionary[dataSnapshot.Key] = obj;
+            //}
+            //else if (type == "null")
+            //{
+            //    innerDictionary[dataSnapshot.Key] = null;
+            //}
+            //else
+            //{
+            //    //first version.
+            //    if (type == "Array")
+            //    {
+            //        obj = new List<Object>();
+            //    }
+            //    else
+            //    {
+            //        obj = new ExpandoObject();
+            //    }
+            //    // Activator.CreateInstance()
+            //    //if (eval("typeof(" + received.type + ")") != "undefined")
+            //    //{
+            //    //    obj = eval("new " + received.type + "();");
+            //    //}
+            //    //else { obj ={ }; }
+            //    innerDictionary[dataSnapshot.Key] = obj;
+            //    mapSnapshotToObject(obj, received);
+            //}
+            //checkForRefrences(dataSnapshot.Key, obj);
+        }
 
         private void checkForRefrences(string key, object obj)
         {
@@ -98,6 +102,7 @@ namespace FireHive
         }
 
         List<KeyValuePair<string, Action<object>>> missingReferences;
+
         //private void mapSnapshotToObject(object obj, DataObject input)
         //{
 

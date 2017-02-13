@@ -20,7 +20,7 @@ namespace FireHive.Firebase
             FirebaseStreamParser.BaseUrl = url;
         }
 
-        public void On(string route, FirebaseEvent evt, Action<Dictionary<string,object>> callback)
+        public void On(string route, FirebaseEvent evt, Action<string, Dictionary<string,object>> callback)
         {
             if (!parsers.ContainsKey(route))
             {

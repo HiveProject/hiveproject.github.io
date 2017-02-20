@@ -29,6 +29,7 @@ namespace FireHive
             //  roots = new Roots(database);
 
             client = new Firebase.FirebaseClient("https://hive-1336.firebaseio.com/");
+            roots = new Roots(client);
             loadedObjects = new AliveObjects(client);
         }
 
@@ -45,8 +46,8 @@ namespace FireHive
         }
         public object Get(string key)
         {
-            // return loadedObjects.Get(roots.Get(key));
-            return null;
+            return loadedObjects.Get(roots.Get(key));
+            
         }
         public void remove(string key)
         {

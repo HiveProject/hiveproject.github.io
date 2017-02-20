@@ -1,4 +1,5 @@
-﻿using System;
+﻿using FireHive.Firebase;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -8,48 +9,35 @@ namespace FireHive
 {
     class Roots : Map<string, string>
     {
-       // private FirebaseClient database;
+        private FirebaseClient client;
+        private List<KeyValuePair<string, Action<object>>> missingReferences;
 
-      /*  public Roots(Firebase.Database.FirebaseClient db)
+        public Roots(FirebaseClient client)
         {
-            database = db;
-            database.Child("roots").AsObservable<string>().Subscribe(t =>
-            {
-                if (t.Key != string.Empty)
-                    switch (t.EventType)
-                    {
-                        case Firebase.Database.Streaming.FirebaseEventType.InsertOrUpdate:
-                            rootAdded(t);
-                            break;
-                        case Firebase.Database.Streaming.FirebaseEventType.Delete:
-                            rootRemoved(t);
-                            break;
-                        default:
-                            break;
-                    }
-            });
-        }*/
-        //private void rootRemoved(FirebaseEvent<string> t)
-        //{
-        //    if (innerDictionary.ContainsKey(t.Key))
-        //        innerDictionary.Remove(t.Key);
-        //}
-        //private void rootAdded(FirebaseEvent<string> t)
-        //{
-        //    innerDictionary[t.Key] = t.Object;
-        //}
-        //public override bool Set(string key, string value)
-        //{
-        //    var result = base.Set(key, value);
-        //    database.Child("roots/"+key).PutAsync(value).Wait();
-        //    return result;
-        //}
-        //public override bool Delete(string key)
-        //{
-        //    var result = base.Delete(key);
-        //    database.Child("roots/" + key).DeleteAsync().Wait();
-        //    return result;
-        //}
+            missingReferences = new List<KeyValuePair<string, Action<object>>>();
+            this.client = client;
+
+            client.On("roots", FirebaseEvent.Added, childAdded);
+            client.On("roots", FirebaseEvent.Changed, childChanged);
+
+            client.On("roots", FirebaseEvent.Deleted, childDeleted);
+        }
+
+        private void childDeleted(string arg1, Dictionary<string, object> arg2)
+        {
+            throw new NotImplementedException();
+        }
+
+        private void childChanged(string arg1, Dictionary<string, object> arg2)
+        {
+            innerDictionary[arg1] = arg2["value"] as string;
+        }
+
+        private void childAdded(string arg1, Dictionary<string, object> arg2)
+        {
+            innerDictionary[arg1]= arg2["value"] as string;
+        }
+
 
     }
 }

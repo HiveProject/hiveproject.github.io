@@ -116,7 +116,7 @@ namespace FireHive
                 //{
                 //    list.RemoveRange(received.Count - 1, list.Count - received.Count);
                 //}
-                int maxIndex = input.Keys.Select(int.Parse).Max();
+                int maxIndex = input["data"].asDictionary().Keys.Select(int.Parse).Max();
                 while (list.Count <=maxIndex) {
                     list.Add(null);
                 }

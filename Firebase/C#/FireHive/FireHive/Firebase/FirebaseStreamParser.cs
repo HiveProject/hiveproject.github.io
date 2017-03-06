@@ -10,8 +10,7 @@ namespace FireHive.Firebase
 {
     internal class FirebaseStreamParser
     {
-        private WebClient client;
-        private Thread receiveThread;
+         private Thread receiveThread;
         private Thread sendThread;
 
         Queue<Tuple<outMessage, Dictionary<string, object>>> ToSend = new Queue<Tuple<outMessage, Dictionary<string, object>>>();
@@ -26,14 +25,16 @@ namespace FireHive.Firebase
         }
         public FirebaseStreamParser(string route, string baseUrl)
         {
+            BaseUrl = baseUrl;
             Added += (k, e) => { };
             Changed += (k, e) => { };
             Deleted += (k, e) => { };
-            client = new System.Net.WebClient();
-            client.Headers.Add(System.Net.HttpRequestHeader.Accept, "text/event-stream");
+         
             Route = route;
             receiveThread = new Thread(() =>
             {
+                var client = new System.Net.WebClient();
+                client.Headers.Add(System.Net.HttpRequestHeader.Accept, "text/event-stream");
                 client.OpenReadCompleted += (s, e) =>
                 {
                     using (StreamReader sr = new StreamReader(e.Result))
@@ -51,7 +52,7 @@ namespace FireHive.Firebase
 
             sendThread = new Thread(() =>
             {
-
+                var client = new System.Net.WebClient(); 
                 while (true)
                 {
                     while (ToSend.Count > 0)
@@ -76,6 +77,16 @@ namespace FireHive.Firebase
             });
             sendThread.IsBackground = true;
             sendThread.Start();
+        }
+
+        internal string Post(Dictionary<string,object> data)
+        {
+            var client = new System.Net.WebClient(); 
+            string toPost = "{}";
+            if (data != null)
+            { toPost = Newtonsoft.Json.JsonConvert.SerializeObject(data); }
+            var result = client.UploadString(new Uri(BaseUrl + Route + ".json"), "POST", toPost);
+            return  mapJson( result).asDictionary()["name"].ToString();
         }
 
         string evt = null;
@@ -179,13 +190,28 @@ namespace FireHive.Firebase
                                 }
                                 else
                                 {
-                                    Changed(item.Key, item.Value as Dictionary<string, object>);
+                                    if (item.Value.GetType() == typeof(string))
+                                    {
+
+                                        Changed(item.Key, new Dictionary<string, object>() { { "value", item.Value } });
+                                    }
+                                    else
+                                    {
+                                        Changed(item.Key, item.Value as Dictionary<string, object>);
+                                    }
                                 }
                             }
                             else
                             {
                                 loadedObjects.Add(item.Key);
-                                Added(item.Key, item.Value as Dictionary<string, object>);
+                                if (item.Value.GetType() == typeof(string))
+                                {
+                                    Added(item.Key,new Dictionary<string, object>(){ { "value" ,item.Value } });
+                                }
+                                else
+                                {
+                                    Added(item.Key, item.Value as Dictionary<string, object>);
+                                }
                             }
                         }
                         break;

@@ -25,7 +25,14 @@ namespace Test.UI
         private void button1_Click(object sender, EventArgs e)
         {
             var n = current.Get("a");
-            var p = current.Get("b");
+            var p = current.set("rect",new Rectangle(10,10));
+
+            var first = current.set("recursive", new RecursiveStructure()
+            { Name="first"});
+
+            var second = current.set("recursive2", new RecursiveStructure()
+            { Name = "second",Child=first });
+            first.Child = second;
         }
 
         private void timer1_Tick(object sender, EventArgs e)

@@ -22,7 +22,12 @@ namespace FireHive
 
             client.On("roots", FirebaseEvent.Deleted, childDeleted);
         }
+        public override bool Set(string key, string value)
+        {
 
+            client.Patch("roots", new Dictionary<string, object>() { { key, value } });
+            return true;
+        }
         private void childDeleted(string arg1, Dictionary<string, object> arg2)
         {
             if (innerDictionary.ContainsKey(arg1))

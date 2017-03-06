@@ -17,10 +17,10 @@ namespace FireHive.Proxies
             setExecuted=SetExecuted;
 
             realInstance = instance;
-            objectDictionary = (IDictionary<String, object>)realInstance;
+            objectDictionary = (IDictionary<string, object>)realInstance;
         }
         private dynamic realInstance;
-        private IDictionary<String, object> objectDictionary;
+        private IDictionary<string, object> objectDictionary;
         private Action<object, string> setExecuted;
 
         public override string ToString()

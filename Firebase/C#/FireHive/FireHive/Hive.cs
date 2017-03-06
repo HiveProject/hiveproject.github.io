@@ -50,26 +50,27 @@ namespace FireHive
 
             loadedObjects.UpdateField(rcvr, name);
             //if value is a proxy, i need the real thing.
-         
+
         }
         private dynamic createProxy(object obj)
         {
             var t = obj.GetType();
             if (t == typeof(ExpandoObject))
-            { return new ExpandoObjectProxy(obj,SetExecuted); }
+            { return new ExpandoObjectProxy(obj, SetExecuted); }
             //todo, other proxies
-            return obj; 
+            return obj;
         }
 
 
         public dynamic set(string key, object value)
         {
+            roots.Set(key, loadedObjects.Add(value));
             return getProxy(value);
         }
         public dynamic Get(string key)
         {
             return getProxy(loadedObjects.Get(roots.Get(key)));
-            
+
         }
         public void remove(string key)
         {

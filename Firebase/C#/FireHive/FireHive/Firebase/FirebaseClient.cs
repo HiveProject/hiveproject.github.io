@@ -20,7 +20,7 @@ namespace FireHive.Firebase
             FirebaseStreamParser.BaseUrl = url;
         }
 
-        public void On(string route, FirebaseEvent evt, Action<string, Dictionary<string,object>> callback)
+        public void On(string route, FirebaseEvent evt, Action<string, Dictionary<string, object>> callback)
         {
             if (!parsers.ContainsKey(route))
             {
@@ -57,7 +57,7 @@ namespace FireHive.Firebase
 
             //   throw new NotImplementedException();
         }
-  
+
 
         internal void Patch(string target, Dictionary<string, object> upd)
         {
@@ -66,6 +66,14 @@ namespace FireHive.Firebase
                 parsers.Add(target, new FirebaseStreamParser(target));
             }
             parsers[target].Patch(upd);
+        }
+        internal string Post(string target, Dictionary<string, object> data = null)
+        {
+            if (!parsers.ContainsKey(target))
+            {
+                parsers.Add(target, new FirebaseStreamParser(target));
+            }
+            return parsers[target].Post(data);
         }
     }
 }

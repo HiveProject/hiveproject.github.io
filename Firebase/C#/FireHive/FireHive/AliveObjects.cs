@@ -19,7 +19,7 @@ namespace FireHive
             client.On("objects", FirebaseEvent.Added, childAdded);
             client.On("objects", FirebaseEvent.Changed, childChanged);
             client.On("objects", FirebaseEvent.Deleted, childDeleted);
-            
+
         }
 
         private void childDeleted(string arg1, Dictionary<string, object> arg2)
@@ -72,6 +72,49 @@ namespace FireHive
                 mapSnapshotToObject(obj, input);
             }
             checkForRefrences(Key, obj);
+        }
+
+        internal string Add(object value)
+        {
+            if (innerDictionary.ContainsValue(value))
+            { return GetKey(value); }
+            string key = client.Post("objects");
+            Set(key, value);
+            Dictionary<string, object> upd = new Dictionary<string, object>();
+            if (value == null)
+            {
+                upd["/" + key + "/type/"] = "null";
+                upd["/" + key + "/value/"] = null;
+            }
+            else if (!isPrimitive(value))
+            {
+                UpdateFields(value, getFields(value));
+            }
+            else
+            {
+                var type = sanitizeTypeName(value.GetType());
+                upd["/" + key + "/type/"] = type;
+                var basePath = "/" + key + "/";
+                //first of all i need to see if the value is either null or undefined.
+                if (type == "Date")
+                {
+                    upd[basePath + "value"] = ((DateTime)value).ToUniversalTime().ToString("s");
+                }
+                else
+                {
+                    upd[basePath + "value"] = value;
+                }
+            }
+
+
+            client.Patch("objects", upd);
+            return key;
+        }
+
+        private IEnumerable<string> getFields(object value)
+        {
+            //inheritance may not work correctly here
+            return value.GetType().GetProperties().Select(t => t.Name);
         }
 
         private void checkForRefrences(string key, object obj)
@@ -228,21 +271,53 @@ namespace FireHive
                         else
                         {
                             //obj.
+                            //ensure i have no proxies here.
+                            if (Hive.Current.proxies.ContainsValue(value))
+                            {//i have a proxy in value.
+                                value = Hive.Current.proxies.FirstOrDefault(kvp => kvp.Value == value).Key;
+                                setPropertyValue(obj, fieldName, value);
+                            }
+
+                            if (type == "Object" || type == "Array")
+                            {
+                                upd[basePath + "value"] = Add(value);
+                            }
                         }
                     }
 
 
                 }
-                client.Patch("objects",upd);
+                client.Patch("objects", upd);
             }
 
         }
 
+        private void setPropertyValue(object rcvr, string name, object value)
+        {
+            try
+            {
+                ((IDictionary<string, object>)rcvr)[name] = value;
+            }
+            catch (InvalidCastException)
+            {
+                rcvr.GetType().GetProperty(name).SetValue(rcvr,value);
+
+            }
+        }
 
         private object getPropertyValue(object rcvr, string name)
         {
             //todo what if what i receive is not a dictionary.
-            return ((IDictionary<string, object>)rcvr)[name];
+            try
+            {
+
+                return ((IDictionary<string, object>)rcvr)[name];
+            }
+            catch (InvalidCastException)
+            {
+                return rcvr.GetType().GetProperty(name).GetValue(rcvr);
+
+            }
             //return rcvr.GetType().GetProperty(name).GetValue(rcvr);
         }
         private string sanitizeTypeName(Type type)
@@ -265,7 +340,7 @@ namespace FireHive
             if (obj == null)
             { return false; }
             //todo: numbers and stuff have different names here. i should map them.
-            return isPrimitiveTypeName( sanitizeTypeName( obj.GetType()));
+            return isPrimitiveTypeName(sanitizeTypeName(obj.GetType()));
         }
         bool isPrimitiveTypeName(string name)
         {

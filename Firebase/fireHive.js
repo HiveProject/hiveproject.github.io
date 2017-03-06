@@ -435,41 +435,44 @@ let hive = (function () {
 	};
 	function mark(obj,untouchedSet)
 	{
-		let type = obj.constructor.name;
-		if(isPrimitiveTypeName(type))
+		if(obj!=undefined)
 		{
-			//do nothing
-		}else if(type=="Function")
-		{
-			//do nothing for now, if i have ever a clojure this should change.
-		}
-		else if(type=="Array") {
-			let id = loadedObjects.getKey(obj);
-			if(id){
-				if(!untouchedSet.has(id)){
-					//if i have already visited this node, do nothing.
-					return;
-				} 
-				untouchedSet.delete(id);
-				obj.forEach(function(item){
-					mark(item,untouchedSet);
-				});
+			let type = obj.constructor.name;
+			if(isPrimitiveTypeName(type))
+			{
+				//do nothing
+			}else if(type=="Function")
+			{
+				//do nothing for now, if i have ever a clojure this should change.
 			}
-		}else{ //object.
-			let id = loadedObjects.getKey(obj);
-			if (id) {
-				if(!untouchedSet.has(id)){
-					//if i have already visited this node, do nothing.
-					return;
-				} 
-				untouchedSet.delete(id);
-				for (let k in obj) {
-					if (obj[k]) {
-						mark(obj[k],untouchedSet);
-					}
+			else if(type=="Array") {
+				let id = loadedObjects.getKey(obj);
+				if(id){
+					if(!untouchedSet.has(id)){
+						//if i have already visited this node, do nothing.
+						return;
+					} 
+					untouchedSet.delete(id);
+					obj.forEach(function(item){
+						mark(item,untouchedSet);
+					});
 				}
-			} 
-		}  
+			}else{ //object.
+				let id = loadedObjects.getKey(obj);
+				if (id) {
+					if(!untouchedSet.has(id)){
+						//if i have already visited this node, do nothing.
+						return;
+					} 
+					untouchedSet.delete(id);
+					for (let k in obj) {
+						if (obj[k]) {
+							mark(obj[k],untouchedSet);
+						}
+					}
+				} 
+			}  
+		}
 	};
 	function sweep(untouchedSet)
 	{	let upd = {};

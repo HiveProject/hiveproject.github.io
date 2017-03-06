@@ -49,6 +49,8 @@
     <Compile Include="Firebase\FirebaseClient.cs" />
     <Compile Include="Firebase\FirebaseEvent.cs" />
     <Compile Include="Firebase\FirebaseStreamParser.cs" />
+    <Compile Include="Firebase\outMessage.cs" />
+    <Compile Include="Proxies\ExpandoObjectProxy.cs" />
     <Compile Include="Roots.cs" />
     <Compile Include="Hive.cs" />
     <Compile Include="Map.cs" />

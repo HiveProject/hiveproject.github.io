@@ -57,5 +57,15 @@ namespace FireHive.Firebase
 
             //   throw new NotImplementedException();
         }
+  
+
+        internal void Patch(string target, Dictionary<string, object> upd)
+        {
+            if (!parsers.ContainsKey(target))
+            {
+                parsers.Add(target, new FirebaseStreamParser(target));
+            }
+            parsers[target].Patch(upd);
+        }
     }
 }

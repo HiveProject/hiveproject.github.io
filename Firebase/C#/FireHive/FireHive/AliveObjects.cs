@@ -19,39 +19,14 @@ namespace FireHive
             client.On("objects", FirebaseEvent.Added, childAdded);
             client.On("objects", FirebaseEvent.Changed, childChanged);
             client.On("objects", FirebaseEvent.Deleted, childDeleted);
-            /*  
-             database.Child("objects").AsObservable<DataTypes.DataObject>().Subscribe(t =>
-             {
-                 if (t.Key != string.Empty)
-                     switch (t.EventType)
-                     {
-                         case FirebaseEventType.InsertOrUpdate:
-                             if (innerDictionary.ContainsKey(t.Key))
-                             {
-                                 //this library sucks, it does not differentiate correctly adds from updates
-                                 //and to make it workst, it triggers this event  more times than it should.
-                                 childChanged(t);
-                             }
-                             else
-                             {
-                                 childAdded(t);
-                             }
-                             break;
-                         case FirebaseEventType.Delete:
-                             childRemoved(t);
-                             break;
-                         default:
-                             break;
-                     }
-
-             });*/
+            
         }
 
         private void childDeleted(string arg1, Dictionary<string, object> arg2)
         {
 
             if (innerDictionary.ContainsKey(arg1))
-                innerDictionary.Remove(arg1); 
+                innerDictionary.Remove(arg1);
         }
 
         private void childAdded(string Key, Dictionary<string, object> input)
@@ -63,12 +38,12 @@ namespace FireHive
             {
                 if (type == "Date")
                 {
-                 obj = ((DateTime)input["value"]).ToLocalTime();
+                    obj = ((DateTime)input["value"]).ToLocalTime();
                 }
                 else
                 {
                     //let's say this is a literal for now.
-                      obj = input["value"];
+                    obj = input["value"];
                 }
                 innerDictionary[Key] = obj;
             }
@@ -112,12 +87,12 @@ namespace FireHive
         List<KeyValuePair<string, Action<object>>> missingReferences;
 
         private void mapSnapshotToObject(object obj, Dictionary<string, object> input)
-        {  
+        {
             string myType = input["type"].ToString();
             if (myType == "Array")
             {
                 List<object> list = (List<object>)obj;
-                var received =  input["data"].asDictionary();
+                var received = input["data"].asDictionary();
                 //todo: if i remove things from an array this wont update correctly.
 
                 //if (list.Count > received.Count)
@@ -125,13 +100,14 @@ namespace FireHive
                 //    list.RemoveRange(received.Count - 1, list.Count - received.Count);
                 //}
                 int maxIndex = input["data"].asDictionary().Keys.Select(int.Parse).Max();
-                while (list.Count <=maxIndex) {
+                while (list.Count <= maxIndex)
+                {
                     list.Add(null);
                 }
                 foreach (var item in received)
                 {
                     int i = int.Parse(item.Key);
-                    string type =item.Value.asDictionary()["type"].ToString();
+                    string type = item.Value.asDictionary()["type"].ToString();
                     if (isPrimitiveTypeName(type))
                     {
 
@@ -159,7 +135,7 @@ namespace FireHive
                         }
 
                     }
-                } 
+                }
             }
             else
             {
@@ -202,7 +178,7 @@ namespace FireHive
 
         }
 
-        private void childChanged(string key, Dictionary<string,object> data)
+        private void childChanged(string key, Dictionary<string, object> data)
         {
             var obj = innerDictionary[key];
             //todo: massive hack
@@ -216,13 +192,80 @@ namespace FireHive
         //{
         //    throw new NotImplementedException();
         //}
+        public void UpdateField(object obj, string fieldName)
+        { UpdateFields(obj, new string[] { fieldName }); }
+        public void UpdateFields(object obj, IEnumerable<string> fieldNames)
+        {
+            Dictionary<string, object> upd = new Dictionary<string, object>();
+            var id = GetKey(obj);
+            if (id != null)
+            {
+                upd["/" + id + "/type/"] = sanitizeTypeName(obj.GetType());
+                foreach (var fieldName in fieldNames)
+                {
+                    string basePath = "/" + id + "/data/" + fieldName + "/";
+                    object value = getPropertyValue(obj, fieldName);
+                    if (value == null)
+                    {
+                        upd[basePath + "type"] = "null";
+                        upd[basePath + "value"] = null;
+                    }
+                    else
+                    {
+                        string type = sanitizeTypeName(value.GetType());
+                        upd[basePath + "/type/"] = type;
+                        if (isPrimitive(value))
+                        {
+                            if (type == "Date")
+                            {
+                                upd[basePath + "value"] = ((DateTime)value).ToUniversalTime().ToString("s");
+                            }
+                            else
+                            {
+                                upd[basePath + "value"] = value;
+                            }
+                        }
+                        else
+                        {
+                            //obj.
+                        }
+                    }
+
+
+                }
+                client.Patch("objects",upd);
+            }
+
+        }
+
+
+        private object getPropertyValue(object rcvr, string name)
+        {
+            //todo what if what i receive is not a dictionary.
+            return ((IDictionary<string, object>)rcvr)[name];
+            //return rcvr.GetType().GetProperty(name).GetValue(rcvr);
+        }
+        private string sanitizeTypeName(Type type)
+        {
+            if (type == typeof(DateTime))
+                return "Date";
+            if (type == typeof(string))
+                return "String";
+            if (type == typeof(bool))
+                return "Boolean";
+            if (type == typeof(int) || type == typeof(long) || type == typeof(double) || type == typeof(float))
+                return "Number";
+            if (type.IsArray)
+                return "Array";
+            return "Object";
+        }
 
         bool isPrimitive(object obj)
         {
             if (obj == null)
             { return false; }
             //todo: numbers and stuff have different names here. i should map them.
-            return isPrimitiveTypeName(obj.GetType().Name);
+            return isPrimitiveTypeName( sanitizeTypeName( obj.GetType()));
         }
         bool isPrimitiveTypeName(string name)
         {

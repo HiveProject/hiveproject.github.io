@@ -11,8 +11,10 @@ namespace FireHive.Firebase
     internal class FirebaseStreamParser
     {
         private WebClient client;
-        Thread th;
+        private Thread receiveThread;
+        private Thread sendThread;
 
+        Queue<Tuple<outMessage, Dictionary<string, object>>> ToSend = new Queue<Tuple<outMessage, Dictionary<string, object>>>();
         HashSet<string> loadedObjects = new HashSet<string>();
         public string Route { get; private set; }
         static public string BaseUrl { get; set; }
@@ -27,12 +29,11 @@ namespace FireHive.Firebase
             Added += (k, e) => { };
             Changed += (k, e) => { };
             Deleted += (k, e) => { };
-
+            client = new System.Net.WebClient();
+            client.Headers.Add(System.Net.HttpRequestHeader.Accept, "text/event-stream");
             Route = route;
-            th = new Thread(() =>
+            receiveThread = new Thread(() =>
             {
-                client = new System.Net.WebClient();
-                client.Headers.Add(System.Net.HttpRequestHeader.Accept, "text/event-stream");
                 client.OpenReadCompleted += (s, e) =>
                 {
                     using (StreamReader sr = new StreamReader(e.Result))
@@ -45,10 +46,40 @@ namespace FireHive.Firebase
                 };
                 client.OpenReadAsync(new Uri(baseUrl + route + ".json"));
             });
-            th.Start();
+            receiveThread.IsBackground = true;
+            receiveThread.Start();
+
+            sendThread = new Thread(() =>
+            {
+
+                while (true)
+                {
+                    while (ToSend.Count > 0)
+                    {
+                        var msg = ToSend.Dequeue();
+
+                        switch (msg.Item1)
+                        {
+                            case outMessage.PATCH:
+                                using (StreamWriter sw = new StreamWriter(client.OpenWrite(new Uri(baseUrl + route + ".json"),"PATCH")))
+                                {
+                                    sw.WriteLine(Newtonsoft.Json.JsonConvert.SerializeObject(msg.Item2));
+                                }
+                                break;
+                            default:
+                                //do nothing
+                                break;
+                        }
+                    }
+                    System.Threading.Thread.Sleep(10);
+                }
+            });
+            sendThread.IsBackground = true;
+            sendThread.Start();
         }
 
         string evt = null;
+
         internal void parse(string data)
         {
             if (evt == null)
@@ -116,7 +147,7 @@ namespace FireHive.Firebase
                         }
                         break;
                     case "patch":
-           
+
 
                         d = (Dictionary<string, object>)(result["data"]);
                         Dictionary<string, object> toUpdate = new Dictionary<string, object>();
@@ -162,6 +193,11 @@ namespace FireHive.Firebase
                         break;
                 }
             }
+        }
+
+        internal void Patch(Dictionary<string, object> upd)
+        {
+            ToSend.Enqueue(new Tuple<outMessage, Dictionary<string, object>>(outMessage.PATCH, upd));
         }
 
         private object mapJson(string input)

@@ -24,11 +24,8 @@ namespace Test.UI
 
         private void button1_Click(object sender, EventArgs e)
         {
-
             var n = current.Get("a");
             var p = current.Get("b");
-            dynamic test = new System.Dynamic.ExpandoObject();
-
         }
 
         private void timer1_Tick(object sender, EventArgs e)

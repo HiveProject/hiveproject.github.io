@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Dynamic;
+using FireHive.Proxies;
 
 namespace FireHive
 {
@@ -15,6 +16,9 @@ namespace FireHive
         private Roots roots;
         private AliveObjects loadedObjects;
         private Firebase.FirebaseClient client;
+
+
+        internal Dictionary<object, dynamic> proxies;
         public static Hive Current
         {
             get
@@ -25,8 +29,7 @@ namespace FireHive
         }
         private Hive()
         {
-            //  database = new Firebase.Database.FirebaseClient("https://hive-1336.firebaseio.com/");
-            //  roots = new Roots(database);
+            proxies = new Dictionary<object, dynamic>();
 
             client = new Firebase.FirebaseClient("https://hive-1336.firebaseio.com/");
             roots = new Roots(client);
@@ -35,18 +38,37 @@ namespace FireHive
 
 
 
-
-
-
-
-
-        public object set(string key, object value)
+        internal dynamic getProxy(object obj)
         {
-            return value;
+            if (obj == null) return null;
+            if (!proxies.ContainsKey(obj))
+                proxies.Add(obj, createProxy(obj));
+            return proxies[obj];
         }
-        public object Get(string key)
+        private void SetExecuted(object rcvr, string name)
         {
-            return loadedObjects.Get(roots.Get(key));
+
+            loadedObjects.UpdateField(rcvr, name);
+            //if value is a proxy, i need the real thing.
+         
+        }
+        private dynamic createProxy(object obj)
+        {
+            var t = obj.GetType();
+            if (t == typeof(ExpandoObject))
+            { return new ExpandoObjectProxy(obj,SetExecuted); }
+            //todo, other proxies
+            return obj; 
+        }
+
+
+        public dynamic set(string key, object value)
+        {
+            return getProxy(value);
+        }
+        public dynamic Get(string key)
+        {
+            return getProxy(loadedObjects.Get(roots.Get(key)));
             
         }
         public void remove(string key)
@@ -65,18 +87,18 @@ namespace FireHive
         {
             return roots.Keys();
         }
-        public Dictionary<string, object> elements()
+        public Dictionary<string, dynamic> elements()
         {
-            var result = new Dictionary<string, object>();
+            var result = new Dictionary<string, dynamic>();
             //todo: proxyfy
             roots.ForEach((k, v) =>
             {
-                result.Add(k, loadedObjects.Get(v));
+                result.Add(k, getProxy(loadedObjects.Get(v)));
             });
 
             return result;
         }
-        public void forEach(Action<string, object> action)
+        public void forEach(Action<string, dynamic> action)
         {
             foreach (var item in elements())
             {

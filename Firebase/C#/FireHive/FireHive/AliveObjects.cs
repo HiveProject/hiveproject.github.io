@@ -18,6 +18,7 @@ namespace FireHive
 
             client.On("objects", FirebaseEvent.Added, childAdded);
             client.On("objects", FirebaseEvent.Changed, childChanged);
+            client.On("objects", FirebaseEvent.Deleted, childDeleted);
             /*  
              database.Child("objects").AsObservable<DataTypes.DataObject>().Subscribe(t =>
              {
@@ -44,6 +45,13 @@ namespace FireHive
                      }
 
              });*/
+        }
+
+        private void childDeleted(string arg1, Dictionary<string, object> arg2)
+        {
+
+            if (innerDictionary.ContainsKey(arg1))
+                innerDictionary.Remove(arg1); 
         }
 
         private void childAdded(string Key, Dictionary<string, object> input)

@@ -84,7 +84,17 @@ namespace FireHive.Firebase
                 {
                     case "put":
                         //data
-                        if (result["data"] is string) {
+
+                        if (result["data"] == null)
+                        {
+                            if (result["path"] as string != "/")
+                                //delete i think.
+                                Deleted(result["path"].ToString().Substring(1), null);
+
+                            return;
+                        }
+                        if (result["data"] is string)
+                        {
                             Added(result["path"].ToString().Substring(1), new Dictionary<string, object>() { { "value", result["data"] } });
                             return;
                         }
@@ -94,7 +104,8 @@ namespace FireHive.Firebase
                         foreach (var item in d.Keys)
                         {
                             loadedObjects.Add(item);
-                            if (d[item] is string) {
+                            if (d[item] is string)
+                            {
                                 Added(item, new Dictionary<string, object>() { { "value", d[item] } });
                             }
                             else
@@ -105,6 +116,8 @@ namespace FireHive.Firebase
                         }
                         break;
                     case "patch":
+           
+
                         d = (Dictionary<string, object>)(result["data"]);
                         Dictionary<string, object> toUpdate = new Dictionary<string, object>();
                         foreach (var item in d.Keys)
@@ -129,7 +142,14 @@ namespace FireHive.Firebase
                         {
                             if (loadedObjects.Contains(item.Key))
                             {
-                                Changed(item.Key, item.Value as Dictionary<string, object>);
+                                if (item.Value == null)
+                                {
+                                    Deleted(item.Key, item.Value as Dictionary<string, object>);
+                                }
+                                else
+                                {
+                                    Changed(item.Key, item.Value as Dictionary<string, object>);
+                                }
                             }
                             else
                             {

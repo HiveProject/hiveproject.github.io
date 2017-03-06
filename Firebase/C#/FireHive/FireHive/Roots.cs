@@ -25,7 +25,8 @@ namespace FireHive
 
         private void childDeleted(string arg1, Dictionary<string, object> arg2)
         {
-            throw new NotImplementedException();
+            if (innerDictionary.ContainsKey(arg1))
+                innerDictionary.Remove(arg1);
         }
 
         private void childChanged(string arg1, Dictionary<string, object> arg2)

@@ -27,12 +27,15 @@ namespace Test.UI
 
             var n = current.Get("a");
             var p = current.Get("b");
+            dynamic test = new System.Dynamic.ExpandoObject();
 
         }
 
         private void timer1_Tick(object sender, EventArgs e)
         {
             var value = current.Get("a");
+            var count= current.keys().Count();
+            label3.Text = count.ToString();
             if (value == null)
             {
                 label1.Text = "null";

@@ -11,11 +11,11 @@
 	var pos = {x:50,y:50};
 	try
 	{
-		hive.get("pos");	
+		pos=hive.get("SquareDemoPosition");	
 	}catch(err)
 	{
 		if(err=="Key not found in Hive Roots")
-		pos = hive.set("pos",pos);
+		pos = hive.set("SquareDemoPosition",pos);
 	}
 	
 	//drawing init

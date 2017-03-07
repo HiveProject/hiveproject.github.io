@@ -8,11 +8,16 @@
 <canvas id="canv"></canvas>
 <script>
 	//hive init
-	var pos = hive.get("pos");
-	if(pos==null)
+	var pos = {x:50,y:50};
+	try
 	{
-		pos = hive.set("pos",{x:50,y:50});
+		hive.get("pos");	
+	}catch(err)
+	{
+		if(err=="Key not found in Hive Roots")
+		pos = hive.set("pos",pos);
 	}
+	
 	//drawing init
 	var canvas = document.getElementById("canv") 
 	canvas.width=500;

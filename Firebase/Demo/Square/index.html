@@ -8,39 +8,43 @@
 <canvas id="canv"></canvas>
 <script>
 	//hive init
-	var pos = {x:50,y:50};
-	try
-	{
-		pos=hive.get("SquareDemoPosition");	
-	}catch(err)
-	{
-		if(err=="Key not found in Hive Roots")
-		pos = hive.set("SquareDemoPosition",pos);
-	}
-	
-	//drawing init
-	var canvas = document.getElementById("canv") 
-	canvas.width=500;
-	canvas.height=500;
-	var ctx=canvas.getContext("2d");
-	
-	//drawing & refreshing
-	function draw(){
-		ctx.fillStyle = "black";
-		ctx.fillRect(0,0,500,500);
-		ctx.fillStyle="red";
-		ctx.fillRect(pos.x-5,pos.y-5,10,10);
-	}
-	setInterval(draw,10);
-	//movement
-	canvas.onmousemove = function(e){ var mouseX, mouseY;
-		if(e.offsetX) {
-			mouseX = e.offsetX;
-			mouseY = e.offsetY;
+	window.onload = function(){
+		var pos = {x:50,y:50};
+		try
+		{
+			pos=hive.get("SquareDemoPosition");	
+		}catch(err)
+		{
+			if(err=="Key not found in Hive Roots")
+			pos = hive.set("SquareDemoPosition",pos);
 		}
-		else if(e.layerX) {
-			mouseX = e.layerX;
-			mouseY = e.layerY;
-		} pos.x=mouseX; pos.y=mouseY;}
+		
+		//drawing init
+		var canvas = document.getElementById("canv") 
+		canvas.width=500;
+		canvas.height=500;
+		var ctx=canvas.getContext("2d");
+		
+		//drawing & refreshing
+		function draw(){
+			ctx.fillStyle = "black";
+			ctx.fillRect(0,0,500,500);
+			ctx.fillStyle="red";
+			ctx.fillRect(pos.x-5,pos.y-5,10,10);
+		}
+		setInterval(draw,10);
+		//movement
+		canvas.onmousemove = function(e){ var mouseX, mouseY;
+			if(e.offsetX) {
+				mouseX = e.offsetX;
+				mouseY = e.offsetY;
+			}
+			else if(e.layerX) {
+				mouseX = e.layerX;
+				mouseY = e.layerY;
+			} pos.x=mouseX; pos.y=mouseY;
+		}
+	}
+	
 </script>
 </body></html>

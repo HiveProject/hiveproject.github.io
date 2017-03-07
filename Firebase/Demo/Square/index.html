@@ -1,0 +1,41 @@
+<html>
+<head></head>
+<body>
+<script src="https://www.gstatic.com/firebasejs/3.6.2/firebase.js"></script>
+<script src="https://www.gstatic.com/firebasejs/3.6.2/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/3.6.2/firebase-database.js"></script> 
+<script src="../../fireHive.js" type="text/javascript"></script>
+<canvas id="canv"></canvas>
+<script>
+	//hive init
+	var pos = hive.get("pos");
+	if(pos==null)
+	{
+		pos = hive.set("pos",{x:50,y:50});
+	}
+	//drawing init
+	var canvas = document.getElementById("canv") 
+	canvas.width=500;
+	canvas.height=500;
+	var ctx=canvas.getContext("2d");
+	
+	//drawing & refreshing
+	function draw(){
+		ctx.fillStyle = "black";
+		ctx.fillRect(0,0,500,500);
+		ctx.fillStyle="red";
+		ctx.fillRect(pos.x-5,pos.y-5,10,10);
+	}
+	setInterval(draw,10);
+	//movement
+	canvas.onmousemove = function(e){ var mouseX, mouseY;
+		if(e.offsetX) {
+			mouseX = e.offsetX;
+			mouseY = e.offsetY;
+		}
+		else if(e.layerX) {
+			mouseX = e.layerX;
+			mouseY = e.layerY;
+		} pos.x=mouseX; pos.y=mouseY;}
+</script>
+</body></html>

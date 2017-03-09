@@ -11,7 +11,7 @@
 	//To Do: i do not have a real way to know when hive is actually working and has all the data.
 
 	window.onload =function(){
-		setTimeout(function(){
+		hive.start(function(){
 			var pos = {x:50,y:50};
 			try
 			{
@@ -47,7 +47,7 @@
 					mouseY = e.layerY;
 				} pos.x=mouseX; pos.y=mouseY;
 			}
-		},2000);
+		});
 	}
 	
 </script>

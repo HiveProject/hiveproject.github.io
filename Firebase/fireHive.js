@@ -64,8 +64,8 @@ let hive = (function () {
 				if(callback && callback.constructor.name=="Function"){
 					callback();
 				}
-				);
 			});
+		});
 		
 	
 		

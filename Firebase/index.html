@@ -6,6 +6,10 @@
 <script src="https://www.gstatic.com/firebasejs/3.6.2/firebase-database.js"></script> 
 <script src="fireHive.js" type="text/javascript"></script>
 <script>
-hive.start(function(){console.log("Hive started");});
+if(hive){
+	hive.start(function(){console.log("Hive started");});
+}else{
+	console.log("Hive was not defined");
+	}
 </script>
 </body></html>

@@ -20,6 +20,9 @@ namespace Test.UI
         private void Form1_Load(object sender, EventArgs e)
         {
             current = FireHive.Hive.Current;
+
+            var t = new Rectangle(10,10);
+            dynamic m = new FireHive.Dynamic.ExpandibleObject(t);
         }
 
         private void button1_Click(object sender, EventArgs e)

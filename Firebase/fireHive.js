@@ -40,7 +40,7 @@ let hive = (function () {
 	//this map contains proxy -> handler
 	let handlers = new Map();
 	
-	module.start = function () {
+	module.start = function (callback) {
 		roots.clear();
 		loadedObjects.clear();
 		firebase.initializeApp(module.config);
@@ -51,13 +51,25 @@ let hive = (function () {
 		proxies.clear();
 		handlers.clear();
 		
-		database.ref("roots").on("child_added", rootAdded);
-		database.ref("roots").on("child_changed", rootAdded);
-		database.ref("roots").on("child_removed", rootRemoved); 
+		database.ref("objects").once("value").then(function(objectsSnapshot){
+			objectsSnapshot.forEach((i)=>{childAdded(i)});			
+			database.ref("objects").on("child_added", childAdded);
+			database.ref("objects").on("child_removed", childRemoved);
+			database.ref("objects").on("child_changed", childChanged);
+			database.ref("roots").once("value").then(function(rootSnapshot){
+				rootSnapshot.forEach((i)=>{rootAdded(i)});
+				database.ref("roots").on("child_added", rootAdded);
+				database.ref("roots").on("child_changed", rootAdded);
+				database.ref("roots").on("child_removed", rootRemoved); 
+				if(callback && callback.constructor.name=="Function"){
+					callback();
+				}
+				);
+			});
 		
-		database.ref("objects").on("child_added", childAdded);
-		database.ref("objects").on("child_removed", childRemoved);
-		database.ref("objects").on("child_changed", childChanged);
+	
+		
+		
 		return module;
 	}
 
@@ -487,4 +499,4 @@ let hive = (function () {
 	
 	return module;
 }
-	().start());
+	());

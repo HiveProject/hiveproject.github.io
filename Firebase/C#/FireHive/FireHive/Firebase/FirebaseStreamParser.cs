@@ -10,7 +10,7 @@ namespace FireHive.Firebase
 {
     internal class FirebaseStreamParser
     {
-         private Thread receiveThread;
+        private Thread receiveThread;
         private Thread sendThread;
 
         Queue<Tuple<outMessage, Dictionary<string, object>>> ToSend = new Queue<Tuple<outMessage, Dictionary<string, object>>>();
@@ -20,16 +20,21 @@ namespace FireHive.Firebase
         public event Action<string, Dictionary<string, object>> Added;
         public event Action<string, Dictionary<string, object>> Changed;
         public event Action<string, Dictionary<string, object>> Deleted;
+
+
+
+        Dictionary<string, object> dataCache;
         public FirebaseStreamParser(string route) : this(route, BaseUrl)
         {
         }
         public FirebaseStreamParser(string route, string baseUrl)
         {
+            dataCache = new Dictionary<string, object>();
             BaseUrl = baseUrl;
             Added += (k, e) => { };
             Changed += (k, e) => { };
             Deleted += (k, e) => { };
-         
+
             Route = route;
             receiveThread = new Thread(() =>
             {
@@ -52,7 +57,7 @@ namespace FireHive.Firebase
 
             sendThread = new Thread(() =>
             {
-                var client = new System.Net.WebClient(); 
+                var client = new System.Net.WebClient();
                 while (true)
                 {
                     while (ToSend.Count > 0)
@@ -62,7 +67,7 @@ namespace FireHive.Firebase
                         switch (msg.Item1)
                         {
                             case outMessage.PATCH:
-                                using (StreamWriter sw = new StreamWriter(client.OpenWrite(new Uri(baseUrl + route + ".json"),"PATCH")))
+                                using (StreamWriter sw = new StreamWriter(client.OpenWrite(new Uri(baseUrl + route + ".json"), "PATCH")))
                                 {
                                     sw.WriteLine(Newtonsoft.Json.JsonConvert.SerializeObject(msg.Item2));
                                 }
@@ -79,14 +84,14 @@ namespace FireHive.Firebase
             sendThread.Start();
         }
 
-        internal string Post(Dictionary<string,object> data)
+        internal string Post(Dictionary<string, object> data)
         {
-            var client = new System.Net.WebClient(); 
+            var client = new System.Net.WebClient();
             string toPost = "{}";
             if (data != null)
             { toPost = Newtonsoft.Json.JsonConvert.SerializeObject(data); }
             var result = client.UploadString(new Uri(BaseUrl + Route + ".json"), "POST", toPost);
-            return  mapJson( result).asDictionary()["name"].ToString();
+            return mapJson(result).asDictionary()["name"].ToString();
         }
 
         string evt = null;
@@ -131,13 +136,13 @@ namespace FireHive.Firebase
                         {
                             if (result["path"] as string != "/")
                                 //delete i think.
-                                Deleted(result["path"].ToString().Substring(1), null);
+                                dataRemoved(result["path"].ToString().Substring(1), null);
 
                             return;
                         }
                         if (result["data"] is string)
                         {
-                            Added(result["path"].ToString().Substring(1), new Dictionary<string, object>() { { "value", result["data"] } });
+                            dataAdded(result["path"].ToString().Substring(1), new Dictionary<string, object>() { { "value", result["data"] } });
                             return;
                         }
 
@@ -148,11 +153,11 @@ namespace FireHive.Firebase
                             loadedObjects.Add(item);
                             if (d[item] is string)
                             {
-                                Added(item, new Dictionary<string, object>() { { "value", d[item] } });
+                                dataAdded(item, new Dictionary<string, object>() { { "value", d[item] } });
                             }
                             else
                             {
-                                Added(item, d[item] as Dictionary<string, object>);
+                                dataAdded(item, d[item] as Dictionary<string, object>);
                             }
 
                         }
@@ -182,22 +187,23 @@ namespace FireHive.Firebase
                         }
                         foreach (var item in toUpdate)
                         {
+                            //todo: change this to use the internal data.
                             if (loadedObjects.Contains(item.Key))
                             {
                                 if (item.Value == null)
                                 {
-                                    Deleted(item.Key, item.Value as Dictionary<string, object>);
+                                    dataRemoved(item.Key, item.Value as Dictionary<string, object>);
                                 }
                                 else
                                 {
                                     if (item.Value.GetType() == typeof(string))
                                     {
 
-                                        Changed(item.Key, new Dictionary<string, object>() { { "value", item.Value } });
+                                        dataChanged(item.Key, new Dictionary<string, object>() { { "value", item.Value } });
                                     }
                                     else
                                     {
-                                        Changed(item.Key, item.Value as Dictionary<string, object>);
+                                        dataChanged(item.Key, item.Value as Dictionary<string, object>);
                                     }
                                 }
                             }
@@ -206,11 +212,11 @@ namespace FireHive.Firebase
                                 loadedObjects.Add(item.Key);
                                 if (item.Value.GetType() == typeof(string))
                                 {
-                                    Added(item.Key,new Dictionary<string, object>(){ { "value" ,item.Value } });
+                                    dataAdded(item.Key, new Dictionary<string, object>() { { "value", item.Value } });
                                 }
                                 else
                                 {
-                                    Added(item.Key, item.Value as Dictionary<string, object>);
+                                    dataAdded(item.Key, item.Value as Dictionary<string, object>);
                                 }
                             }
                         }
@@ -250,6 +256,53 @@ namespace FireHive.Firebase
             }
         }
 
+        internal void dataAdded(string key, Dictionary<string, object> data)
+        {
+            dataCache[key] = data;
+            Added(key, data); 
+        }
+        internal void dataChanged(string key, Dictionary<string, object> data)
+        {
+            var realdata = dataCache[key].asDictionary();
+            mergeDictionaries(data, realdata);
+            Changed(key, realdata);
+        }
+
+
+        internal void dataRemoved(string key, Dictionary<string, object> data)
+        {
+            Deleted(key, data);
+        }
+
+        private void mergeDictionaries(Dictionary<string, object> from, Dictionary<string, object> to)
+        {
+            foreach (var item in from)
+            {
+                if (to.ContainsKey(item.Key))
+                {
+                    var d1 = item.Value.asDictionary();
+                    var d2 = to[item.Key].asDictionary();
+                    if (d1 != null)
+                    {
+                        if (d2 != null)
+                        {
+                            mergeDictionaries(d1, d2);
+                        }
+                        else
+                        {
+                            to[item.Key] = d1;
+                        }
+                    }
+                    else {
+                        //not a dictionary
+                        to[item.Key] = item.Value;
+                    }
+                }
+                else
+                { }
+
+            }
+        }
         bool isPrimitive(object obj)
         {
             if (obj == null)

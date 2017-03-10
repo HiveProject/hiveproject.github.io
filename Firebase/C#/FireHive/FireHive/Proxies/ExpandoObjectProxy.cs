@@ -111,6 +111,10 @@ namespace FireHive.Proxies
         {
             return base.TryInvokeMember(binder, args, out result);
         }
+        public override bool TryConvert(ConvertBinder binder, out object result)
+        {
+            return base.TryConvert(binder, out result);
+        }
 
 
     }

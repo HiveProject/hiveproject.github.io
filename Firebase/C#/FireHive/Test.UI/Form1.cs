@@ -12,7 +12,7 @@ namespace Test.UI
 {
     public partial class Form1 : Form
     {
-        dynamic pos = new { x = 50, y = 50 };
+        dynamic rectangles = new List<dynamic>();
         public Form1()
         {
             InitializeComponent();
@@ -58,22 +58,28 @@ namespace Test.UI
         bool drawingStarted = false;
         Brush blackBrush = Brushes.Black;
         Brush redBrush = Brushes.Red;
+        ColorConverter converter = new ColorConverter();
         private void timer2_Tick(object sender, EventArgs e)
         {
             if (drawingStarted)
             {
                 var g = panel1.CreateGraphics();
-                
-                g.FillRectangle(blackBrush, 0, 0, 500, 500);
-                g.FillRectangle(redBrush, pos.x - 5, pos.y - 5, 10, 10); 
+                foreach (var item in rectangles)
+                {
+
+                   
+                    g.FillRectangle(blackBrush, 0, 0, 500, 500);
+                    g.FillRectangle(new SolidBrush((Color)converter.ConvertFromString(item.color)), item.x - 5, item.y - 5, 10, 10);
+
+                }
 
             }
             else
             {
-                if (current.keys().Contains("SquareDemoPosition")) { pos = current.Get("SquareDemoPosition"); }
+                if (current.keys().Contains("SquareDemoPosition")) { rectangles = current.Get("SquareDemoPosition"); }
                 else
                 {
-                    pos = current.set("SquareDemoPosition", pos);
+                    rectangles = current.set("SquareDemoPosition", rectangles);
                 }
                 drawingStarted = true;
                 timer2.Interval = 10;

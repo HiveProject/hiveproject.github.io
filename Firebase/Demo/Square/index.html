@@ -37,9 +37,11 @@
 				ctx.fillRect(0,0,500,500);
 				for(let k in squares)
 				{
-					let current = squares[k];
-					ctx.fillStyle=current.color;
-					ctx.fillRect(current.x-5,current.y-5,10,10);				
+					if(squares[k]){
+						let current = squares[k];
+						ctx.fillStyle=current.color;
+						ctx.fillRect(current.x-5,current.y-5,10,10);				
+					}
 				}
 			}
 			setInterval(draw,10);

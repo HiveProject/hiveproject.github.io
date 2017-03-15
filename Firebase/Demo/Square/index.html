@@ -12,19 +12,18 @@
 	
 	window.onload =function(){
 		hive.start(function(){
-			var myColor=((1<<24)*Math.random()|0).toString(16);
-			var pos = {x:50,y:50,color:"#"+myColor};
-			var squares={};
+			let myColor=((1<<24)*Math.random()|0).toString(16);
+			let pos = {x:50,y:50,color:"#"+myColor};
+			let squares={};
 			try
 			{
 				squares=hive.get("SquareDemoPosition");	
 			}catch(err)
 			{
 				if(err=="Key not found in Hive Roots")
-				squares = hive.set("SquareDemoPosition",{});
+				squares = hive.set("SquareDemoPosition",[]);
 			}
-			squares[myColor]=pos;
-			pos=squares[myColor];
+			pos= squares[ squares.push(pos)-1];
 			//drawing init
 			var canvas = document.getElementById("canv") 
 			canvas.width=500;

@@ -5,6 +5,7 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Dynamic;
 using FireHive.Proxies;
+using FireHive.Dynamic;
 
 namespace FireHive
 {
@@ -13,8 +14,8 @@ namespace FireHive
         //FirebaseClient database; 
 
         static Hive instance;
-        private Roots roots;
-        private AliveObjects loadedObjects;
+        internal Roots roots;
+        internal AliveObjects loadedObjects;
         private Firebase.FirebaseClient client;
 
 
@@ -55,17 +56,20 @@ namespace FireHive
         private dynamic createProxy(object obj)
         {
             var t = obj.GetType();
-            if (t == typeof(ExpandoObject))
-            { return new ExpandoObjectProxy(obj, SetExecuted); }
+            if (t == typeof(ExpandibleObject))
+            { return new ExpandoObjectProxy((ExpandibleObject)obj, SetExecuted); }
             //todo, other proxies
+            if (t == typeof(List<object>))
+                return new ListProxy((List<object>)obj, SetExecuted);
             return obj;
         }
 
 
         public dynamic set(string key, object value)
         {
-            roots.Set(key, loadedObjects.Add(value));
-            return getProxy(value);
+            string innerKey = loadedObjects.Add(value);
+            roots.Set(key, innerKey);
+            return getProxy(loadedObjects.Get(innerKey));
         }
         public dynamic Get(string key)
         {

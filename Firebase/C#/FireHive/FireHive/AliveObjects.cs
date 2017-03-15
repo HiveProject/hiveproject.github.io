@@ -5,6 +5,7 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Dynamic;
 using FireHive.Firebase;
+using FireHive.Dynamic;
 
 namespace FireHive
 {
@@ -22,14 +23,14 @@ namespace FireHive
 
         }
 
-        private void childDeleted(string arg1, Dictionary<string, object> arg2)
+        private void childDeleted(string arg1, IDictionary<string, object> arg2)
         {
 
             if (innerDictionary.ContainsKey(arg1))
                 innerDictionary.Remove(arg1);
         }
 
-        private void childAdded(string Key, Dictionary<string, object> input)
+        private void childAdded(string Key, IDictionary<string, object> input)
         {
 
             object obj = null;
@@ -60,7 +61,7 @@ namespace FireHive
                 }
                 else
                 {
-                    obj = new ExpandoObject();
+                    obj = new ExpandibleObject(new object());
                 }
                 // Activator.CreateInstance()
                 //if (eval("typeof(" + received.type + ")") != "undefined")
@@ -79,6 +80,7 @@ namespace FireHive
             if (innerDictionary.ContainsValue(value))
             { return GetKey(value); }
             string key = client.Post("objects");
+            value = new Dynamic.ExpandibleObject(value);
             Set(key, value);
             Dictionary<string, object> upd = new Dictionary<string, object>();
             if (value == null)
@@ -113,6 +115,10 @@ namespace FireHive
 
         private IEnumerable<string> getFields(object value)
         {
+            if (value.GetType() == typeof(ExpandibleObject))
+            {
+                return ((ExpandibleObject)value).GetPropertyNames();
+            }
             //inheritance may not work correctly here
             return value.GetType().GetProperties().Select(t => t.Name);
         }
@@ -129,20 +135,22 @@ namespace FireHive
 
         List<KeyValuePair<string, Action<object>>> missingReferences;
 
-        private void mapSnapshotToObject(object obj, Dictionary<string, object> input)
+        private void mapSnapshotToObject(object obj, IDictionary<string, object> input)
         {
             string myType = input["type"].ToString();
             if (myType == "Array")
             {
                 List<object> list = (List<object>)obj;
-                var received = input["data"].asDictionary();
-                //todo: if i remove things from an array this wont update correctly.
+                IDictionary<string, object> received = new Dictionary<string, object>();
 
-                //if (list.Count > received.Count)
-                //{
-                //    list.RemoveRange(received.Count - 1, list.Count - received.Count);
-                //}
-                int maxIndex = input["data"].asDictionary().Keys.Select(int.Parse).Max();
+                int maxIndex = 0;
+                if (input.ContainsKey("data"))
+                { 
+                    received = input["data"].asDictionary();
+                    maxIndex= received.Keys.Select(int.Parse).Max();
+                }
+                //todo: if i remove things from an array this wont update correctly.
+                 
                 while (list.Count <= maxIndex)
                 {
                     list.Add(null);
@@ -184,46 +192,46 @@ namespace FireHive
             }
             else
             {
-                IDictionary<string, object> dictionary = (IDictionary<string, object>)obj;
-                foreach (var item in (Dictionary<string, object>)input["data"])
+                IDictionary<string, object> dictionary = obj.asDictionary();
+                if (input.ContainsKey("data"))
                 {
-                    string type = item.Value.asDictionary()["type"].ToString();
-                    if (isPrimitiveTypeName(type))
+                    foreach (var item in (Dictionary<string, object>)input["data"])
                     {
-
-                        dictionary[item.Key as string] = item.Value.asDictionary()["value"];
-                    }
-                    else if (type == "null")
-                    {
-
-                        dictionary[item.Key as string] = null;
-                    }
-                    else
-                    {
-                        //object or array.
-                        string otherKey = item.Value.asDictionary()["value"].ToString();
-                        var other = Get(otherKey);
-                        if (other == null)
+                        string type = item.Value.asDictionary()["type"].ToString();
+                        if (isPrimitiveTypeName(type))
                         {
-                            missingReferences.Add(new KeyValuePair<string, Action<object>>(otherKey, (otherObj) =>
-                            {
-                                dictionary[item.Key] = otherObj;
-                            }));
+
+                            dictionary[item.Key as string] = item.Value.asDictionary()["value"];
+                        }
+                        else if (type == "null")
+                        {
+
+                            dictionary[item.Key as string] = null;
                         }
                         else
                         {
-                            dictionary[item.Key] = other;
+                            //object or array.
+                            string otherKey = item.Value.asDictionary()["value"].ToString();
+                            var other = Get(otherKey);
+                            if (other == null)
+                            {
+                                missingReferences.Add(new KeyValuePair<string, Action<object>>(otherKey, (otherObj) =>
+                                {
+                                    dictionary[item.Key] = otherObj;
+                                }));
+                            }
+                            else
+                            {
+                                dictionary[item.Key] = other;
+                            }
                         }
-
                     }
-
-
                 }
             }
 
         }
 
-        private void childChanged(string key, Dictionary<string, object> data)
+        private void childChanged(string key, IDictionary<string, object> data)
         {
             var obj = innerDictionary[key];
             //todo: massive hack
@@ -302,17 +310,29 @@ namespace FireHive
             }
             catch (InvalidCastException)
             {
-                rcvr.GetType().GetProperty(name).SetValue(rcvr,value);
+                rcvr.GetType().GetProperty(name).SetValue(rcvr, value);
 
             }
         }
 
         private object getPropertyValue(object rcvr, string name)
         {
-            //todo what if what i receive is not a dictionary.
+            //todo: what if what i receive is not a dictionary.
+            //if i have to get it from an array it is different
+            if (rcvr.GetType() == typeof(List<object>))
+            {
+                //let's try it with a simple parse.
+                var list = (IList<object>)rcvr;
+                return list[int.Parse(name)];
+            }
             try
             {
-
+                if (rcvr.GetType() == typeof(ExpandibleObject))
+                {
+                    object result;
+                    ((ExpandibleObject)(rcvr)).innerGet(name, out result);
+                    return result;
+                }
                 return ((IDictionary<string, object>)rcvr)[name];
             }
             catch (InvalidCastException)

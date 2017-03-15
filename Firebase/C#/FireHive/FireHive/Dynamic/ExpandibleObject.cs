@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Dynamic;
 using System.Linq;
@@ -12,13 +13,23 @@ namespace FireHive.Dynamic
     {
         Dictionary<string, object> extendedObject;
         object innerObject;
+
+        public IDictionary<string, object> asDictionary()
+        {
+
+            return new ExpandibleObjectDictionary(this);
+        }
+
         public ExpandibleObject(object InnerObject)
         {
             innerObject = InnerObject;
             extendedObject = new Dictionary<string, object>();
         }
-
-        private IEnumerable<PropertyInfo> getProperties()
+        internal IEnumerable<string> GetPropertyNames()
+        {
+            return GetProperties().Select(p => p.Name).Union(extendedObject.Keys);
+        }
+        private IEnumerable<PropertyInfo> GetProperties()
         {
             //todo: cache maybe?
             return innerObject.GetType().GetProperties(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance);
@@ -28,28 +39,36 @@ namespace FireHive.Dynamic
         {
             return innerObject.GetType().GetMembers().Select(m => m.Name).Union(extendedObject.Keys);
         }
-        public override bool TryGetMember(GetMemberBinder binder, out object result)
+
+        internal bool innerGet(string name, out object result)
         {
-            //todo: cache this maybe?
-            var property = getProperties().FirstOrDefault(p => p.Name == binder.Name);
+            var property = GetProperties().FirstOrDefault(p => p.Name == name);
             if (property != null)
             {
                 result = property.GetValue(innerObject);
                 return true;
             }
-            else {
-                if (extendedObject.ContainsKey(binder.Name))
+            else
+            {
+                if (extendedObject.ContainsKey(name))
                 {
-                    result = extendedObject[binder.Name];
+                    result = extendedObject[name];
                     return true;
                 }
             }
             result = null;
             return false;
         }
-        public override bool TrySetMember(SetMemberBinder binder, object value)
+
+        public override bool TryGetMember(GetMemberBinder binder, out object result)
         {
-            var property = getProperties().FirstOrDefault(p => p.Name == binder.Name);
+            //todo: cache this maybe?
+            return innerGet(binder.Name, out result);
+
+        }
+        internal bool innerSet(string name, object value)
+        {
+            var property = GetProperties().FirstOrDefault(p => p.Name == name);
             if (property != null)
             {//the property exists in the real object.
 
@@ -58,10 +77,15 @@ namespace FireHive.Dynamic
 
                 return true;
             }
-            else {
-                extendedObject[binder.Name] = value;
+            else
+            {
+                extendedObject[name] = value;
                 return true;
             }
+        }
+        public override bool TrySetMember(SetMemberBinder binder, object value)
+        {
+            return innerSet(binder.Name, value);
         }
 
         public override string ToString()
@@ -89,5 +113,11 @@ namespace FireHive.Dynamic
             return false;
 
         }
+        public override bool TryConvert(ConvertBinder binder, out object result)
+        {
+            return base.TryConvert(binder, out result);
+        }
+
+     
     }
 }

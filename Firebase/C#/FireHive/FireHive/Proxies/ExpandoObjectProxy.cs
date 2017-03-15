@@ -1,4 +1,5 @@
-﻿using System;
+﻿using FireHive.Dynamic;
+using System;
 using System.Collections.Generic;
 using System.Dynamic;
 using System.Linq;
@@ -12,14 +13,14 @@ namespace FireHive.Proxies
     public class ExpandoObjectProxy : DynamicObject
     {
         //todo, i do not need the expandoobject anymore, i can have the same functionality directly with a dictionary here.
-        public ExpandoObjectProxy(object instance, Action<object,string> SetExecuted)
+        public ExpandoObjectProxy(ExpandibleObject instance, Action<object,string> SetExecuted)
         {
             setExecuted=SetExecuted;
 
             realInstance = instance;
-            objectDictionary = (IDictionary<string, object>)realInstance;
+            objectDictionary = (IDictionary<string, object>)realInstance.asDictionary();
         }
-        private dynamic realInstance;
+        private ExpandibleObject realInstance;
         private IDictionary<string, object> objectDictionary;
         private Action<object, string> setExecuted;
 
@@ -109,7 +110,7 @@ namespace FireHive.Proxies
         }
         public override bool TryInvokeMember(InvokeMemberBinder binder, object[] args, out object result)
         {
-            return base.TryInvokeMember(binder, args, out result);
+            return realInstance.TryInvokeMember(binder, args, out result); 
         }
         public override bool TryConvert(ConvertBinder binder, out object result)
         {

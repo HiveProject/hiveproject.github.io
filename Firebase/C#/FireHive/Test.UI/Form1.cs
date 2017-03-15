@@ -30,13 +30,16 @@ namespace Test.UI
         {
             var n = current.Get("a");
             var p = current.set("rect", new Rectangle(10, 10));
-            var arr = current.Get("arr");
-            var first = current.set("recursive", new RecursiveStructure()
-            { Name = "first" });
+            var currentArea = p.Area();
+            p.depth = 200;
 
-            var second = current.set("recursive2", new RecursiveStructure()
-            { Name = "second", Child = first });
-            first.Child = second;
+            //var arr = current.Get("arr");
+            //var first = current.set("recursive", new RecursiveStructure()
+            //{ Name = "first" });
+
+            //var second = current.set("recursive2", new RecursiveStructure()
+            //{ Name = "second", Child = first });
+            //first.Child = second;
         }
 
         private void timer1_Tick(object sender, EventArgs e)
@@ -59,16 +62,22 @@ namespace Test.UI
         Brush blackBrush = Brushes.Black;
         Brush redBrush = Brushes.Red;
         ColorConverter converter = new ColorConverter();
+        dynamic pos = new object();//new { x = 50, y = 50, color = "" };
+        private Random rnd = new Random();
+        private string getRandomColor()
+        {
+            Color randomColor = Color.FromArgb(rnd.Next(256), rnd.Next(256), rnd.Next(256));
+            return HexConverter(randomColor);
+        }
+
         private void timer2_Tick(object sender, EventArgs e)
         {
             if (drawingStarted)
             {
                 var g = panel1.CreateGraphics();
-                foreach (var item in rectangles)
+                g.FillRectangle(blackBrush, 0, 0, 500, 500);
+                foreach (dynamic item in rectangles)
                 {
-
-                   
-                    g.FillRectangle(blackBrush, 0, 0, 500, 500);
                     g.FillRectangle(new SolidBrush((Color)converter.ConvertFromString(item.color)), item.x - 5, item.y - 5, 10, 10);
 
                 }
@@ -76,14 +85,26 @@ namespace Test.UI
             }
             else
             {
+                //pos.color = getRandomColor();
                 if (current.keys().Contains("SquareDemoPosition")) { rectangles = current.Get("SquareDemoPosition"); }
                 else
                 {
                     rectangles = current.set("SquareDemoPosition", rectangles);
                 }
+
+                //rectangles.Add(pos);
+                //pos = rectangles[rectangles.Count-1];
+                //pos.color = getRandomColor();
+                //pos.x = 50;
+                //pos.y = 50;
                 drawingStarted = true;
                 timer2.Interval = 10;
             }
         }
+        private String HexConverter(System.Drawing.Color c)
+        {
+            return "#" + c.R.ToString("X2") + c.G.ToString("X2") + c.B.ToString("X2");
+        }
+
     }
 }

@@ -17,9 +17,9 @@ namespace FireHive.Firebase
         HashSet<string> loadedObjects = new HashSet<string>();
         public string Route { get; private set; }
         static public string BaseUrl { get; set; }
-        public event Action<string, Dictionary<string, object>> Added;
-        public event Action<string, Dictionary<string, object>> Changed;
-        public event Action<string, Dictionary<string, object>> Deleted;
+        public event Action<string, IDictionary<string, object>> Added;
+        public event Action<string, IDictionary<string, object>> Changed;
+        public event Action<string, IDictionary<string, object>> Deleted;
 
 
 
@@ -170,7 +170,7 @@ namespace FireHive.Firebase
                         foreach (var item in d.Keys)
                         {
                             Queue<string> path = new Queue<string>(item.Split('/'));
-                            Dictionary<string, object> current = toUpdate;
+                            IDictionary<string, object> current = toUpdate;
                             while (path.Count > 1)
                             {
                                 string k = path.Dequeue();
@@ -256,12 +256,12 @@ namespace FireHive.Firebase
             }
         }
 
-        internal void dataAdded(string key, Dictionary<string, object> data)
+        internal void dataAdded(string key, IDictionary<string, object> data)
         {
             dataCache[key] = data;
             Added(key, data);
         }
-        internal void dataChanged(string key, Dictionary<string, object> data)
+        internal void dataChanged(string key, IDictionary<string, object> data)
         {
             var realdata = dataCache[key].asDictionary();
             mergeDictionaries(data, realdata);
@@ -269,12 +269,12 @@ namespace FireHive.Firebase
         }
 
 
-        internal void dataRemoved(string key, Dictionary<string, object> data)
+        internal void dataRemoved(string key, IDictionary<string, object> data)
         {
             Deleted(key, data);
         }
 
-        private void mergeDictionaries(Dictionary<string, object> from, Dictionary<string, object> to)
+        private void mergeDictionaries(IDictionary<string, object> from, IDictionary<string, object> to)
         {
 
             foreach (var item in from)

@@ -259,7 +259,7 @@ namespace FireHive.Firebase
         internal void dataAdded(string key, Dictionary<string, object> data)
         {
             dataCache[key] = data;
-            Added(key, data); 
+            Added(key, data);
         }
         internal void dataChanged(string key, Dictionary<string, object> data)
         {
@@ -276,32 +276,46 @@ namespace FireHive.Firebase
 
         private void mergeDictionaries(Dictionary<string, object> from, Dictionary<string, object> to)
         {
+
             foreach (var item in from)
             {
-                if (to.ContainsKey(item.Key))
+                if (item.Value == null)
                 {
-                    var d1 = item.Value.asDictionary();
-                    var d2 = to[item.Key].asDictionary();
-                    if (d1 != null)
+                    //if the value is null is because it was removed from to.
+                    if (to.ContainsKey(item.Key))
+                        to.Remove(item.Key);
+                }
+                else
+                {
+                    if (to.ContainsKey(item.Key))
                     {
-                        if (d2 != null)
+                        var d1 = item.Value.asDictionary();
+                        var d2 = to[item.Key].asDictionary();
+                        if (d1 != null)
                         {
-                            mergeDictionaries(d1, d2);
+                            if (d2 != null)
+                            {
+                                mergeDictionaries(d1, d2);
+                            }
+                            else
+                            {
+                                to[item.Key] = d1;
+                            }
                         }
                         else
                         {
-                            to[item.Key] = d1;
+                            //not a dictionary
+                            to[item.Key] = item.Value;
                         }
                     }
-                    else {
-                        //not a dictionary
+                    else
+                    {
+                        //i have a new key for the dict.
                         to[item.Key] = item.Value;
                     }
                 }
-                else
-                { }
-
             }
+
         }
         bool isPrimitive(object obj)
         {

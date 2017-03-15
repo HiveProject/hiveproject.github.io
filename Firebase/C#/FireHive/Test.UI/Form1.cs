@@ -30,7 +30,7 @@ namespace Test.UI
         {
             var n = current.Get("a");
             var p = current.set("rect", new Rectangle(10, 10));
-
+            var arr = current.Get("arr");
             var first = current.set("recursive", new RecursiveStructure()
             { Name = "first" });
 

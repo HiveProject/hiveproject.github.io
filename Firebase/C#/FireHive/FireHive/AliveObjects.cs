@@ -147,6 +147,8 @@ namespace FireHive
                 {
                     list.Add(null);
                 }
+                //remove elements to ensure the length. 
+                list.RemoveRange(received.Count, list.Count - received.Count);
                 foreach (var item in received)
                 {
                     int i = int.Parse(item.Key);

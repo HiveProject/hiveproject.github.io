@@ -56,7 +56,8 @@
 				} pos.x=mouseX; pos.y=mouseY;
 			}
 			window.onunload=function(){
-				squares[myColor]=null;
+				
+				squares.splice(squares.indexOf(pos),1);
 			}
 		});
 	}

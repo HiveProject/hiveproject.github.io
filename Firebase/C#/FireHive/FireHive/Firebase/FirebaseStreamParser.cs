@@ -5,6 +5,7 @@ using System.Net;
 using System.Threading;
 using Newtonsoft.Json.Linq;
 using System.Linq;
+using FireHive.Firebase.Data;
 
 namespace FireHive.Firebase
 {
@@ -67,7 +68,8 @@ namespace FireHive.Firebase
                         switch (msg.Item1)
                         {
                             case outMessage.PATCH:
-                                mergeDictionaries(splitPath(msg.Item2), dataCache);
+                                //todo: merge using datanodes
+                                //  mergeDictionaries(splitPath(msg.Item2), dataCache);
                                 using (StreamWriter sw = new StreamWriter(client.OpenWrite(new Uri(baseUrl + route + ".json"), "PATCH")))
                                 {
                                     sw.WriteLine(Newtonsoft.Json.JsonConvert.SerializeObject(msg.Item2));
@@ -93,7 +95,8 @@ namespace FireHive.Firebase
             if (data != null)
             { toPost = Newtonsoft.Json.JsonConvert.SerializeObject(data); }
             var result = client.UploadString(new Uri(BaseUrl + Route + ".json"), "POST", toPost);
-            return mapJson(result).asDictionary()["name"].ToString();
+            //return mapJson(result).asDictionary()["name"].ToString();
+            return "";
         }
 
         string evt = null;
@@ -128,7 +131,7 @@ namespace FireHive.Firebase
                 }
                 //todo, some events do not have any data.
                 data = data.Substring(5);
-                var result = (Dictionary<string, object>)mapJson(data);
+                var result = DataNode.FromJsonString(data);
                 switch (evt)
                 {
                     case "put":
@@ -136,30 +139,32 @@ namespace FireHive.Firebase
 
                         if (result["data"] == null)
                         {
-                            if (result["path"] as string != "/")
+                            if (result["path"].As<string>() != "/")
                                 //delete i think.
                                 dataRemoved(result["path"].ToString().Substring(1), null);
 
                             return;
                         }
-                        if (result["data"] is string)
+                        if (result["data"].IsLeaf)
                         {
+                            //todo: replace the dict with my datanodes.
                             dataAdded(result["path"].ToString().Substring(1), new Dictionary<string, object>() { { "value", result["data"] } });
                             return;
                         }
 
-
-                        var d = (Dictionary<string, object>)(result["data"]);
-                        foreach (var item in d.Keys)
+                        var dataBranch = (DataBranch)result["data"];
+                        foreach (var item in dataBranch.Keys)
                         {
                             loadedObjects.Add(item);
-                            if (d[item] is string)
-                            {
-                                dataAdded(item, new Dictionary<string, object>() { { "value", d[item] } });
+                            if (dataBranch[item].IsLeaf)
+                            {//todo: replace the dict with my datanodes.
+
+                                dataAdded(item, new Dictionary<string, object>() { { "value", dataBranch[item] } });
                             }
                             else
-                            {
-                                dataAdded(item, d[item] as Dictionary<string, object>);
+                            {//todo: replace the dict with my datanodes.
+
+                                // dataAdded(item, d[item] );
                             }
 
                         }
@@ -167,40 +172,42 @@ namespace FireHive.Firebase
                     case "patch":
 
 
-                        d = (Dictionary<string, object>)(result["data"]);
-                        IDictionary<string, object> toUpdate = splitPath(d);
-                        foreach (var item in toUpdate)
+                        DataBranch dataNode = (DataBranch)result["data"];
+                        foreach (var item in dataNode)
                         {
                             //todo: change this to use the internal data.
                             if (loadedObjects.Contains(item.Key))
                             {
                                 if (item.Value == null)
                                 {
-                                    dataRemoved(item.Key, item.Value as Dictionary<string, object>);
+                                    //todo: replace the dict with my datanodes.
+                                    // dataRemoved(item.Key, item.Value as Dictionary<string, object>);
                                 }
                                 else
                                 {
-                                    if (item.Value.GetType() == typeof(string))
+                                    if (item.Value.IsLeaf)
                                     {
 
                                         dataChanged(item.Key, new Dictionary<string, object>() { { "value", item.Value } });
                                     }
                                     else
                                     {
-                                        dataChanged(item.Key, item.Value as Dictionary<string, object>);
+                                        //todo: replace the dict with my datanodes.
+                                        //dataChanged(item.Key, item.Value as Dictionary<string, object>);
                                     }
                                 }
                             }
                             else
                             {
                                 loadedObjects.Add(item.Key);
-                                if (item.Value.GetType() == typeof(string))
+                                if (item.Value.IsLeaf)
                                 {
                                     dataAdded(item.Key, new Dictionary<string, object>() { { "value", item.Value } });
                                 }
                                 else
                                 {
-                                    dataAdded(item.Key, item.Value as Dictionary<string, object>);
+                                    //todo: replace the dict with my datanodes.
+                                    // dataAdded(item.Key, item.Value as Dictionary<string, object>);
                                 }
                             }
                         }
@@ -216,29 +223,8 @@ namespace FireHive.Firebase
             ToSend.Enqueue(new Tuple<outMessage, Dictionary<string, object>>(outMessage.PATCH, upd));
         }
 
-        private object mapJson(string input)
-        {
-            return mapJsonToken(JToken.Parse(input));
 
-        }
 
-        private object mapJsonToken(JToken token)
-        {
-            switch (token.Type)
-            {
-                case JTokenType.Object:
-                    return token.Children<JProperty>()
-                                .ToDictionary(prop => prop.Name,
-                                              prop => mapJsonToken(prop.Value));
-
-                case JTokenType.Array:
-                    var i = 0;
-                    return token.Select(mapJsonToken).ToDictionary(p => (i++).ToString(), p => p);
-
-                default:
-                    return ((JValue)token).Value;
-            }
-        }
 
         internal void dataAdded(string key, IDictionary<string, object> data)
         {
@@ -274,7 +260,7 @@ namespace FireHive.Firebase
             {
                 if (!cache.ContainsKey(item.Key)) return true;
                 object me = item.Value;
-                
+
                 object other = cache[item.Key];
                 //todo: fix this hack.
                 if (me.GetType() == typeof(Int32))
@@ -286,7 +272,7 @@ namespace FireHive.Firebase
                 }
                 else
                 {
-                    equals = equals || (! me.Equals(other));
+                    equals = equals || (!me.Equals(other));
                 }
 
             }
@@ -297,28 +283,7 @@ namespace FireHive.Firebase
         {
             Deleted(key, data);
         }
-        private IDictionary<string, object> splitPath(IDictionary<string, object> d)
-        {
-            Dictionary<string, object> toUpdate = new Dictionary<string, object>();
-            foreach (var item in d.Keys)
-            {
-                Queue<string> path = new Queue<string>(item.Split('/').Where(t=>t!=""));
-                IDictionary<string, object> current = toUpdate;
-                while (path.Count > 1)
-                {
-                    string k = path.Dequeue();
-                    Dictionary<string, object> next = null;
-                    if (!current.ContainsKey(k))
-                    {
-                        next = new Dictionary<string, object>();
-                        current[k] = next;
-                    }
-                    current = current[k].asDictionary();
-                }
-                current[path.Dequeue()] = d[item];
-            }
-            return toUpdate;
-        }
+
         private void mergeDictionaries(IDictionary<string, object> from, IDictionary<string, object> to)
         {
 

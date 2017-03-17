@@ -48,6 +48,9 @@
     <Compile Include="Dynamic\ExpandibleObject.cs" />
     <Compile Include="Dynamic\ExpandibleObjectDictionary.cs" />
     <Compile Include="Extensions.cs" />
+    <Compile Include="Firebase\Data\DataBranch.cs" />
+    <Compile Include="Firebase\Data\DataLeaf.cs" />
+    <Compile Include="Firebase\Data\DataNode.cs" />
     <Compile Include="Firebase\FirebaseClient.cs" />
     <Compile Include="Firebase\FirebaseEvent.cs" />
     <Compile Include="Firebase\FirebaseStreamParser.cs" />

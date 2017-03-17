@@ -12,6 +12,8 @@ namespace FireHive.Firebase.Data
 
         public DataLeaf(object value)
         {
+            if (value.GetType() == typeof(int))
+                value = Convert.ToInt64(value);
             this.value = value;
         }
 

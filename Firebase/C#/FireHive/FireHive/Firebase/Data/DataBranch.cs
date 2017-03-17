@@ -86,6 +86,11 @@ namespace FireHive.Firebase.Data
             return differs;
         }
 
+        public void Clear()
+        {
+            children.Clear();
+        }
+
         public override void Merge(DataBranch data)
         {
             if (data.IsLeaf) throw new NotImplementedException();

@@ -50,12 +50,11 @@ namespace FireHive.Firebase.Data
             {
                 DataBranch branch = (DataBranch)this;
                 foreach (var item in branch.Keys)
-                {
-                    Queue<string> path = new Queue<string>(item.Split('/').Where(t => t != ""));
+                { 
                     var child = branch[item];
                     if (child.IsLeaf)
                     {
-                        toUpdate[item] = ((DataLeaf)this).Value;
+                        toUpdate[item] = ((DataLeaf)child).Value;
                     }
                     else
                     {

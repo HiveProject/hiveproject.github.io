@@ -14,7 +14,8 @@ namespace FireHive.Firebase
         private Thread receiveThread;
         private Thread sendThread;
 
-        Queue<Tuple<outMessage, Dictionary<string, object>>> ToSend = new Queue<Tuple<outMessage, Dictionary<string, object>>>();
+        private DataBranch toPatch;
+
         HashSet<string> loadedObjects = new HashSet<string>();
         public string Route { get; private set; }
         static public string BaseUrl { get; set; }
@@ -30,6 +31,7 @@ namespace FireHive.Firebase
         }
         public FirebaseStreamParser(string route, string baseUrl)
         {
+            toPatch = new DataBranch();
             dataCache = new DataBranch();
             BaseUrl = baseUrl;
             Added += (k, e) => { };
@@ -61,27 +63,21 @@ namespace FireHive.Firebase
                 var client = new System.Net.WebClient();
                 while (true)
                 {
-                    while (ToSend.Count > 0)
-                    {
-                        //todo: not dequeue until confirmation of the push
-                        var msg = ToSend.Dequeue();
-
-                        switch (msg.Item1)
-                        {
-                            case outMessage.PATCH:
-                                dataCache.Merge(new DataBranch(msg.Item2.ToDictionary(entry => entry.Key, entry => (DataNode)new DataLeaf(entry.Value))));
-                                using (StreamWriter sw = new StreamWriter(client.OpenWrite(new Uri(baseUrl + route + ".json"), "PATCH")))
-                                {
-                                    sw.WriteLine(Newtonsoft.Json.JsonConvert.SerializeObject(msg.Item2));
-                                }
-                                break;
-                            default:
-                                //do nothing
-                                break;
+                    lock (toPatch) {
+                        if (toPatch.Count() != 0) {
+                            dataCache.Merge(toPatch);
+                            using (StreamWriter sw = new StreamWriter(client.OpenWrite(new Uri(baseUrl + route + ".json"), "PATCH")))
+                            {
+                                sw.WriteLine(Newtonsoft.Json.JsonConvert.SerializeObject(toPatch.FlattenDictionary()));
+                            }
+                            toPatch.Clear();
                         }
+                        Thread.Sleep(20);
                     }
-                    System.Threading.Thread.Sleep(10);
+
+                   
                 }
+
             });
             sendThread.IsBackground = true;
             sendThread.Start();
@@ -190,7 +186,12 @@ namespace FireHive.Firebase
 
         internal void Patch(Dictionary<string, object> upd)
         {
-            ToSend.Enqueue(new Tuple<outMessage, Dictionary<string, object>>(outMessage.PATCH, upd));
+            var toUpdate = new DataBranch(upd.ToDictionary(entry=>entry.Key,entry=>(DataNode)new DataLeaf(entry.Value)));
+            lock (toPatch)
+            {
+                if (toPatch.NotContains(toUpdate))
+                { toPatch.Merge(toUpdate); }
+            }
         }
 
 

@@ -48,12 +48,14 @@ namespace FireHive.Firebase.Data
             return new DataBranch(new Dictionary<string, DataNode>() { { "value", this } });
         }
 
-        public override bool Differs(DataNode data)
+        public override bool NotContains(DataNode data)
         {
-            throw new NotImplementedException();
+            if (!data.IsLeaf) return true;
+            //todo: here i might check for that different int type kind of problem.
+            return !((DataLeaf)data).Value.Equals(value);
         }
 
-        public override void Merge(DataNode data)
+        public override void Merge(DataBranch data)
         {
             throw new NotImplementedException();
         }

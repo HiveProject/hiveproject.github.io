@@ -74,9 +74,11 @@ namespace FireHive.Firebase.Data
 
         }
 
-        public abstract bool Differs(DataNode data);
+ 
 
-        public abstract void Merge(DataNode data);
+        public abstract bool NotContains(DataNode data);
+
+        public abstract void Merge(DataBranch data);
 
         public abstract DataBranch AsBranch();
     }

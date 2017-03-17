@@ -10,7 +10,7 @@ namespace FireHive.Firebase.Data
     class DataBranch : DataNode, IEnumerable<KeyValuePair<string, DataNode>>
     {
         private Dictionary<string, DataNode> children;
-        private DataBranch()
+        public DataBranch()
         { children = new Dictionary<string, DataNode>(); }
         public DataBranch(Dictionary<string, DataNode> childs)
         {
@@ -70,14 +70,55 @@ namespace FireHive.Firebase.Data
             return children.ContainsKey(key);
         }
 
-        public override bool Differs(DataNode data)
+        public override bool NotContains(DataNode data)
         {
-            throw new NotImplementedException();
+            if (data.IsLeaf) return true;
+            bool differs = false;
+            foreach (var item in data.AsBranch())
+            {
+                if (!ContainsKey(item.Key)) return true;
+                DataNode other = item.Value;
+                DataNode me = this[item.Key];
+                differs = differs || me.NotContains(other);
+            }
+            return differs;
         }
 
-        public override void Merge(DataNode data)
+        public override void Merge(DataBranch data)
         {
-            throw new NotImplementedException();
+            if (data.IsLeaf) throw new NotImplementedException();
+            foreach (var item in data)
+            {
+                if (ContainsKey(item.Key))
+                {
+                    if (item.Value == null)
+                    {
+                        //i think this neve happens.
+                        children.Remove(item.Key);
+                    }
+                    else
+                    {
+                        if (children[item.Key].IsLeaf != item.Value.IsLeaf || item.Value.IsLeaf)
+                        {
+                            //this might override the leaf with a new one with the same value.
+                            children[item.Key] = item.Value;
+                        }
+                        else {
+                            //i can only get here if i have two branches to merge.
+                            children[item.Key].AsBranch().Merge(item.Value.AsBranch());
+                        }
+
+                    }
+                }
+                else
+                {
+                    if (item.Value != null)
+                    {
+                        children[item.Key] = item.Value;
+                    }
+                }
+            }
+             
         }
 
         public override DataBranch AsBranch()

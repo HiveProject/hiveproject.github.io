@@ -30,7 +30,7 @@ namespace FireHive.Firebase
         }
         public FirebaseStreamParser(string route, string baseUrl)
         {
-            dataCache = new DataBranch(new Dictionary<string, DataNode>());
+            dataCache = new DataBranch();
             BaseUrl = baseUrl;
             Added += (k, e) => { };
             Changed += (k, e) => { };
@@ -68,8 +68,7 @@ namespace FireHive.Firebase
                         switch (msg.Item1)
                         {
                             case outMessage.PATCH:
-                                //todo: merge using datanodes
-                                //  mergeDictionaries(splitPath(msg.Item2), dataCache);
+                                dataCache.Merge(new DataBranch(msg.Item2.ToDictionary(entry => entry.Key, entry => (DataNode)new DataLeaf(entry.Value))));
                                 using (StreamWriter sw = new StreamWriter(client.OpenWrite(new Uri(baseUrl + route + ".json"), "PATCH")))
                                 {
                                     sw.WriteLine(Newtonsoft.Json.JsonConvert.SerializeObject(msg.Item2));
@@ -95,8 +94,7 @@ namespace FireHive.Firebase
             if (data != null)
             { toPost = Newtonsoft.Json.JsonConvert.SerializeObject(data); }
             var result = client.UploadString(new Uri(BaseUrl + Route + ".json"), "POST", toPost);
-            //return mapJson(result).asDictionary()["name"].ToString();
-            return "";
+            return ((dynamic)JObject.Parse(result)).name;
         }
 
         string evt = null;
@@ -224,28 +222,30 @@ namespace FireHive.Firebase
 
         internal void dataAdded(string key, DataNode data)
         {
+            DataBranch dataBranch = data.AsBranch();
             if (dataCache.ContainsKey(key))
             {
                 //i had something here.
                 var realdata = dataCache[key];
-                if (realdata == null || realdata.Differs(data))
+                if (realdata == null || realdata.NotContains(dataBranch))
                 {
                     dataCache[key] = data;
-                    Added(key, data.AsBranch());
+                    Added(key, dataBranch);
                 }
             }
             else
             {
                 dataCache[key] = data;
-                Added(key, data.AsBranch());
+                Added(key, dataBranch);
             }
         }
         internal void dataChanged(string key, DataNode data)
         {
+            DataBranch dataBranch = data.AsBranch();
             var realdata = dataCache[key];
-            if (realdata.Differs(data))
+            if (realdata.NotContains(dataBranch))
             {
-                realdata.Merge(data);
+                realdata.Merge(dataBranch);
                 Changed(key, realdata.AsBranch());
             }
         }

@@ -63,8 +63,10 @@ namespace FireHive.Firebase
                 var client = new System.Net.WebClient();
                 while (true)
                 {
-                    lock (toPatch) {
-                        if (toPatch.Count() != 0) {
+                    lock (toPatch)
+                    {
+                        if (toPatch.Count() != 0)
+                        {
                             dataCache.Merge(toPatch);
                             using (StreamWriter sw = new StreamWriter(client.OpenWrite(new Uri(baseUrl + route + ".json"), "PATCH")))
                             {
@@ -75,7 +77,7 @@ namespace FireHive.Firebase
                         Thread.Sleep(20);
                     }
 
-                   
+
                 }
 
             });
@@ -186,7 +188,7 @@ namespace FireHive.Firebase
 
         internal void Patch(Dictionary<string, object> upd)
         {
-            var toUpdate = new DataBranch(upd.ToDictionary(entry=>entry.Key,entry=>(DataNode)new DataLeaf(entry.Value)));
+            var toUpdate = new DataBranch(upd.ToDictionary(entry => entry.Key, entry => (DataNode)new DataLeaf(entry.Value)));
             lock (toPatch)
             {
                 if (toPatch.NotContains(toUpdate))
@@ -218,12 +220,19 @@ namespace FireHive.Firebase
         }
         internal void dataChanged(string key, DataNode data)
         {
-            DataBranch dataBranch = data.AsBranch();
             var realdata = dataCache[key];
-            if (realdata.NotContains(dataBranch))
+            if (realdata.NotContains(data))
             {
-                realdata.Merge(dataBranch);
-                Changed(key, realdata.AsBranch());
+                if (realdata.IsLeaf != data.IsLeaf || realdata.IsLeaf)
+                {
+                    dataCache[key] = data;
+                }
+                else
+                {
+                    DataBranch dataBranch = data.AsBranch();
+                    realdata.Merge(dataBranch);
+                    Changed(key, realdata.AsBranch());
+                }
             }
         }
 

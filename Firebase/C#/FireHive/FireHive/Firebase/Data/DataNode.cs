@@ -28,7 +28,9 @@ namespace FireHive.Firebase.Data
                     return new DataBranch(token.Select(mapJsonToken).ToDictionary(p => (i++).ToString(), p => p));
 
                 default:
-                    return new DataLeaf(((JValue)token).Value);
+                    object value = ((JValue)token).Value;
+                    if (value == null) return null;
+                    return new DataLeaf(value);
 
             }
         }

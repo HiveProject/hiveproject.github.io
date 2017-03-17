@@ -249,7 +249,7 @@ namespace FireHive
             var id = GetKey(obj);
             if (id != null)
             {
-                upd["/" + id + "/type/"] = sanitizeTypeName(obj.GetType());
+                upd["/" + id + "/type"] = sanitizeTypeName(obj.GetType());
                 foreach (var fieldName in fieldNames)
                 {
                     string basePath = "/" + id + "/data/" + fieldName + "/";
@@ -262,7 +262,7 @@ namespace FireHive
                     else
                     {
                         string type = sanitizeTypeName(value.GetType());
-                        upd[basePath + "/type/"] = type;
+                        upd[basePath + "/type"] = type;
                         if (isPrimitive(value))
                         {
                             if (type == "Date")

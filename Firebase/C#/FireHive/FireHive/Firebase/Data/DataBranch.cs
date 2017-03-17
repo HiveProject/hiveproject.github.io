@@ -23,6 +23,8 @@ namespace FireHive.Firebase.Data
 
         private void addPathedValue(string path, DataNode value)
         {
+            if (path.StartsWith("/"))
+                path = path.Substring(1);
             if (path.Contains('/'))
             {
                 string[] parts = path.Split(new char[] { '/' }, 2);

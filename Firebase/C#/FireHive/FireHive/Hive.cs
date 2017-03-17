@@ -49,8 +49,7 @@ namespace FireHive
         private void SetExecuted(object rcvr, string name)
         {
 
-            loadedObjects.UpdateField(rcvr, name);
-            //if value is a proxy, i need the real thing.
+            loadedObjects.UpdateField(rcvr, name); 
 
         }
 

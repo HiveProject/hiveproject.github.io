@@ -63,6 +63,7 @@ namespace FireHive.Firebase
                 {
                     while (ToSend.Count > 0)
                     {
+                        //todo: not dequeue until confirmation of the push
                         var msg = ToSend.Dequeue();
 
                         switch (msg.Item1)

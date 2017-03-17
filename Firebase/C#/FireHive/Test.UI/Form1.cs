@@ -27,10 +27,10 @@ namespace Test.UI
         private void button1_Click(object sender, EventArgs e)
         {
 
-            pos = current.set("temporal", pos);
-            pos.color = getRandomColor();
+            pos = current.Get("temporal");
+            // pos.color = getRandomColor();
             pos.x = 50;
-            pos.y = 50;
+            // pos.y = 50;
             drawingStarted = true;
             //var n = current.Get("a");
             //var p = current.set("rect", new Rectangle(10, 10));

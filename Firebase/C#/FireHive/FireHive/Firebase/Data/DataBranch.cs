@@ -67,7 +67,7 @@ namespace FireHive.Firebase.Data
             return ((IEnumerable<KeyValuePair<string, DataNode>>)children).GetEnumerator();
         }
 
-        public bool ContainsKey(string key)
+        public override bool ContainsKey(string key)
         {
             return children.ContainsKey(key);
         }

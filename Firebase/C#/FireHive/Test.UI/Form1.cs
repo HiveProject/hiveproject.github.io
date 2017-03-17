@@ -28,6 +28,7 @@ namespace Test.UI
         {
 
             pos = current.Get("temporal");
+           // pos = current.set("temporal", new object());
             // pos.color = getRandomColor();
             pos.x = 50;
              pos.y = 50;

@@ -15,8 +15,7 @@ namespace FireHive.Firebase
         private Thread receiveThread;
         private Thread sendThread;
 
-        //  private Queue<Dictionary<string, object>> toSend = new Queue<Dictionary<string, object>>();
-        private Queue<DataBranch> toSend = new Queue<DataBranch>();
+        private Queue<Dictionary<string, object>> toSend = new Queue<Dictionary<string, object>>();
 
         HashSet<string> loadedObjects = new HashSet<string>();
         public string Route { get; private set; }
@@ -26,16 +25,14 @@ namespace FireHive.Firebase
         public event Action<string, DataBranch> Deleted;
 
 
-
-        DataBranch dataCache;
+        //   DataBranch dataCache;
         public FirebaseStreamParser(string route) : this(route, BaseUrl)
         {
         }
         public FirebaseStreamParser(string route, string baseUrl)
         {
-            // toSend = new Queue<Dictionary<string, object>>();
-            toSend = new Queue<DataBranch>();
-            dataCache = new DataBranch();
+            toSend = new Queue<Dictionary<string, object>>();
+            //  dataCache = new DataBranch();
             BaseUrl = baseUrl;
             Added += (k, e) => { };
             Changed += (k, e) => { };
@@ -69,17 +66,17 @@ namespace FireHive.Firebase
 
                     if (toSend.Count() != 0)
                     {
-                        var changes = new DataBranch();
+                        var uri = new Uri(baseUrl + route + ".json");
                         while (toSend.Count > 0)
                         {
-                            changes.Merge(toSend.Dequeue());
-                        }
-                        dataCache.Merge(changes);
-                        using (StreamWriter sw = new StreamWriter(client.OpenWrite(new Uri(baseUrl + route + ".json"), "PATCH")))
-                        {
-                            sw.WriteLine(serializeDictionary(changes.FlattenDictionary()));
-                        }
+                            var upd = toSend.Dequeue();
+                            while (toSend.Count > 0 && tryJoin(upd, toSend.Peek()))
+                            { toSend.Dequeue(); }
 
+                            //   var toUpdate = new DataBranch(upd.ToDictionary(entry => entry.Key, entry => (DataNode)new DataLeaf(entry.Value)));
+                            //    dataCache.Merge(toUpdate);
+                            client.UploadData(uri, "PATCH", Encoding.UTF8.GetBytes(serializeDictionary(upd)));
+                        }
                     }
 
                     Thread.Sleep(10);
@@ -91,7 +88,19 @@ namespace FireHive.Firebase
             sendThread.IsBackground = true;
             sendThread.Start();
         }
+        private bool tryJoin(IDictionary<string, object> current, IDictionary<string, object> changes)
+        {
 
+            if (changes.Any(kvp => current.ContainsKey(kvp.Key) && current[kvp.Key] != kvp.Value))
+                return false;
+            //the changes dont collide. i need only to update the new keys
+            foreach (var key in changes.Keys.Where(k => !current.ContainsKey(k)))
+            {
+                current.Add(key, changes[key]);
+
+            }
+            return true;
+        }
         private string serializeDictionary(IDictionary<string, object> data)
         {
             var sb = new StringBuilder();
@@ -184,8 +193,19 @@ namespace FireHive.Firebase
                         }
                         if (result["data"].IsLeaf)
                         {
-
-                            dataAdded(result["path"].ToString().Substring(1), result["data"]);
+                            //i need to check it by the path.
+                            if (result["path"].As<string>() != "/")
+                            {
+                                var dict = new Dictionary<string, DataNode>();
+                                dict[result["path"].As<string>()] =  result["data"];
+                                var rootBranch = new DataBranch(dict);
+                                var key = rootBranch.Keys.First();
+                                dataChanged(key, rootBranch[key]);
+                            }
+                            else
+                            {
+                                dataAdded(result["path"].ToString().Substring(1), result["data"]);
+                            }
                             return;
                         }
 
@@ -202,7 +222,7 @@ namespace FireHive.Firebase
                         DataBranch dataNode = (DataBranch)result["data"];
                         foreach (var item in dataNode)
                         {
-                            if (dataCache.ContainsKey(item.Key))
+                            if (loadedObjects.Contains(item.Key))
                             {
                                 if (item.Value == null)
                                 {
@@ -228,8 +248,9 @@ namespace FireHive.Firebase
 
         internal void Patch(Dictionary<string, object> upd)
         {
-            var toUpdate = new DataBranch(upd.ToDictionary(entry => entry.Key, entry => (DataNode)new DataLeaf(entry.Value)));
-            toSend.Enqueue(toUpdate);
+
+
+            toSend.Enqueue(upd);
         }
 
 
@@ -237,39 +258,40 @@ namespace FireHive.Firebase
 
         internal void dataAdded(string key, DataNode data)
         {
-            DataBranch dataBranch = data.AsBranch();
-            if (dataCache.ContainsKey(key))
-            {
-                //i had something here.
-                var realdata = dataCache[key];
-                if (realdata == null || realdata.NotContains(dataBranch))
-                {
-                    dataCache[key] = data;
-                    Added(key, dataBranch);
-                }
-            }
-            else
-            {
-                dataCache[key] = data;
-                Added(key, dataBranch);
-            }
+            //DataBranch dataBranch = data.AsBranch();
+            //if (dataCache.ContainsKey(key))
+            //{
+            //    //i had something here.
+            //    var realdata = dataCache[key];
+            //    if (realdata == null || realdata.NotContains(dataBranch))
+            //    {
+            //        dataCache[key] = data;
+            //        Added(key, dataBranch);
+            //    }
+            //}
+            //else
+            //{
+            //    dataCache[key] = data;
+            Added(key, data.AsBranch());
+            // }
         }
         internal void dataChanged(string key, DataNode data)
         {
-            var realdata = dataCache[key];
-            if (realdata.NotContains(data))
-            {
-                if (realdata.IsLeaf != data.IsLeaf || realdata.IsLeaf)
-                {
-                    dataCache[key] = data;
-                }
-                else
-                {
-                    DataBranch dataBranch = data.AsBranch();
-                    realdata.Merge(dataBranch);
-                    Changed(key, realdata.AsBranch());
-                }
-            }
+            //var realdata = dataCache[key];
+            //if (realdata.NotContains(data))
+            //{
+            //    if (realdata.IsLeaf != data.IsLeaf || realdata.IsLeaf)
+            //    {
+            //        dataCache[key] = data;
+            //    }
+            //    else
+            //    {
+            //        DataBranch dataBranch = data.AsBranch();
+            //        realdata.Merge(dataBranch);
+            //Changed(key, realdata.AsBranch());
+            Changed(key, data.AsBranch());
+            //    }
+            //}
         }
 
 

@@ -33,7 +33,9 @@ namespace FireHive
 
         private void childAdded(string Key, DataBranch input)
         {
-
+            //if i already have an object with this key i'll ignore it, and see what happens.
+            if (innerDictionary.ContainsKey(Key))
+                return;
             object obj = null;
             var type = input["type"].As<string>();
             if (isPrimitiveTypeName(type))
@@ -154,11 +156,11 @@ namespace FireHive
                 foreach (var item in received)
                 {
                     int i = int.Parse(item.Key);
-                    string type =  item.Value["type"].As<string>();
+                    string type = item.Value["type"].As<string>();
                     if (isPrimitiveTypeName(type))
                     {
 
-                        list[i] =  item.Value["value"].As<object>();
+                        list[i] = item.Value["value"].As<object>();
                     }
                     else if (type == "null")
                     {
@@ -193,7 +195,11 @@ namespace FireHive
                     DataBranch dataBranch = (DataBranch)input["data"];
                     foreach (var item in dataBranch)
                     {
-                        string type = item.Value["type"].As<string>();
+                        string type = "";
+                        if (item.Value.ContainsKey("type"))
+                            type = item.Value["type"].As<string>();
+                        else
+                            type = sanitizeTypeName(dictionary[item.Key].GetType());
                         if (isPrimitiveTypeName(type))
                         {
 
@@ -262,7 +268,7 @@ namespace FireHive
                     else
                     {
                         string type = sanitizeTypeName(value.GetType());
-                        upd[basePath + "/type"] = type;
+                        upd[basePath + "type"] = type;
                         if (isPrimitive(value))
                         {
                             if (type == "Date")

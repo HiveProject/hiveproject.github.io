@@ -13,9 +13,9 @@ namespace FireHive.Proxies
     public class ExpandoObjectProxy : DynamicObject
     {
         //todo, i do not need the expandoobject anymore, i can have the same functionality directly with a dictionary here.
-        public ExpandoObjectProxy(ExpandibleObject instance, Action<object,string> SetExecuted)
+        public ExpandoObjectProxy(ExpandibleObject instance, Action<object, string> SetExecuted)
         {
-            setExecuted=SetExecuted;
+            setExecuted = SetExecuted;
 
             realInstance = instance;
             objectDictionary = (IDictionary<string, object>)realInstance.asDictionary();
@@ -54,7 +54,8 @@ namespace FireHive.Proxies
             {
                 result = null;
             }
-            else {
+            else
+            {
                 result = Hive.Current.getProxy(objectDictionary[binder.Name]);
             }
             return true;
@@ -62,8 +63,14 @@ namespace FireHive.Proxies
         public override bool TrySetMember(SetMemberBinder binder, object value)
         {
             value = Hive.Current.UnProxyfy(value);
-            objectDictionary[binder.Name] = value;
-            setExecuted(realInstance, binder.Name);
+            if (value.GetType() == typeof(int)) {
+                value = Convert.ToInt64(value);
+            }
+            if (objectDictionary[binder.Name] != value)
+            {
+                objectDictionary[binder.Name] = value;
+                setExecuted(realInstance, binder.Name);
+            }
             return true;
         }
 
@@ -107,7 +114,7 @@ namespace FireHive.Proxies
         }
         public override bool TryInvokeMember(InvokeMemberBinder binder, object[] args, out object result)
         {
-            return realInstance.TryInvokeMember(binder, args, out result); 
+            return realInstance.TryInvokeMember(binder, args, out result);
         }
         public override bool TryConvert(ConvertBinder binder, out object result)
         {

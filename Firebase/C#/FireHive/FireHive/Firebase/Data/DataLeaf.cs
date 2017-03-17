@@ -61,5 +61,10 @@ namespace FireHive.Firebase.Data
         {
             throw new NotImplementedException();
         }
+
+        public override bool ContainsKey(string key)
+        {
+            return false;
+        }
     }
 }

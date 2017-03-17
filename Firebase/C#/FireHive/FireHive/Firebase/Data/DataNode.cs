@@ -82,5 +82,7 @@ namespace FireHive.Firebase.Data
         public abstract void Merge(DataBranch data);
 
         public abstract DataBranch AsBranch();
+
+        public abstract bool ContainsKey(string key);
     }
 }

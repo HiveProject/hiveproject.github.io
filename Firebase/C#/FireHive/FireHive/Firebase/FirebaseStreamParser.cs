@@ -154,16 +154,7 @@ namespace FireHive.Firebase
                         foreach (var item in dataBranch.Keys)
                         {
                             loadedObjects.Add(item);
-                            if (dataBranch[item].IsLeaf)
-                            {
-
-                                dataAdded(item, dataBranch[item]);
-                            }
-                            else
-                            {
-                                dataAdded(item, dataBranch[item]);
-                            }
-
+                            dataAdded(item, dataBranch[item]);
                         }
                         break;
                     case "patch":
@@ -172,8 +163,7 @@ namespace FireHive.Firebase
                         DataBranch dataNode = (DataBranch)result["data"];
                         foreach (var item in dataNode)
                         {
-                            //todo: change this to use the internal data.
-                            if (loadedObjects.Contains(item.Key))
+                            if (dataCache.ContainsKey(item.Key))
                             {
                                 if (item.Value == null)
                                 {
@@ -181,28 +171,13 @@ namespace FireHive.Firebase
                                 }
                                 else
                                 {
-                                    if (item.Value.IsLeaf)
-                                    {
-
-                                        dataChanged(item.Key, item.Value);
-                                    }
-                                    else
-                                    {
-                                        dataChanged(item.Key, item.Value);
-                                    }
+                                    dataChanged(item.Key, item.Value);
                                 }
                             }
                             else
                             {
                                 loadedObjects.Add(item.Key);
-                                if (item.Value.IsLeaf)
-                                {
-                                    dataAdded(item.Key, item.Value);
-                                }
-                                else
-                                {
-                                    dataAdded(item.Key, item.Value);
-                                }
+                                dataAdded(item.Key, item.Value);
                             }
                         }
                         break;

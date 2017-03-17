@@ -6,6 +6,7 @@ using System.Threading;
 using Newtonsoft.Json.Linq;
 using System.Linq;
 using FireHive.Firebase.Data;
+using System.Text;
 
 namespace FireHive.Firebase
 {
@@ -14,7 +15,8 @@ namespace FireHive.Firebase
         private Thread receiveThread;
         private Thread sendThread;
 
-        private DataBranch toPatch;
+        //  private Queue<Dictionary<string, object>> toSend = new Queue<Dictionary<string, object>>();
+        private Queue<DataBranch> toSend = new Queue<DataBranch>();
 
         HashSet<string> loadedObjects = new HashSet<string>();
         public string Route { get; private set; }
@@ -31,7 +33,8 @@ namespace FireHive.Firebase
         }
         public FirebaseStreamParser(string route, string baseUrl)
         {
-            toPatch = new DataBranch();
+            // toSend = new Queue<Dictionary<string, object>>();
+            toSend = new Queue<DataBranch>();
             dataCache = new DataBranch();
             BaseUrl = baseUrl;
             Added += (k, e) => { };
@@ -57,34 +60,71 @@ namespace FireHive.Firebase
             });
             receiveThread.IsBackground = true;
             receiveThread.Start();
-
+            receiveThread.Name = ("FirebaseStreamParser -> " + route);
             sendThread = new Thread(() =>
             {
                 var client = new System.Net.WebClient();
                 while (true)
                 {
-                    lock (toPatch)
+
+                    if (toSend.Count() != 0)
                     {
-                        if (toPatch.Count() != 0)
+                        var changes = new DataBranch();
+                        while (toSend.Count > 0)
                         {
-                            dataCache.Merge(toPatch);
-                            using (StreamWriter sw = new StreamWriter(client.OpenWrite(new Uri(baseUrl + route + ".json"), "PATCH")))
-                            {
-                                sw.WriteLine(Newtonsoft.Json.JsonConvert.SerializeObject(toPatch.FlattenDictionary()));
-                            }
-                            toPatch.Clear();
+                            changes.Merge(toSend.Dequeue());
                         }
-                        Thread.Sleep(20);
+                        dataCache.Merge(changes);
+                        using (StreamWriter sw = new StreamWriter(client.OpenWrite(new Uri(baseUrl + route + ".json"), "PATCH")))
+                        {
+                            sw.WriteLine(serializeDictionary(changes.FlattenDictionary()));
+                        }
+
                     }
 
+                    Thread.Sleep(10);
 
                 }
 
             });
+            sendThread.Name = ("FirebaseStreamParser <- " + route);
             sendThread.IsBackground = true;
             sendThread.Start();
         }
 
+        private string serializeDictionary(IDictionary<string, object> data)
+        {
+            var sb = new StringBuilder();
+            sb.Append("{");
+            bool comma = false;
+            foreach (var item in data)
+            {
+                if (comma) { sb.Append(","); } else { comma = true; }
+                sb.Append("\"")
+                    .Append(item.Key)
+                    .Append("\":");
+                if (item.Value == null)
+                {
+                    sb.Append("null");
+                }
+                else if (item.Value.GetType() == typeof(DateTime))
+                {
+                    sb.Append("\"")
+                          .Append(((DateTime)item.Value).ToUniversalTime().ToString("s"))
+                          .Append("\"");
+                }
+                else if (item.Value.GetType() == typeof(string))
+                {
+                    sb.Append("\"").Append(item.Value).Append("\"");
+                }
+                else { sb.Append(item.Value); }
+
+            }
+
+            sb.Append("}");
+
+            return sb.ToString();
+        }
 
         internal string Post(Dictionary<string, object> data)
         {
@@ -189,11 +229,7 @@ namespace FireHive.Firebase
         internal void Patch(Dictionary<string, object> upd)
         {
             var toUpdate = new DataBranch(upd.ToDictionary(entry => entry.Key, entry => (DataNode)new DataLeaf(entry.Value)));
-            lock (toPatch)
-            {
-                if (toPatch.NotContains(toUpdate))
-                { toPatch.Merge(toUpdate); }
-            }
+            toSend.Enqueue(toUpdate);
         }
 
 
@@ -239,7 +275,10 @@ namespace FireHive.Firebase
 
         internal void dataRemoved(string key, DataNode data)
         {
-            Deleted(key, data.AsBranch());
+            if (data == null)
+                Deleted(key, null);
+            else
+                Deleted(key, data.AsBranch());
         }
 
 

@@ -21,17 +21,21 @@ namespace Test.UI
         private void Form1_Load(object sender, EventArgs e)
         {
             current = FireHive.Hive.Current;
-
-            var t = new Rectangle(10, 10);
-            dynamic m = new FireHive.Dynamic.ExpandibleObject(t);
+            panel1.MouseMove += panel1_MouseMove;
         }
 
         private void button1_Click(object sender, EventArgs e)
         {
-            var n = current.Get("a");
-            var p = current.set("rect", new Rectangle(10, 10));
-            var currentArea = p.Area();
-            p.depth = 200;
+
+            pos = current.set("temporal", pos);
+            pos.color = getRandomColor();
+            pos.x = 50;
+            pos.y = 50;
+            drawingStarted = true;
+            //var n = current.Get("a");
+            //var p = current.set("rect", new Rectangle(10, 10));
+            //var currentArea = p.Area();
+            //p.depth = 200;
 
             //var arr = current.Get("arr");
             //var first = current.set("recursive", new RecursiveStructure()
@@ -44,6 +48,8 @@ namespace Test.UI
 
         private void timer1_Tick(object sender, EventArgs e)
         {
+            if (drawingStarted)
+            { label4.Text = pos.x.ToString() + ":" + pos.y.ToString(); }
             var value = current.Get("a");
             var count = current.keys().Count();
             label3.Text = count.ToString();
@@ -78,10 +84,9 @@ namespace Test.UI
                 g.FillRectangle(blackBrush, 0, 0, 500, 500);
                 foreach (dynamic item in rectangles)
                 {
-                    g.FillRectangle(new SolidBrush((Color)converter.ConvertFromString(item.color)), item.x - 5, item.y - 5, 10, 10);
-
+                    if (item.x != null && item.y != null)
+                        g.FillRectangle(new SolidBrush((Color)converter.ConvertFromString(item.color)), item.x - 5, item.y - 5, 10, 10);
                 }
-
             }
             else
             {
@@ -91,12 +96,11 @@ namespace Test.UI
                 {
                     rectangles = current.set("SquareDemoPosition", rectangles);
                 }
-
-                //rectangles.Add(pos);
-                //pos = rectangles[rectangles.Count-1];
-                //pos.color = getRandomColor();
-                //pos.x = 50;
-                //pos.y = 50;
+                pos = current.set("temporal", pos);
+                pos.color = getRandomColor();
+                pos.x = 50;
+                pos.y = 50;
+                rectangles.Add(pos);
                 drawingStarted = true;
                 timer2.Interval = 10;
             }
@@ -106,5 +110,13 @@ namespace Test.UI
             return "#" + c.R.ToString("X2") + c.G.ToString("X2") + c.B.ToString("X2");
         }
 
+        private void panel1_MouseMove(object sender, MouseEventArgs e)
+        {
+            if (drawingStarted)
+            {
+                pos.x = e.X;
+                pos.y = e.Y;
+            }
+        }
     }
 }

@@ -52,7 +52,8 @@ namespace FireHive.Proxies
         public void Add(object item)
         {
             //i need to ensure that this object is expandible and whatsoever.
-            
+            //i need to remove proxies..
+            item = Hive.Current.UnProxyfy(item);
             innerList.Add( Hive.Current.loadedObjects.Get( Hive.Current.loadedObjects.Add(item)));
             setExecuted(innerList, (innerList.Count - 1).ToString());
             

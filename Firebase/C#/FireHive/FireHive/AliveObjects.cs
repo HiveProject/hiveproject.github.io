@@ -145,12 +145,12 @@ namespace FireHive
 
                 int maxIndex = 0;
                 if (input.ContainsKey("data"))
-                { 
+                {
                     received = input["data"].asDictionary();
-                    maxIndex= received.Keys.Select(int.Parse).Max();
+                    maxIndex = received.Keys.Select(int.Parse).Max();
                 }
                 //todo: if i remove things from an array this wont update correctly.
-                 
+
                 while (list.Count <= maxIndex)
                 {
                     list.Add(null);
@@ -282,11 +282,8 @@ namespace FireHive
                         {
                             //obj.
                             //ensure i have no proxies here.
-                            if (Hive.Current.proxies.ContainsValue(value))
-                            {//i have a proxy in value.
-                                value = Hive.Current.proxies.FirstOrDefault(kvp => kvp.Value == value).Key;
-                                setPropertyValue(obj, fieldName, value);
-                            }
+                            value = Hive.Current.UnProxyfy(value);
+                            setPropertyValue(obj, fieldName, value);
 
                             if (type == "Object" || type == "Array")
                             {
@@ -304,6 +301,12 @@ namespace FireHive
 
         private void setPropertyValue(object rcvr, string name, object value)
         {
+            if (rcvr.GetType() == typeof(List<object>))
+            {
+                List<object> list = (List<object>)rcvr;
+                list[int.Parse(name)] = value;
+                return;
+            }
             try
             {
                 ((IDictionary<string, object>)rcvr)[name] = value;
@@ -352,7 +355,7 @@ namespace FireHive
                 return "Boolean";
             if (type == typeof(int) || type == typeof(long) || type == typeof(double) || type == typeof(float))
                 return "Number";
-            if (type.IsArray)
+            if (type == typeof(List<object>) || type.IsArray)
                 return "Array";
             return "Object";
         }

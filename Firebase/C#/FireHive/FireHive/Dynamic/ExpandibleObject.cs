@@ -22,6 +22,8 @@ namespace FireHive.Dynamic
 
         public ExpandibleObject(object InnerObject)
         {
+            if (InnerObject == null)
+                throw new InvalidOperationException();
             innerObject = InnerObject;
             extendedObject = new Dictionary<string, object>();
         }

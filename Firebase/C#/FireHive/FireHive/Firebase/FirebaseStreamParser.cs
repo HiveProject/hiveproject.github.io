@@ -67,6 +67,7 @@ namespace FireHive.Firebase
                         switch (msg.Item1)
                         {
                             case outMessage.PATCH:
+                                mergeDictionaries(splitPath(msg.Item2), dataCache);
                                 using (StreamWriter sw = new StreamWriter(client.OpenWrite(new Uri(baseUrl + route + ".json"), "PATCH")))
                                 {
                                     sw.WriteLine(Newtonsoft.Json.JsonConvert.SerializeObject(msg.Item2));
@@ -83,6 +84,7 @@ namespace FireHive.Firebase
             sendThread.IsBackground = true;
             sendThread.Start();
         }
+
 
         internal string Post(Dictionary<string, object> data)
         {
@@ -166,25 +168,7 @@ namespace FireHive.Firebase
 
 
                         d = (Dictionary<string, object>)(result["data"]);
-                        Dictionary<string, object> toUpdate = new Dictionary<string, object>();
-                        foreach (var item in d.Keys)
-                        {
-                            Queue<string> path = new Queue<string>(item.Split('/'));
-                            IDictionary<string, object> current = toUpdate;
-                            while (path.Count > 1)
-                            {
-                                string k = path.Dequeue();
-                                Dictionary<string, object> next = null;
-                                if (!current.ContainsKey(k))
-                                {
-                                    next = new Dictionary<string, object>();
-                                    current[k] = next;
-                                }
-                                current = current[k].asDictionary();
-                            }
-                            current[path.Dequeue()] = d[item];
-
-                        }
+                        IDictionary<string, object> toUpdate = splitPath(d);
                         foreach (var item in toUpdate)
                         {
                             //todo: change this to use the internal data.
@@ -258,22 +242,83 @@ namespace FireHive.Firebase
 
         internal void dataAdded(string key, IDictionary<string, object> data)
         {
-            dataCache[key] = data;
-            Added(key, data);
+            if (dataCache.ContainsKey(key))
+            {
+                //i had something here.
+                var realdata = dataCache[key].asDictionary();
+                if (realdata == null || differs(realdata, data))
+                {
+                    dataCache[key] = data;
+                    Added(key, data);
+                }
+            }
+            else
+            {
+                dataCache[key] = data;
+                Added(key, data);
+            }
         }
         internal void dataChanged(string key, IDictionary<string, object> data)
         {
             var realdata = dataCache[key].asDictionary();
-            mergeDictionaries(data, realdata);
-            Changed(key, realdata);
+            if (differs(realdata, data))
+            {
+                mergeDictionaries(data, realdata);
+                Changed(key, realdata);
+            }
         }
+        internal bool differs(IDictionary<string, object> cache, IDictionary<string, object> changes)
+        {
+            bool equals = false;
+            foreach (var item in changes)
+            {
+                if (!cache.ContainsKey(item.Key)) return true;
+                object me = item.Value;
+                
+                object other = cache[item.Key];
+                //todo: fix this hack.
+                if (me.GetType() == typeof(Int32))
+                { me = (Int64)me; }
+                if (me.GetType() != other.GetType()) return true;
+                if (me.GetType() == typeof(Dictionary<string, object>))
+                {
+                    equals = equals || differs((Dictionary<string, object>)other, (Dictionary<string, object>)me);
+                }
+                else
+                {
+                    equals = equals || (! me.Equals(other));
+                }
 
+            }
+            return equals;
+        }
 
         internal void dataRemoved(string key, IDictionary<string, object> data)
         {
             Deleted(key, data);
         }
-
+        private IDictionary<string, object> splitPath(IDictionary<string, object> d)
+        {
+            Dictionary<string, object> toUpdate = new Dictionary<string, object>();
+            foreach (var item in d.Keys)
+            {
+                Queue<string> path = new Queue<string>(item.Split('/').Where(t=>t!=""));
+                IDictionary<string, object> current = toUpdate;
+                while (path.Count > 1)
+                {
+                    string k = path.Dequeue();
+                    Dictionary<string, object> next = null;
+                    if (!current.ContainsKey(k))
+                    {
+                        next = new Dictionary<string, object>();
+                        current[k] = next;
+                    }
+                    current = current[k].asDictionary();
+                }
+                current[path.Dequeue()] = d[item];
+            }
+            return toUpdate;
+        }
         private void mergeDictionaries(IDictionary<string, object> from, IDictionary<string, object> to)
         {
 

@@ -53,6 +53,19 @@ namespace FireHive
             //if value is a proxy, i need the real thing.
 
         }
+
+        internal object UnProxyfy(object item)
+        {
+            if (item.GetType().IsValueType) return item;
+            if (Current.proxies.ContainsValue(item))
+            {
+                var result =  Current.proxies.FirstOrDefault(kvp => kvp.Value == item).Key;
+                if (result == null) return item;
+                return result;
+            }
+            return item;
+        }
+
         private dynamic createProxy(object obj)
         {
             var t = obj.GetType();

@@ -61,10 +61,7 @@ namespace FireHive.Proxies
         }
         public override bool TrySetMember(SetMemberBinder binder, object value)
         {
-            if (Hive.Current.proxies.ContainsValue(value))
-            {
-                value = Hive.Current.proxies.FirstOrDefault(kvp => kvp.Value == value).Key;
-            }
+            value = Hive.Current.UnProxyfy(value);
             objectDictionary[binder.Name] = value;
             setExecuted(realInstance, binder.Name);
             return true;

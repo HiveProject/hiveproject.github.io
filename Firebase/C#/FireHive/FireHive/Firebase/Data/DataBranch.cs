@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 
 namespace FireHive.Firebase.Data
 {
-    class DataBranch : DataNode,IEnumerable<KeyValuePair<string, DataNode>>
+    class DataBranch : DataNode, IEnumerable<KeyValuePair<string, DataNode>>
     {
         private Dictionary<string, DataNode> children;
         private DataBranch()
@@ -19,7 +19,7 @@ namespace FireHive.Firebase.Data
             {
                 addPathedValue(item.Key, item.Value);
             }
-        } 
+        }
 
         private void addPathedValue(string path, DataNode value)
         {
@@ -63,6 +63,26 @@ namespace FireHive.Firebase.Data
         IEnumerator IEnumerable.GetEnumerator()
         {
             return ((IEnumerable<KeyValuePair<string, DataNode>>)children).GetEnumerator();
+        }
+
+        public bool ContainsKey(string key)
+        {
+            return children.ContainsKey(key);
+        }
+
+        public override bool Differs(DataNode data)
+        {
+            throw new NotImplementedException();
+        }
+
+        public override void Merge(DataNode data)
+        {
+            throw new NotImplementedException();
+        }
+
+        public override DataBranch AsBranch()
+        {
+            return this;
         }
     }
 }

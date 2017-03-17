@@ -23,9 +23,9 @@ namespace FireHive.Firebase.Data
                     return new DataBranch(token.Children<JProperty>().ToDictionary(prop => prop.Name,
                                               prop => mapJsonToken(prop.Value)));
                 case JTokenType.Array:
-                    
-                 var i = 0;
-                 return new DataBranch( token.Select(mapJsonToken).ToDictionary(p => (i++).ToString(), p => p));
+
+                    var i = 0;
+                    return new DataBranch(token.Select(mapJsonToken).ToDictionary(p => (i++).ToString(), p => p));
 
                 default:
                     return new DataLeaf(((JValue)token).Value);
@@ -73,5 +73,11 @@ namespace FireHive.Firebase.Data
 
 
         }
+
+        public abstract bool Differs(DataNode data);
+
+        public abstract void Merge(DataNode data);
+
+        public abstract DataBranch AsBranch();
     }
 }

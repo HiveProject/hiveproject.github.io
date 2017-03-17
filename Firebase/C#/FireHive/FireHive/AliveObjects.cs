@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using System.Dynamic;
 using FireHive.Firebase;
 using FireHive.Dynamic;
+using FireHive.Firebase.Data;
 
 namespace FireHive
 {
@@ -23,14 +24,14 @@ namespace FireHive
 
         }
 
-        private void childDeleted(string arg1, IDictionary<string, object> arg2)
+        private void childDeleted(string arg1, DataBranch arg2)
         {
 
             if (innerDictionary.ContainsKey(arg1))
                 innerDictionary.Remove(arg1);
         }
 
-        private void childAdded(string Key, IDictionary<string, object> input)
+        private void childAdded(string Key, DataBranch input)
         {
 
             object obj = null;
@@ -39,7 +40,7 @@ namespace FireHive
             {
                 if (type == "Date")
                 {
-                    obj = ((DateTime)input["value"]).ToLocalTime();
+                    obj = (input["value"].As<DateTime>()).ToLocalTime();
                 }
                 else
                 {
@@ -70,7 +71,8 @@ namespace FireHive
                 //}
                 //else { obj ={ }; }
                 innerDictionary[Key] = obj;
-                mapSnapshotToObject(obj, input);
+                //todo:enable map.
+               // mapSnapshotToObject(obj, input);
             }
             checkForRefrences(Key, obj);
         }
@@ -135,109 +137,109 @@ namespace FireHive
 
         List<KeyValuePair<string, Action<object>>> missingReferences;
 
-        private void mapSnapshotToObject(object obj, IDictionary<string, object> input)
-        {
-            string myType = input["type"].ToString();
-            if (myType == "Array")
-            {
-                List<object> list = (List<object>)obj;
-                IDictionary<string, object> received = new Dictionary<string, object>();
+        //private void mapSnapshotToObject(object obj, IDictionary<string, object> input)
+        //{
+        //    string myType = input["type"].ToString();
+        //    if (myType == "Array")
+        //    {
+        //        List<object> list = (List<object>)obj;
+        //        IDictionary<string, object> received = new Dictionary<string, object>();
 
-                int maxIndex = 0;
-                if (input.ContainsKey("data"))
-                {
-                    received = input["data"].asDictionary();
-                    maxIndex = received.Keys.Select(int.Parse).Max();
-                }
-                //todo: if i remove things from an array this wont update correctly.
+        //        int maxIndex = 0;
+        //        if (input.ContainsKey("data"))
+        //        {
+        //            received = input["data"].asDictionary();
+        //            maxIndex = received.Keys.Select(int.Parse).Max();
+        //        }
+        //        //todo: if i remove things from an array this wont update correctly.
 
-                while (list.Count <= maxIndex)
-                {
-                    list.Add(null);
-                }
-                //remove elements to ensure the length. 
-                list.RemoveRange(received.Count, list.Count - received.Count);
-                foreach (var item in received)
-                {
-                    int i = int.Parse(item.Key);
-                    string type = item.Value.asDictionary()["type"].ToString();
-                    if (isPrimitiveTypeName(type))
-                    {
+        //        while (list.Count <= maxIndex)
+        //        {
+        //            list.Add(null);
+        //        }
+        //        //remove elements to ensure the length. 
+        //        list.RemoveRange(received.Count, list.Count - received.Count);
+        //        foreach (var item in received)
+        //        {
+        //            int i = int.Parse(item.Key);
+        //            string type = item.Value.asDictionary()["type"].ToString();
+        //            if (isPrimitiveTypeName(type))
+        //            {
 
-                        list[i] = item.Value.asDictionary()["value"];
-                    }
-                    else if (type == "null")
-                    {
-                        list[i] = null;
-                    }
-                    else
-                    {
-                        //object or array.
-                        string otherKey = item.Value.asDictionary()["value"].ToString();
-                        var other = Get(otherKey);
-                        if (other == null)
-                        {
-                            missingReferences.Add(new KeyValuePair<string, Action<object>>(otherKey, (otherObj) =>
-                            {
-                                list[i] = otherObj;
-                            }));
-                        }
-                        else
-                        {
-                            list[i] = other;
-                        }
+        //                list[i] = item.Value.asDictionary()["value"];
+        //            }
+        //            else if (type == "null")
+        //            {
+        //                list[i] = null;
+        //            }
+        //            else
+        //            {
+        //                //object or array.
+        //                string otherKey = item.Value.asDictionary()["value"].ToString();
+        //                var other = Get(otherKey);
+        //                if (other == null)
+        //                {
+        //                    missingReferences.Add(new KeyValuePair<string, Action<object>>(otherKey, (otherObj) =>
+        //                    {
+        //                        list[i] = otherObj;
+        //                    }));
+        //                }
+        //                else
+        //                {
+        //                    list[i] = other;
+        //                }
 
-                    }
-                }
-            }
-            else
-            {
-                IDictionary<string, object> dictionary = obj.asDictionary();
-                if (input.ContainsKey("data"))
-                {
-                    foreach (var item in (Dictionary<string, object>)input["data"])
-                    {
-                        string type = item.Value.asDictionary()["type"].ToString();
-                        if (isPrimitiveTypeName(type))
-                        {
+        //            }
+        //        }
+        //    }
+        //    else
+        //    {
+        //        IDictionary<string, object> dictionary = obj.asDictionary();
+        //        if (input.ContainsKey("data"))
+        //        {
+        //            foreach (var item in (Dictionary<string, object>)input["data"])
+        //            {
+        //                string type = item.Value.asDictionary()["type"].ToString();
+        //                if (isPrimitiveTypeName(type))
+        //                {
 
-                            dictionary[item.Key as string] = item.Value.asDictionary()["value"];
-                        }
-                        else if (type == "null")
-                        {
+        //                    dictionary[item.Key as string] = item.Value.asDictionary()["value"];
+        //                }
+        //                else if (type == "null")
+        //                {
 
-                            dictionary[item.Key as string] = null;
-                        }
-                        else
-                        {
-                            //object or array.
-                            string otherKey = item.Value.asDictionary()["value"].ToString();
-                            var other = Get(otherKey);
-                            if (other == null)
-                            {
-                                missingReferences.Add(new KeyValuePair<string, Action<object>>(otherKey, (otherObj) =>
-                                {
-                                    dictionary[item.Key] = otherObj;
-                                }));
-                            }
-                            else
-                            {
-                                dictionary[item.Key] = other;
-                            }
-                        }
-                    }
-                }
-            }
+        //                    dictionary[item.Key as string] = null;
+        //                }
+        //                else
+        //                {
+        //                    //object or array.
+        //                    string otherKey = item.Value.asDictionary()["value"].ToString();
+        //                    var other = Get(otherKey);
+        //                    if (other == null)
+        //                    {
+        //                        missingReferences.Add(new KeyValuePair<string, Action<object>>(otherKey, (otherObj) =>
+        //                        {
+        //                            dictionary[item.Key] = otherObj;
+        //                        }));
+        //                    }
+        //                    else
+        //                    {
+        //                        dictionary[item.Key] = other;
+        //                    }
+        //                }
+        //            }
+        //        }
+        //    }
 
-        }
+        //}
 
-        private void childChanged(string key, IDictionary<string, object> data)
+        private void childChanged(string key, DataBranch data)
         {
             var obj = innerDictionary[key];
             //todo: massive hack
-            if (obj is IList<object>) { data["type"] = "Array"; } else { data["type"] = "Object"; }
-
-            mapSnapshotToObject(obj, data);
+            if (obj is IList<object>) { data["type"] = new DataLeaf("Array"); } else { data["type"] = new DataLeaf("Object"); }
+            //todo:map
+           // mapSnapshotToObject(obj, data);
         }
 
 

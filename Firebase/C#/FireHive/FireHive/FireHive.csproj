@@ -47,7 +47,6 @@
     <Compile Include="AliveObjects.cs" />
     <Compile Include="Dynamic\ExpandibleObject.cs" />
     <Compile Include="Dynamic\ExpandibleObjectDictionary.cs" />
-    <Compile Include="Extensions.cs" />
     <Compile Include="Firebase\Data\DataBranch.cs" />
     <Compile Include="Firebase\Data\DataLeaf.cs" />
     <Compile Include="Firebase\Data\DataNode.cs" />

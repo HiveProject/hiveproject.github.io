@@ -1,4 +1,5 @@
 ﻿using FireHive.Firebase;
+using FireHive.Firebase.Data;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -28,20 +29,20 @@ namespace FireHive
             client.Patch("roots", new Dictionary<string, object>() { { key, value } });
             return true;
         }
-        private void childDeleted(string arg1, IDictionary<string, object> arg2)
+        private void childDeleted(string arg1, DataBranch arg2)
         {
             if (innerDictionary.ContainsKey(arg1))
                 innerDictionary.Remove(arg1);
         }
 
-        private void childChanged(string arg1, IDictionary<string, object> arg2)
+        private void childChanged(string arg1, DataBranch arg2)
         {
-            innerDictionary[arg1] = arg2["value"] as string;
+            innerDictionary[arg1] = arg2["value"].As<string>();
         }
 
-        private void childAdded(string arg1, IDictionary<string, object> arg2)
+        private void childAdded(string arg1, DataBranch arg2)
         {
-            innerDictionary[arg1]= arg2["value"] as string;
+            innerDictionary[arg1]= arg2["value"].As<string>();
         }
 
 

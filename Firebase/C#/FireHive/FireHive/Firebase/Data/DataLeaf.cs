@@ -42,5 +42,20 @@ namespace FireHive.Firebase.Data
                 return default(T);
             return (T)value;
         }
+
+        public override DataBranch AsBranch()
+        {
+            return new DataBranch(new Dictionary<string, DataNode>() { { "value", this } });
+        }
+
+        public override bool Differs(DataNode data)
+        {
+            throw new NotImplementedException();
+        }
+
+        public override void Merge(DataNode data)
+        {
+            throw new NotImplementedException();
+        }
     }
 }

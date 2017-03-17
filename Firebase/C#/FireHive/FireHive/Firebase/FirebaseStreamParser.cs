@@ -18,19 +18,19 @@ namespace FireHive.Firebase
         HashSet<string> loadedObjects = new HashSet<string>();
         public string Route { get; private set; }
         static public string BaseUrl { get; set; }
-        public event Action<string, IDictionary<string, object>> Added;
-        public event Action<string, IDictionary<string, object>> Changed;
-        public event Action<string, IDictionary<string, object>> Deleted;
+        public event Action<string, DataBranch> Added;
+        public event Action<string, DataBranch> Changed;
+        public event Action<string, DataBranch> Deleted;
 
 
 
-        Dictionary<string, object> dataCache;
+        DataBranch dataCache;
         public FirebaseStreamParser(string route) : this(route, BaseUrl)
         {
         }
         public FirebaseStreamParser(string route, string baseUrl)
         {
-            dataCache = new Dictionary<string, object>();
+            dataCache = new DataBranch(new Dictionary<string, DataNode>());
             BaseUrl = baseUrl;
             Added += (k, e) => { };
             Changed += (k, e) => { };
@@ -147,8 +147,8 @@ namespace FireHive.Firebase
                         }
                         if (result["data"].IsLeaf)
                         {
-                            //todo: replace the dict with my datanodes.
-                            dataAdded(result["path"].ToString().Substring(1), new Dictionary<string, object>() { { "value", result["data"] } });
+
+                            dataAdded(result["path"].ToString().Substring(1), result["data"]);
                             return;
                         }
 
@@ -157,14 +157,13 @@ namespace FireHive.Firebase
                         {
                             loadedObjects.Add(item);
                             if (dataBranch[item].IsLeaf)
-                            {//todo: replace the dict with my datanodes.
+                            {
 
-                                dataAdded(item, new Dictionary<string, object>() { { "value", dataBranch[item] } });
+                                dataAdded(item, dataBranch[item]);
                             }
                             else
-                            {//todo: replace the dict with my datanodes.
-
-                                // dataAdded(item, d[item] );
+                            {
+                                dataAdded(item, dataBranch[item]);
                             }
 
                         }
@@ -180,20 +179,18 @@ namespace FireHive.Firebase
                             {
                                 if (item.Value == null)
                                 {
-                                    //todo: replace the dict with my datanodes.
-                                    // dataRemoved(item.Key, item.Value as Dictionary<string, object>);
+                                    dataRemoved(item.Key, item.Value);
                                 }
                                 else
                                 {
                                     if (item.Value.IsLeaf)
                                     {
 
-                                        dataChanged(item.Key, new Dictionary<string, object>() { { "value", item.Value } });
+                                        dataChanged(item.Key, item.Value);
                                     }
                                     else
                                     {
-                                        //todo: replace the dict with my datanodes.
-                                        //dataChanged(item.Key, item.Value as Dictionary<string, object>);
+                                        dataChanged(item.Key, item.Value);
                                     }
                                 }
                             }
@@ -202,12 +199,11 @@ namespace FireHive.Firebase
                                 loadedObjects.Add(item.Key);
                                 if (item.Value.IsLeaf)
                                 {
-                                    dataAdded(item.Key, new Dictionary<string, object>() { { "value", item.Value } });
+                                    dataAdded(item.Key, item.Value);
                                 }
                                 else
                                 {
-                                    //todo: replace the dict with my datanodes.
-                                    // dataAdded(item.Key, item.Value as Dictionary<string, object>);
+                                    dataAdded(item.Key, item.Value);
                                 }
                             }
                         }
@@ -226,107 +222,41 @@ namespace FireHive.Firebase
 
 
 
-        internal void dataAdded(string key, IDictionary<string, object> data)
+        internal void dataAdded(string key, DataNode data)
         {
             if (dataCache.ContainsKey(key))
             {
                 //i had something here.
-                var realdata = dataCache[key].asDictionary();
-                if (realdata == null || differs(realdata, data))
+                var realdata = dataCache[key];
+                if (realdata == null || realdata.Differs(data))
                 {
                     dataCache[key] = data;
-                    Added(key, data);
+                    Added(key, data.AsBranch());
                 }
             }
             else
             {
                 dataCache[key] = data;
-                Added(key, data);
+                Added(key, data.AsBranch());
             }
         }
-        internal void dataChanged(string key, IDictionary<string, object> data)
+        internal void dataChanged(string key, DataNode data)
         {
-            var realdata = dataCache[key].asDictionary();
-            if (differs(realdata, data))
+            var realdata = dataCache[key];
+            if (realdata.Differs(data))
             {
-                mergeDictionaries(data, realdata);
-                Changed(key, realdata);
+                realdata.Merge(data);
+                Changed(key, realdata.AsBranch());
             }
         }
-        internal bool differs(IDictionary<string, object> cache, IDictionary<string, object> changes)
+
+
+        internal void dataRemoved(string key, DataNode data)
         {
-            bool equals = false;
-            foreach (var item in changes)
-            {
-                if (!cache.ContainsKey(item.Key)) return true;
-                object me = item.Value;
-
-                object other = cache[item.Key];
-                //todo: fix this hack.
-                if (me.GetType() == typeof(Int32))
-                { me = (Int64)me; }
-                if (me.GetType() != other.GetType()) return true;
-                if (me.GetType() == typeof(Dictionary<string, object>))
-                {
-                    equals = equals || differs((Dictionary<string, object>)other, (Dictionary<string, object>)me);
-                }
-                else
-                {
-                    equals = equals || (!me.Equals(other));
-                }
-
-            }
-            return equals;
+            Deleted(key, data.AsBranch());
         }
 
-        internal void dataRemoved(string key, IDictionary<string, object> data)
-        {
-            Deleted(key, data);
-        }
 
-        private void mergeDictionaries(IDictionary<string, object> from, IDictionary<string, object> to)
-        {
-
-            foreach (var item in from)
-            {
-                if (item.Value == null)
-                {
-                    //if the value is null is because it was removed from to.
-                    if (to.ContainsKey(item.Key))
-                        to.Remove(item.Key);
-                }
-                else
-                {
-                    if (to.ContainsKey(item.Key))
-                    {
-                        var d1 = item.Value.asDictionary();
-                        var d2 = to[item.Key].asDictionary();
-                        if (d1 != null)
-                        {
-                            if (d2 != null)
-                            {
-                                mergeDictionaries(d1, d2);
-                            }
-                            else
-                            {
-                                to[item.Key] = d1;
-                            }
-                        }
-                        else
-                        {
-                            //not a dictionary
-                            to[item.Key] = item.Value;
-                        }
-                    }
-                    else
-                    {
-                        //i have a new key for the dict.
-                        to[item.Key] = item.Value;
-                    }
-                }
-            }
-
-        }
         bool isPrimitive(object obj)
         {
             if (obj == null)

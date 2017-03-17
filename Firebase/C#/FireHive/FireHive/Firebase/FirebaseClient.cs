@@ -1,4 +1,5 @@
-﻿using System;
+﻿using FireHive.Firebase.Data;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -20,7 +21,7 @@ namespace FireHive.Firebase
             FirebaseStreamParser.BaseUrl = url;
         }
 
-        public void On(string route, FirebaseEvent evt, Action<string, IDictionary<string, object>> callback)
+        public void On(string route, FirebaseEvent evt, Action<string, DataBranch> callback)
         {
             if (!parsers.ContainsKey(route))
             {

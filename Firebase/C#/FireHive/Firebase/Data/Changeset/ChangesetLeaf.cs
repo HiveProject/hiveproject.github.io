@@ -28,6 +28,13 @@ namespace Firebase.Data.Changeset
 
         public object Value { get; set; }
 
+        public override T As<T>()
+        {
+            if (!(Value is T))
+                return default(T);
+            return (T)Value;
+        }
+
         internal override DataNode ToDataNode()
         {
             return new DataLeaf(Value);

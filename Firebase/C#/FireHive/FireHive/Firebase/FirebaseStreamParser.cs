@@ -5,10 +5,10 @@ using System.Net;
 using System.Threading;
 using Newtonsoft.Json.Linq;
 using System.Linq;
-using FireHive.Firebase.Data;
 using System.Text;
+using FireHive.Firebase.REST.Data;
 
-namespace FireHive.Firebase
+namespace FireHive.Firebase.REST
 {
     internal class FirebaseStreamParser
     {

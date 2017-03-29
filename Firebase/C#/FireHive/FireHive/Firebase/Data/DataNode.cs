@@ -5,7 +5,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace FireHive.Firebase.Data
+namespace FireHive.Firebase.REST.Data
 {
     abstract class DataNode
     {

@@ -1,5 +1,5 @@
-﻿using FireHive.Firebase;
-using FireHive.Firebase.Data;
+﻿using Firebase;
+using Firebase.Data.Changeset;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -18,10 +18,10 @@ namespace FireHive
             missingReferences = new List<KeyValuePair<string, Action<object>>>();
             this.client = client;
 
-            client.On("roots", FirebaseEvent.Added, childAdded);
-            client.On("roots", FirebaseEvent.Changed, childChanged);
+            client.On("roots", SubscribeOperations.Added, childAdded);
+            client.On("roots", SubscribeOperations.Changed, childChanged);
 
-            client.On("roots", FirebaseEvent.Deleted, childDeleted);
+            client.On("roots", SubscribeOperations.Removed, childDeleted);
         }
         public override bool Set(string key, string value)
         {
@@ -29,20 +29,28 @@ namespace FireHive
             client.Patch("roots", new Dictionary<string, object>() { { key, value } });
             return true;
         }
-        private void childDeleted(string arg1, DataBranch arg2)
+        private void childDeleted(string arg1, ChangeSet arg2)
         {
             if (innerDictionary.ContainsKey(arg1))
                 innerDictionary.Remove(arg1);
         }
 
-        private void childChanged(string arg1, DataBranch arg2)
+        private void childChanged(string arg1, ChangeSet arg2)
         {
-            innerDictionary[arg1] = arg2["value"].As<string>();
+            if (!arg2.IsLeaf)
+                throw new NotImplementedException("this was suposed to be a leaf!");
+            var leaf = (ChangeSetLeaf)arg2;
+
+            innerDictionary[arg1] = leaf.Value.ToString();
         }
 
-        private void childAdded(string arg1, DataBranch arg2)
+        private void childAdded(string arg1, ChangeSet arg2)
         {
-            innerDictionary[arg1]= arg2["value"].As<string>();
+            if (!arg2.IsLeaf)
+                throw new NotImplementedException("this was suposed to be a leaf!");
+            var leaf = (ChangeSetLeaf)arg2;
+
+            innerDictionary[arg1] = leaf.Value.ToString();
         }
 
 

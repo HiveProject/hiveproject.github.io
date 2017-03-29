@@ -10,8 +10,7 @@ namespace Firebase.Data.Changeset
     public abstract class ChangeSet
     {
         public ChangeSet()
-        { childs = new Dictionary<string, ChangeSet>(); }
-        public string Path { get; set; }
+        { childs = new Dictionary<string, ChangeSet>(); } 
         ChangeType? type;
         public virtual ChangeType Type
         {
@@ -23,6 +22,9 @@ namespace Firebase.Data.Changeset
             }
             set { type = value; }
         }
+
+
+        public ChangeSet this[string key] { get { return childs[key]; } set { childs[key] = value; } }
         Dictionary<string, ChangeSet> childs;
         public Dictionary<string, ChangeSet> Childs { get { return childs; } }
         public abstract bool IsLeaf { get; }
@@ -101,7 +103,9 @@ namespace Firebase.Data.Changeset
             {
                 childs[path] = new ChangeSetLeaf(value);
             }
-
         }
+
+        public abstract T As<T>();
+
     }
 }

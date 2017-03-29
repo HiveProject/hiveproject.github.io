@@ -4,9 +4,10 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Dynamic;
-using FireHive.Firebase;
 using FireHive.Dynamic;
-using FireHive.Firebase.Data;
+using Firebase;
+using Firebase.Data.Changeset;
+using FireHive.Firebase.REST.Data;
 
 namespace FireHive
 {
@@ -18,20 +19,20 @@ namespace FireHive
             missingReferences = new List<KeyValuePair<string, Action<object>>>();
             this.client = client;
 
-            client.On("objects", FirebaseEvent.Added, childAdded);
-            client.On("objects", FirebaseEvent.Changed, childChanged);
-            client.On("objects", FirebaseEvent.Deleted, childDeleted);
+            client.On("objects", SubscribeOperations.Added, childAdded);
+            client.On("objects", SubscribeOperations.Changed, childChanged);
+            client.On("objects", SubscribeOperations.Removed, childDeleted);
 
         }
 
-        private void childDeleted(string arg1, DataBranch arg2)
+        private void childDeleted(string arg1, ChangeSet arg2)
         {
 
             if (innerDictionary.ContainsKey(arg1))
                 innerDictionary.Remove(arg1);
         }
 
-        private void childAdded(string Key, DataBranch input)
+        private void childAdded(string Key, ChangeSet input)
         {
             //if i already have an object with this key i'll ignore it, and see what happens.
             if (innerDictionary.ContainsKey(Key))
@@ -132,18 +133,18 @@ namespace FireHive
 
         List<KeyValuePair<string, Action<object>>> missingReferences;
 
-        private void mapSnapshotToObject(object obj, DataBranch input)
+        private void mapSnapshotToObject(object obj, ChangeSet input)
         {
             string myType = input["type"].As<string>();
             if (myType == "Array")
             {
                 List<object> list = (List<object>)obj;
-                DataBranch received = new DataBranch();
+                ChangesetBranch received = null;
                 int maxIndex = 0;
-                if (input.ContainsKey("data"))
+                if (input.Childs.ContainsKey("data"))
                 {
-                    received = input["data"].AsBranch();
-                    maxIndex = received.Keys.Select(int.Parse).Max();
+                    received = (ChangesetBranch)input["data"];
+                    maxIndex = received.Childs.Keys.Select(int.Parse).Max();
                 }
                 //todo: if i remove things from an array this wont update correctly.
 
@@ -152,8 +153,8 @@ namespace FireHive
                     list.Add(null);
                 }
                 //remove elements to ensure the length. 
-                list.RemoveRange(received.Count(), list.Count - received.Count());
-                foreach (var item in received)
+                list.RemoveRange(received.Childs.Count(), list.Count - received.Childs.Count());
+                foreach (var item in received.Childs)
                 {
                     int i = int.Parse(item.Key);
                     string type = item.Value["type"].As<string>();
@@ -190,13 +191,13 @@ namespace FireHive
             {
 
                 IDictionary<string, object> dictionary = ((ExpandibleObject)obj).asDictionary();
-                if (input.ContainsKey("data"))
+                if (input.Childs.ContainsKey("data"))
                 {
-                    DataBranch dataBranch = (DataBranch)input["data"];
-                    foreach (var item in dataBranch)
+                    ChangesetBranch dataBranch = (ChangesetBranch)input["data"];
+                    foreach (var item in dataBranch.Childs)
                     {
                         string type = "";
-                        if (item.Value.ContainsKey("type"))
+                        if (item.Value.Childs.ContainsKey("type"))
                             type = item.Value["type"].As<string>();
                         else
                             type = sanitizeTypeName(dictionary[item.Key].GetType());
@@ -233,13 +234,13 @@ namespace FireHive
 
         }
 
-        private void childChanged(string key, DataBranch data)
+        private void childChanged(string key, ChangeSet data)
         {
-            var obj = innerDictionary[key];
-            //todo: massive hack
-            if (obj is IList<object>) { data["type"] = new DataLeaf("Array"); } else { data["type"] = new DataLeaf("Object"); }
-
-            mapSnapshotToObject(obj, data);
+             var obj = innerDictionary[key];
+             //todo: massive hack
+             if (obj is IList<object>) { data["type"] = new ChangeSetLeaf("Array"); } else { data["type"] = new ChangeSetLeaf("Object"); }
+             
+             mapSnapshotToObject(obj, data);
         }
 
 

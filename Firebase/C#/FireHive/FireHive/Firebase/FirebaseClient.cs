@@ -1,4 +1,5 @@
-﻿using FireHive.Firebase.Data;
+﻿ 
+using FireHive.Firebase.REST.Data;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -7,7 +8,7 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace FireHive.Firebase
+namespace FireHive.Firebase.REST
 {
     class FirebaseClient
     {

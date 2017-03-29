@@ -26,12 +26,11 @@ namespace Test.UI
 
         private void button1_Click(object sender, EventArgs e)
         {
-
             pos = current.Get("temporal");
-           // pos = current.set("temporal", new object());
+            // pos = current.set("temporal", new object());
             // pos.color = getRandomColor();
             pos.x = 50;
-             pos.y = 50;
+            pos.y = 50;
             drawingStarted = true;
             //var n = current.Get("a");
             //var p = current.set("rect", new Rectangle(10, 10));
@@ -91,19 +90,18 @@ namespace Test.UI
             }
             else
             {
-                //pos.color = getRandomColor();
-                if (current.keys().Contains("SquareDemoPosition")) { rectangles = current.Get("SquareDemoPosition"); }
-                else
+                if (current.keys().Contains("SquareDemoPosition")
+                    && current.Get("SquareDemoPosition")!=null)
                 {
-                    rectangles = current.set("SquareDemoPosition", rectangles);
+                    rectangles = current.Get("SquareDemoPosition");
+                    pos = current.set("temporal", pos);
+                    pos.color = getRandomColor();
+                    pos.x = 50;
+                    pos.y = 50;
+                    rectangles.Add(pos);
+                    drawingStarted = true;
+                    timer2.Interval = 10;
                 }
-                pos = current.set("temporal", pos);
-                pos.color = getRandomColor();
-                pos.x = 50;
-                pos.y = 50;
-                rectangles.Add(pos);
-                drawingStarted = true;
-                timer2.Interval = 10;
             }
         }
         private String HexConverter(System.Drawing.Color c)

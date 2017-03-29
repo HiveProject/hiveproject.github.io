@@ -1,4 +1,4 @@
-﻿namespace FireHive.Firebase
+﻿namespace FireHive.Firebase.REST
 {
     public enum FirebaseEvent
     {

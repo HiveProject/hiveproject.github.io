@@ -54,6 +54,12 @@ namespace Firebase.Data.Changeset
                     }
             }
         }
+
+        public override T As<T>()
+        {
+            throw new NotImplementedException();
+        }
+
         internal override DataNode ToDataNode()
         {
 

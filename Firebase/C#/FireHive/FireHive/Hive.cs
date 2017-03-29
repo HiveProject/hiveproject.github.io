@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using System.Dynamic;
 using FireHive.Proxies;
 using FireHive.Dynamic;
+using Firebase;
 
 namespace FireHive
 {
@@ -16,7 +17,7 @@ namespace FireHive
         static Hive instance;
         internal Roots roots;
         internal AliveObjects loadedObjects;
-        private Firebase.FirebaseClient client;
+        private FirebaseClient client;
 
 
         internal Dictionary<object, dynamic> proxies;
@@ -32,7 +33,7 @@ namespace FireHive
         {
             proxies = new Dictionary<object, dynamic>();
 
-            client = new Firebase.FirebaseClient("https://hive-1336.firebaseio.com/");
+            client = new FirebaseClient("https://hive-1336.firebaseio.com/");
             roots = new Roots(client);
             loadedObjects = new AliveObjects(client);
         }

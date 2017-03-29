@@ -10,6 +10,9 @@ namespace Firebase.Data.Changeset
     {
         public ChangeSetLeaf(object value)
         {
+            if (value.GetType() == typeof(int))
+                value = Convert.ToInt64(value);
+
             Value = value;
         }
 

@@ -63,17 +63,6 @@ namespace Firebase
 
         }
 
-        public void Patch(string path, Dictionary<string, object> data)
-        {
-            if (!path.StartsWith("/"))
-                path = "/" + path;
-            Enqueue(new Messages.Request("m",
-                new Messages.RequestPayload()
-                {
-                    Path = path,
-                    Data = data
-                }));
-        }
 
         private void initializeConnections()
         {
@@ -213,19 +202,23 @@ namespace Firebase
                 else
                 { }
 
-                var node = localCache.Find(response.Data.Payload.Path);
+                mergeToLocalCache(response.Data.Payload.Path, changeset);
 
-                if (node == null)
-                {
-                    node = localCache.Find(response.Data.Payload.Path, true);
-                    changeset.Type = ChangeType.Added;
-                }
-                node.Merge(changeset);
                 handleCallbacks(response.Data.Payload.Path, changeset);
             }
 
         }
+        private void mergeToLocalCache(string path, ChangeSet changeset)
+        {
+            var node = localCache.Find(path);
 
+            if (node == null)
+            {
+                node = localCache.Find(path, true);
+                changeset.Type = ChangeType.Added;
+            }
+            node.Merge(changeset);
+        }
         private void handleCallbacks(string basePath, ChangeSet set)
         {
             handleSpecificCallbacks(basePath, set, AddedCallbacks, ChangeType.Added);
@@ -335,5 +328,23 @@ namespace Firebase
             var result = client.UploadString(new Uri(dbUri.AbsoluteUri + Route + ".json"), "POST", toPost);
             return ((dynamic)JObject.Parse(result)).name;
         }
+        public void Patch(string path, Dictionary<string, object> data)
+        {
+            var cs = ChangeSet.FromFlatDictionary(data);
+            //merge to local
+            mergeToLocalCache(path, cs);
+            if (cs.Type != ChangeType.None)
+            {
+                if (!path.StartsWith("/"))
+                    path = "/" + path;
+                Enqueue(new Messages.Request("m",
+                    new Messages.RequestPayload()
+                    {
+                        Path = path,
+                        Data = data
+                    }));
+            }
+        }
+
     }
 }

@@ -63,6 +63,17 @@ namespace Firebase.Data.Changeset
             return Childs[me].Find(key.Substring(me.Length));
         }
 
+        internal static ChangeSet FromFlatDictionary(Dictionary<string, object> data)
+        {
+            ChangesetBranch branch = new ChangesetBranch(new Dictionary<string, ChangeSet>());
+
+            foreach (var item in data)
+            {
+                branch.addPathedValue(item.Key, item.Value);
+            }
+            return branch;
+        }
+
         internal static ChangeSet FromFlatJToken(JToken token)
         {
             ChangesetBranch branch = new ChangesetBranch(new Dictionary<string, ChangeSet>());

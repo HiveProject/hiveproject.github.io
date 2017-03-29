@@ -32,6 +32,17 @@ namespace Firebase.TestUI
         { }
         private void dataRemoved(string key, ChangeSet data)
         { }
-         
+
+        private void button1_Click(object sender, EventArgs e)
+        {
+            string key = client.Post("objects");
+
+            Dictionary<string, object> data = new Dictionary<string, object>();
+            for (int i = 0; i < 3; i++)
+            {
+                data.Add("/" + key+"/" + "asd" + i, i);
+            }
+            client.Patch("objects", data);
+        }
     }
 }

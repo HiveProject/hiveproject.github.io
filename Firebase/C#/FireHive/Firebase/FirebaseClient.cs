@@ -17,7 +17,7 @@ namespace Firebase
         string version = "5";
         string firebaseUrl = "wss://s-usc1c-nss-128.firebaseio.com/.ws";//?v=5&ns=hive-1336
         ConcurrentQueue<string> sendQueue = new ConcurrentQueue<string>();
-
+        Uri dbUri;
         System.Net.WebSockets.ClientWebSocket client;
         Thread receiveTh;
         Thread sendTh;
@@ -27,7 +27,7 @@ namespace Firebase
 
         public FirebaseClient(Uri url)
         {
-
+            dbUri = url;
             processInput = HandleHandshake;
 
             dbName = url.Authority.Substring(0, url.Authority.IndexOf("."));
@@ -62,6 +62,19 @@ namespace Firebase
             sendQueue = new ConcurrentQueue<string>();
 
         }
+
+        public void Patch(string path, Dictionary<string, object> data)
+        {
+            if (!path.StartsWith("/"))
+                path = "/" + path;
+            Enqueue(new Messages.Request("m",
+                new Messages.RequestPayload()
+                {
+                    Path = path,
+                    Data = data
+                }));
+        }
+
         private void initializeConnections()
         {
             cleanupConnection();
@@ -269,6 +282,19 @@ namespace Firebase
         Dictionary<string, List<Action<string, ChangeSet>>> ChangedCallbacks = new Dictionary<string, List<Action<string, ChangeSet>>>();
         Dictionary<string, List<Action<string, ChangeSet>>> RemovedCallbacks = new Dictionary<string, List<Action<string, ChangeSet>>>();
         List<string> subscribedPaths = new List<string>();
+        private void subscribeNotification(string path)
+        {
+            var req = new Messages.Request("n",
+                      new Messages.RequestPayload() { Path = "/" + path });
+            Enqueue(req);
+            req = new Messages.Request("q",
+                new Messages.RequestPayload() { Path = "/" + path, h = string.Empty });
+            Enqueue(req);
+        }
+
+
+
+
 
         public void On(string path, SubscribeOperations operation, Action<string, ChangeSet> action)
         {
@@ -296,14 +322,18 @@ namespace Firebase
         }
 
 
-        private void subscribeNotification(string path)
+
+
+
+
+        public string Post(string Route, Dictionary<string, object> data = null)
         {
-            var req = new Messages.Request("n",
-                      new Messages.RequestPayload() { Path = "/" + path });
-            Enqueue(req);
-            req = new Messages.Request("q",
-                new Messages.RequestPayload() { Path = "/" + path, h = string.Empty });
-            Enqueue(req);
+            var client = new System.Net.WebClient();
+            string toPost = "{}";
+            if (data != null)
+            { toPost = Newtonsoft.Json.JsonConvert.SerializeObject(data); }
+            var result = client.UploadString(new Uri(dbUri.AbsoluteUri + Route + ".json"), "POST", toPost);
+            return ((dynamic)JObject.Parse(result)).name;
         }
     }
 }

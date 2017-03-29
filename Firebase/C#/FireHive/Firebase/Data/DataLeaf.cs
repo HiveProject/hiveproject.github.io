@@ -84,7 +84,7 @@ namespace Firebase.Data
             {
                 var leaf = (ChangeSetLeaf)data;
 
-                if (this.value.Equals(leaf.Value))
+                if (this.value==leaf.Value)
                 {
                     leaf.Type = ChangeType.None;
                 }

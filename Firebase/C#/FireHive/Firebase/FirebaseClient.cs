@@ -40,7 +40,7 @@ namespace Firebase
         }
 
         private void cleanupConnection()
-        {
+        { 
             Messages.RequestData.resetCounter();
             if (sendTh != null)
             {
@@ -59,11 +59,9 @@ namespace Firebase
                 client.Abort();
                 client = null;
             }
-            sendQueue = new ConcurrentQueue<string>();
 
         }
-
-
+         
         private void initializeConnections()
         {
             cleanupConnection();
@@ -74,11 +72,21 @@ namespace Firebase
                 byte[] buff = new byte[2048];
                 ArraySegment<byte> segment = new ArraySegment<byte>(buff);
                 CancellationToken rcvToken = new CancellationToken(false);
-                while (client.State == System.Net.WebSockets.WebSocketState.Open)
+                try
                 {
-                    var result = client.ReceiveAsync(segment, rcvToken).Result;
-                    processInput(System.Text.Encoding.UTF8.GetString(buff, 0, result.Count));
+                    while (client.State == System.Net.WebSockets.WebSocketState.Open)
+                    {
+                        var result = client.ReceiveAsync(segment, rcvToken).Result;
+
+                        processInput(System.Text.Encoding.UTF8.GetString(buff, 0, result.Count));
+                    }
                 }
+                catch (Exception ex)
+                {
+                    Console.WriteLine("Error on websocket");
+                    Console.WriteLine(ex);
+                }
+
                 Console.WriteLine("receive thread ending");
                 //the socket aborted. this will be in charge of reinitializing the connection.
                 initializeConnections();
@@ -91,7 +99,10 @@ namespace Firebase
                 int toSend = keepAlive;
                 while (client.State == System.Net.WebSockets.WebSocketState.Open)
                 {
-                    while (sendQueue.Count > 0)
+                    //hack, release send package.
+
+                    int sent = 0;
+                    while (sent++ < 30 && sendQueue.Count > 0 && client.State == System.Net.WebSockets.WebSocketState.Open)
                     {
                         string current = string.Empty;
                         CancellationToken outToken = new CancellationToken();
@@ -99,8 +110,7 @@ namespace Firebase
                         {
                             client.SendAsync(new ArraySegment<byte>(System.Text.Encoding.UTF8.GetBytes(current))
                                 , System.Net.WebSockets.WebSocketMessageType.Text,
-                                true, outToken);
-                            Thread.Sleep(1);
+                                true, outToken).Wait();
                         }
                     }
                     Thread.Sleep(10);
@@ -144,7 +154,7 @@ namespace Firebase
                 });
             //"{\"t\":\"d\",\"d\":{\"r\":1,\"a\":\"s\",\"b\":{\"c\":{\"sdk.js.3 - 6 - 2\":1}}}}"
             Enqueue(initialRequest);
-            processInput = ProcessInput;
+            processInput = PreProcessInput;
             //tests:
             //it seems that if i request an n, it is a notification of changes, but then i have to actually do a query for the information to start coming.
 
@@ -159,18 +169,29 @@ namespace Firebase
         {
             sendQueue.Enqueue(Newtonsoft.Json.JsonConvert.SerializeObject(request));
         }
-        private void ProcessInput(string data)
+
+
+        private void PreProcessInput(string data)
+        {
+            var response = Newtonsoft.Json.JsonConvert.DeserializeObject<Responses.Response>(data);
+
+            if (response.Data.Action == null)
+            {
+                Console.WriteLine(string.Format("Request: {0} -> {1}", response.Data.ResquestId, response.Data.Payload.Status)); 
+            }
+            else
+            {
+                Console.WriteLine(string.Format("Request {0}", response.Data.Action));
+                ProcessInput(response);
+            }
+
+        }
+        private void ProcessInput(Responses.Response response)
         {
             //todo: process the input to ensure message re-sending
 
             //Console.WriteLine(data);
-            var response = Newtonsoft.Json.JsonConvert.DeserializeObject<Responses.Response>(data);
-            if (response.Data.Action == null)
-            {
-                //reply to message.
-                Console.WriteLine(string.Format("Request: {0} -> {1}", response.Data.ResquestId, response.Data.Payload.Status));
-            }
-            else
+            if (response.Data.Action != null)
             {
                 ChangeSet changeset = null;
                 if (response.Data.Action == "d")

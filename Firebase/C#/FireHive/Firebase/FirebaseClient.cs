@@ -31,6 +31,36 @@ namespace Firebase
             processInput = HandleHandshake;
 
             dbName = url.Authority.Substring(0, url.Authority.IndexOf("."));
+
+            initializeConnections();
+
+        }
+        public FirebaseClient(string url) : this(new Uri(url))
+        {
+        }
+
+        private void cleanupConnection() {
+            if (sendTh != null)
+            {
+                sendTh.Abort();
+                sendTh = null;
+            }
+            if (receiveTh!= null)
+            {
+                receiveTh.Abort();
+                receiveTh = null;
+            }
+            if (client != null)
+            {
+                client.Abort();
+                client = null;
+            }
+            sendQueue = new ConcurrentQueue<string>();
+
+        }
+        private void initializeConnections()
+        {
+            cleanupConnection();
             client = new System.Net.WebSockets.ClientWebSocket();
             receiveTh = new Thread(() =>
             {
@@ -44,12 +74,15 @@ namespace Firebase
                     processInput(System.Text.Encoding.UTF8.GetString(buff, 0, result.Count));
                 }
                 Console.WriteLine("receive thread ending");
+                //the socket aborted. this will be in charge of reinitializing the connection.
+                initializeConnections();
             });
             receiveTh.IsBackground = true;
             receiveTh.Name = "receive";
-
+            int keepAlive= 50 * 1000;
             sendTh = new Thread(() =>
             {
+                int toSend = keepAlive;
                 while (client.State == System.Net.WebSockets.WebSocketState.Open)
                 {
                     while (sendQueue.Count > 0)
@@ -65,12 +98,19 @@ namespace Firebase
                         }
                     }
                     Thread.Sleep(10);
+                    toSend -= 10;
+                    if (toSend <= 0)
+                    {
+                        sendQueue.Enqueue("0");
+                        toSend = keepAlive;
+                    }
                 }
                 Console.WriteLine("send thread ending");
             });
             sendTh.Name = "send";
             sendTh.IsBackground = true;
 
+            processInput = HandleHandshake;
             Uri targetURI = new Uri(firebaseUrl + "?v=" + version + "&ns=" + dbName);
             CancellationToken token = new CancellationToken(false);
             client.ConnectAsync(targetURI, token).ContinueWith((t) =>
@@ -79,13 +119,7 @@ namespace Firebase
                 receiveTh.Start();
                 sendTh.Start();
             });
-
-
         }
-        public FirebaseClient(string url) : this(new Uri(url))
-        {
-        }
-
         string authurl = "";
         string authToken = "";
         long serverTime;
@@ -210,7 +244,7 @@ namespace Firebase
                     {
                         var childs = new Dictionary<string, ChangeSet>();
                         childs.Add(toBuild.Dequeue(), node);
-                        node = new ChangesetBranch(childs); 
+                        node = new ChangesetBranch(childs);
                     }
                 }
                 node = node.Find(key);

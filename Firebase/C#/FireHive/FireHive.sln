@@ -7,6 +7,10 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FireHive", "FireHive\FireHi
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Test.UI", "Test.UI\Test.UI.csproj", "{1142C6ED-94EE-45BB-8293-F5CC58FBB58E}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Firebase", "Firebase\Firebase.csproj", "{3D99BC18-513A-4265-9BB2-A52D9697F1C2}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Firebase.TestUI", "Firebase.TestUI\Firebase.TestUI.csproj", "{4C9F696F-5896-426A-9178-482AFC8385F9}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -21,6 +25,14 @@ Global
 		{1142C6ED-94EE-45BB-8293-F5CC58FBB58E}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{1142C6ED-94EE-45BB-8293-F5CC58FBB58E}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{1142C6ED-94EE-45BB-8293-F5CC58FBB58E}.Release|Any CPU.Build.0 = Release|Any CPU
+		{3D99BC18-513A-4265-9BB2-A52D9697F1C2}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{3D99BC18-513A-4265-9BB2-A52D9697F1C2}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{3D99BC18-513A-4265-9BB2-A52D9697F1C2}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{3D99BC18-513A-4265-9BB2-A52D9697F1C2}.Release|Any CPU.Build.0 = Release|Any CPU
+		{4C9F696F-5896-426A-9178-482AFC8385F9}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{4C9F696F-5896-426A-9178-482AFC8385F9}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{4C9F696F-5896-426A-9178-482AFC8385F9}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{4C9F696F-5896-426A-9178-482AFC8385F9}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

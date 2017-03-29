@@ -115,9 +115,11 @@ namespace Firebase.Data
                 }
             }
         }
-        private void setChild(string key, DataNode child)
+        internal void setChild(string key, DataNode child)
         {
+
             children[key] = child;
+            child.Parent = this;
             if (Path != "")
             {
                 child.Path = Path + "/" + key;
@@ -165,45 +167,65 @@ namespace Firebase.Data
         internal override void Merge(ChangeSet data)
         {
             // i do not know how to join this, my parent should have joined this.
-            if (data.IsLeaf) throw new NotImplementedException();
-            foreach (var kvp in data.Childs)
+            if (data.IsLeaf)
             {
-                if (ContainsKey(kvp.Key))
+                //if it is a null, it is a remove.
+                var leaf = (ChangeSetLeaf)data;
+                string myKey = Path.Substring(Parent.Path.Length + 1);
+                if (leaf.Value == null)
                 {
-                    //i have the key
-                    if (kvp.Value == null)
-                    {
-                        //if i have the key, and the new value is null, is because this was removed
-                        children.Remove(kvp.Key);
-                        kvp.Value.Type = ChangeType.Removed;
-                    }
-                    else
-                    {
-                        //this is a modification
-                        if (children[kvp.Key].IsLeaf != kvp.Value.IsLeaf  )
-                        {
-                            //what i had, and what it is suposed to have now are not the same type.
-                            setChild(kvp.Key, kvp.Value.ToDataNode());
-                            kvp.Value.Type = ChangeType.Modified;
-
-                        }
-                        else
-                        {
-                            //i can only get here if i have two branches to merge.
-                            //the recursion will handle the rest.
-                            children[kvp.Key].Merge(kvp.Value);
-                        }
-
-                    }
+                    Parent.AsBranch().children.Remove(myKey);
+                    data.Type = ChangeType.Removed;
                 }
                 else
                 {
-                    //i do not have the key. this is an Add.
-                    setChild(kvp.Key, kvp.Value.ToDataNode());
-                    kvp.Value.Type = ChangeType.Added;
+                    Parent.AsBranch().setChild(myKey, data.ToDataNode());
+                    data.Type = ChangeType.Modified;
                 }
 
             }
+            else
+            {
+                foreach (var kvp in data.Childs)
+                {
+                    if (ContainsKey(kvp.Key))
+                    {
+                        //i have the key
+                        if (kvp.Value == null)
+                        {
+                            //if i have the key, and the new value is null, is because this was removed
+                            children.Remove(kvp.Key);
+                            kvp.Value.Type = ChangeType.Removed;
+                        }
+                        else
+                        {
+                            //this is a modification
+                            if (children[kvp.Key].IsLeaf != kvp.Value.IsLeaf)
+                            {
+                                //what i had, and what it is suposed to have now are not the same type.
+                                setChild(kvp.Key, kvp.Value.ToDataNode());
+                                kvp.Value.Type = ChangeType.Modified;
+
+                            }
+                            else
+                            {
+                                //i can only get here if i have two branches to merge.
+                                //the recursion will handle the rest.
+                                children[kvp.Key].Merge(kvp.Value);
+                            }
+
+                        }
+                    }
+                    else
+                    {
+                        //i do not have the key. this is an Add.
+                        setChild(kvp.Key, kvp.Value.ToDataNode());
+                        kvp.Value.Type = ChangeType.Added;
+                    }
+
+                }
+            }
+
 
         }
     }

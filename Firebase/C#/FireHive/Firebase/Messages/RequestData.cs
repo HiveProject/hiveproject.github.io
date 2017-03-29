@@ -10,6 +10,9 @@ namespace Firebase.Messages
 
     class RequestData
     {
+        public static void resetCounter() {
+            count = 0;
+        }
         static UInt16 count;
         public RequestData()
         {

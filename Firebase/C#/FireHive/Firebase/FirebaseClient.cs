@@ -39,15 +39,19 @@ namespace Firebase
         {
         }
 
-        private void cleanupConnection() {
+        private void cleanupConnection()
+        {
+            Messages.RequestData.resetCounter();
             if (sendTh != null)
             {
-                sendTh.Abort();
+                if (sendTh.ThreadState == ThreadState.Running)
+                    sendTh.Abort();
                 sendTh = null;
             }
-            if (receiveTh!= null)
+            if (receiveTh != null)
             {
-                receiveTh.Abort();
+                if (receiveTh.ThreadState == ThreadState.Running)
+                    receiveTh.Abort();
                 receiveTh = null;
             }
             if (client != null)
@@ -79,7 +83,7 @@ namespace Firebase
             });
             receiveTh.IsBackground = true;
             receiveTh.Name = "receive";
-            int keepAlive= 50 * 1000;
+            int keepAlive = 50 * 1000;
             sendTh = new Thread(() =>
             {
                 int toSend = keepAlive;
@@ -143,6 +147,10 @@ namespace Firebase
             //it seems that if i request an n, it is a notification of changes, but then i have to actually do a query for the information to start coming.
 
 
+            foreach (var path in subscribedPaths)
+            {
+                subscribeNotification(path);
+            }
         }
 
         private void Enqueue(Messages.Request request)
@@ -160,23 +168,37 @@ namespace Firebase
                 //reply to message.
                 Console.WriteLine(string.Format("Request: {0} -> {1}", response.Data.ResquestId, response.Data.Payload.Status));
             }
-            else if (response.Data.Action == "d")
+            else
             {
-
-                //i need to keep in mind the complete path to this point
-                //hack.
                 ChangeSet changeset = null;
-
-                JToken token = response.Data.Payload.Data as JToken;
-                if (token == null)
+                if (response.Data.Action == "d")
                 {
-                    changeset = new ChangeSetLeaf(response.Data.Payload);
+                    //the data here comes as an object
+                    JToken token = response.Data.Payload.Data as JToken;
+                    if (token == null)
+                    {
+                        changeset = new ChangeSetLeaf(response.Data.Payload.Data);
+                    }
+                    else
+                    {
+
+                        changeset = ChangeSet.FromJToken(token);
+                    }
+
+
+                }
+                else if (response.Data.Action == "m")
+                {
+                    //the data here comes as a dictionary of path,value
+                    JToken token = response.Data.Payload.Data as JToken;
+
+
+                    changeset = ChangeSet.FromFlatJToken(token);
+
+
                 }
                 else
-                {
-
-                    changeset = ChangeSet.FromJToken(token);
-                }
+                { }
 
                 var node = localCache.Find(response.Data.Payload.Path);
 
@@ -187,45 +209,22 @@ namespace Firebase
                 }
                 node.Merge(changeset);
                 handleCallbacks(response.Data.Payload.Path, changeset);
-
-
-
-            }
-            else
-            {
-
             }
 
         }
 
         private void handleCallbacks(string basePath, ChangeSet set)
         {
-            handleAddedCallbacks(basePath, set);
-            handleChangedCallbacks(basePath, set);
-            // handleRemovedCallbacks(basePath, set);
+            handleSpecificCallbacks(basePath, set, AddedCallbacks, ChangeType.Added);
+            handleSpecificCallbacks(basePath, set, ChangedCallbacks, ChangeType.Modified);
+            handleSpecificCallbacks(basePath, set, RemovedCallbacks, ChangeType.Removed);
         }
 
-        private void handleAddedCallbacks(string basePath, ChangeSet set)
+        private void handleSpecificCallbacks(string basePath, ChangeSet set, Dictionary<string, List<Action<string, ChangeSet>>> callbacks, ChangeType desiredChange)
         {
-            //for each callback someone asked me, i am going to filter the set to see what should i give that guy.
-            foreach (var cb in AddedCallbacks.Where(kvp => kvp.Key.StartsWith(basePath)))
-            {
-                //those nodes to add.
-                var node = set.Find(cb.Key.Substring(basePath.Length));
-                foreach (var child in node.Childs.Where(t => t.Value.Type == ChangeType.Added))
-                {
-                    foreach (var action in cb.Value)
-                    {
-                        action(child.Key, child.Value);
-                    }
-                }
-            }
 
-        }
-        private void handleChangedCallbacks(string basePath, ChangeSet set)
-        {
             //for each callback someone asked me, i am going to filter the set to see what should i give that guy.
-            foreach (var cb in ChangedCallbacks.Where(kvp => kvp.Key.StartsWith(basePath) || basePath.StartsWith(kvp.Key)))
+            foreach (var cb in callbacks.Where(kvp => kvp.Key.StartsWith(basePath) || basePath.StartsWith(kvp.Key)))
             {
                 ChangeSet node;
                 //those nodes to add.
@@ -250,19 +249,17 @@ namespace Firebase
                 node = node.Find(key);
 
                 //really not sure about this.
-                if (node.Type == ChangeType.Modified)
+                foreach (var child in node.Childs.Where(t => t.Value.Type == desiredChange))
                 {
                     foreach (var action in cb.Value)
                     {
-                        action(key, node);
+                        action(child.Key, child.Value);
                     }
                 }
+
             }
 
-        }
-        private void handleRemovedCallbacks(string basePath, ChangeSet set)
-        {
-            throw new NotImplementedException();
+
         }
 
 
@@ -271,7 +268,7 @@ namespace Firebase
         Dictionary<string, List<Action<string, ChangeSet>>> AddedCallbacks = new Dictionary<string, List<Action<string, ChangeSet>>>();
         Dictionary<string, List<Action<string, ChangeSet>>> ChangedCallbacks = new Dictionary<string, List<Action<string, ChangeSet>>>();
         Dictionary<string, List<Action<string, ChangeSet>>> RemovedCallbacks = new Dictionary<string, List<Action<string, ChangeSet>>>();
-
+        List<string> subscribedPaths = new List<string>();
 
         public void On(string path, SubscribeOperations operation, Action<string, ChangeSet> action)
         {
@@ -291,15 +288,22 @@ namespace Firebase
             if (!callbacks.ContainsKey(path))
             {
                 callbacks[path] = new List<Action<string, ChangeSet>>();
-                var req = new Messages.Request("n",
-                    new Messages.RequestPayload() { Path = "/" + path });
-                Enqueue(req);
-                req = new Messages.Request("q",
-                    new Messages.RequestPayload() { Path = "/" + path, h = string.Empty });
-                Enqueue(req);
+
             }
+            if (!subscribedPaths.Contains(path))
+            { subscribeNotification(path); }
             callbacks[path].Add(action);
         }
 
+
+        private void subscribeNotification(string path)
+        {
+            var req = new Messages.Request("n",
+                      new Messages.RequestPayload() { Path = "/" + path });
+            Enqueue(req);
+            req = new Messages.Request("q",
+                new Messages.RequestPayload() { Path = "/" + path, h = string.Empty });
+            Enqueue(req);
+        }
     }
 }

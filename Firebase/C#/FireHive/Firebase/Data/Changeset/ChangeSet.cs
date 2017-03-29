@@ -62,5 +62,35 @@ namespace Firebase.Data.Changeset
                 return this;
             return Childs[me].Find(key.Substring(me.Length));
         }
+
+        internal static ChangeSet FromFlatJToken(JToken token)
+        {
+            ChangesetBranch branch = new ChangesetBranch(new Dictionary<string, ChangeSet>());
+
+            foreach (var item in token.Children<JProperty>())
+            {
+                branch.addPathedValue(item.Name, ((JValue)item.Value).Value);
+            }
+            return branch;
+        }
+
+        private void addPathedValue(string path, object value)
+        {
+            if (path.StartsWith("/"))
+                path = path.Substring(1);
+            if (path.Contains('/'))
+            {
+                string[] parts = path.Split(new char[] { '/' }, 2);
+                if (!Childs.ContainsKey(parts[0]))
+                    childs.Add(parts[0], new ChangesetBranch(new Dictionary<string, ChangeSet>()));
+                var child = (ChangesetBranch)(Childs[parts[0]]);
+                child.addPathedValue(parts[1], value);
+            }
+            else
+            {
+                childs[path] = new ChangeSetLeaf(value);
+            }
+
+        }
     }
 }

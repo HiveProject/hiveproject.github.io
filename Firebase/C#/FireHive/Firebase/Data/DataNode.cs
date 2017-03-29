@@ -69,7 +69,6 @@ namespace Firebase.Data
                         {
                             toUpdate[item + "/" + childItem.Key] = childItem.Value;
                         }
-
                     }
 
                 }
@@ -95,5 +94,8 @@ namespace Firebase.Data
         public abstract DataBranch AsBranch();
 
         public abstract bool ContainsKey(string key);
+
+
+        public DataNode Parent { get; set; }
     }
 }

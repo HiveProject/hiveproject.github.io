@@ -10,7 +10,7 @@ namespace Firebase.Data.Changeset
     public abstract class ChangeSet
     {
         public ChangeSet()
-        { childs = new Dictionary<string, ChangeSet>(); } 
+        { childs = new Dictionary<string, ChangeSet>(); }
         ChangeType? type;
         public virtual ChangeType Type
         {
@@ -107,5 +107,37 @@ namespace Firebase.Data.Changeset
 
         public abstract T As<T>();
 
+        internal Dictionary<string, object> Flatten()
+        {
+            Dictionary<string, object> toUpdate = new Dictionary<string, object>();
+            if (IsLeaf)
+            {
+                toUpdate.Add("value", ((ChangeSetLeaf)this).Value);
+            }
+            else
+            {
+                ChangesetBranch branch = (ChangesetBranch)this;
+                foreach (var item in branch.childs.Keys)
+                {
+                    var key = "/" + item;
+                    var child = branch[item];
+                    if (child.IsLeaf)
+                    {
+                        toUpdate[key] = ((ChangeSetLeaf)child).Value;
+                    }
+                    else
+                    {
+                        foreach (var childItem in child.Flatten())
+                        {
+                            toUpdate[key + childItem.Key] = childItem.Value;
+                        }
+                    }
+
+                }
+            }
+
+            return toUpdate;
+
+        }
     }
 }

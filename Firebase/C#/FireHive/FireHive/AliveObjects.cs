@@ -153,7 +153,7 @@ namespace FireHive
                     list.Add(null);
                 }
                 //remove elements to ensure the length. 
-                list.RemoveRange(received.Childs.Count(), list.Count - received.Childs.Count());
+              //not anymore.  list.RemoveRange(received.Childs.Count(), list.Count - received.Childs.Count());
                 foreach (var item in received.Childs)
                 {
                     int i = int.Parse(item.Key);

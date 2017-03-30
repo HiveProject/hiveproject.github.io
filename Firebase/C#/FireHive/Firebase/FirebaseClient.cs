@@ -16,15 +16,29 @@ namespace Firebase
         private string dbName;
         string version = "5";
         string firebaseUrl = "wss://s-usc1c-nss-128.firebaseio.com/.ws";//?v=5&ns=hive-1336
-        ConcurrentQueue<string> sendQueue = new ConcurrentQueue<string>();
+
         Uri dbUri;
         System.Net.WebSockets.ClientWebSocket client;
         Thread receiveTh;
         Thread sendTh;
 
-
         Action<string> processInput;
+        DataBranch localCache = new DataBranch();
 
+        Dictionary<string, List<Action<string, ChangeSet>>> AddedCallbacks = new Dictionary<string, List<Action<string, ChangeSet>>>();
+        Dictionary<string, List<Action<string, ChangeSet>>> ChangedCallbacks = new Dictionary<string, List<Action<string, ChangeSet>>>();
+        Dictionary<string, List<Action<string, ChangeSet>>> RemovedCallbacks = new Dictionary<string, List<Action<string, ChangeSet>>>();
+        List<string> subscribedPaths = new List<string>();
+
+        string authurl = "";
+        string authToken = "";
+        long serverTime;
+
+
+        ConcurrentQueue<string> sendQueue = new ConcurrentQueue<string>();
+        ConcurrentQueue<Dictionary<string, object>> unconfirmedChangesets = new ConcurrentQueue<Dictionary<string, object>>();
+
+        #region ctor
         public FirebaseClient(Uri url)
         {
             dbUri = url;
@@ -38,9 +52,11 @@ namespace Firebase
         public FirebaseClient(string url) : this(new Uri(url))
         {
         }
+        #endregion
 
+        #region connection
         private void cleanupConnection()
-        { 
+        {
             Messages.RequestData.resetCounter();
             if (sendTh != null)
             {
@@ -61,7 +77,7 @@ namespace Firebase
             }
 
         }
-         
+
         private void initializeConnections()
         {
             cleanupConnection();
@@ -136,9 +152,7 @@ namespace Firebase
                 sendTh.Start();
             });
         }
-        string authurl = "";
-        string authToken = "";
-        long serverTime;
+
         private void HandleHandshake(string data)
         {
             dynamic obj = Newtonsoft.Json.JsonConvert.DeserializeObject(data);
@@ -164,12 +178,23 @@ namespace Firebase
                 subscribeNotification(path);
             }
         }
+        #endregion
 
         private void Enqueue(Messages.Request request)
         {
+            if (request.Data.Payload.Data != null)
+            //i need to sanitize the ints here too.
+            {
+                foreach (var item in request.Data.Payload.Data)
+                {
+                    if (item.Value != null && item.Value.GetType() == typeof(int))
+                        request.Data.Payload.Data[item.Key] = Convert.ToInt64(item.Value);
+                } 
+                unconfirmedChangesets.Enqueue(request.Data.Payload.Data);
+            }
             sendQueue.Enqueue(Newtonsoft.Json.JsonConvert.SerializeObject(request));
-        }
 
+        }
 
         private void PreProcessInput(string data)
         {
@@ -177,11 +202,12 @@ namespace Firebase
 
             if (response.Data.Action == null)
             {
-                Console.WriteLine(string.Format("Request: {0} -> {1}", response.Data.ResquestId, response.Data.Payload.Status)); 
+                Dictionary<string, object> current;
+                unconfirmedChangesets.TryDequeue(out current);
+                Console.WriteLine(string.Format("Request: {0} -> {1}", response.Data.ResquestId, response.Data.Payload.Status));
             }
             else
             {
-                Console.WriteLine(string.Format("Request {0}", response.Data.Action));
                 ProcessInput(response);
             }
 
@@ -222,10 +248,28 @@ namespace Firebase
                 }
                 else
                 { }
+                //ensure that the changset is not mine.
+                Dictionary<string, object> flattennedChangeset = changeset.Flatten();
+                //top of the queue should be the next message if it is mine.
+                Dictionary<string, object> current = null;
 
-                mergeToLocalCache(response.Data.Payload.Path, changeset);
+                if (unconfirmedChangesets.TryPeek(out current)
+                    &&
+                    flattennedChangeset.All(kvp => current.ContainsKey(kvp.Key) && current[kvp.Key].Equals( kvp.Value)))
+                {
+                    //i have an unconfirmed changeset that did this exact modification
+                    Console.WriteLine("Echo received");
+                }
+                else
+                {
+                    //no unconfirmed messages, i think
 
-                handleCallbacks(response.Data.Payload.Path, changeset);
+                    mergeToLocalCache(response.Data.Payload.Path, changeset);
+
+                    handleCallbacks(response.Data.Payload.Path, changeset);
+                }
+
+
             }
 
         }
@@ -290,12 +334,6 @@ namespace Firebase
         }
 
 
-        DataBranch localCache = new DataBranch();
-
-        Dictionary<string, List<Action<string, ChangeSet>>> AddedCallbacks = new Dictionary<string, List<Action<string, ChangeSet>>>();
-        Dictionary<string, List<Action<string, ChangeSet>>> ChangedCallbacks = new Dictionary<string, List<Action<string, ChangeSet>>>();
-        Dictionary<string, List<Action<string, ChangeSet>>> RemovedCallbacks = new Dictionary<string, List<Action<string, ChangeSet>>>();
-        List<string> subscribedPaths = new List<string>();
         private void subscribeNotification(string path)
         {
             var req = new Messages.Request("n",

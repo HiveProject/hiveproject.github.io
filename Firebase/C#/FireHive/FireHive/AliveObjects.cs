@@ -13,7 +13,9 @@ namespace FireHive
 {
     class AliveObjects : Map<string, object>
     {
+        internal event EventHandler<EventArgs> Initialized;
         private FirebaseClient client;
+        bool initialized = false;
         public AliveObjects(FirebaseClient client)
         {
             missingReferences = new List<KeyValuePair<string, Action<object>>>();
@@ -24,6 +26,7 @@ namespace FireHive
             client.On("objects", SubscribeOperations.Removed, childDeleted);
 
         }
+
 
         private void childDeleted(string arg1, ChangeSet arg2)
         {
@@ -71,6 +74,14 @@ namespace FireHive
                 mapSnapshotToObject(obj, input);
             }
             checkForRefrences(Key, obj);
+
+            if (!initialized && missingReferences.Count==0)
+            {
+                initialized = true;
+                Initialized?.Invoke(this, EventArgs.Empty);
+            }
+
+
         }
 
         internal string Add(object value)
@@ -153,7 +164,7 @@ namespace FireHive
                     list.Add(null);
                 }
                 //remove elements to ensure the length. 
-              //not anymore.  list.RemoveRange(received.Childs.Count(), list.Count - received.Childs.Count());
+                //not anymore.  list.RemoveRange(received.Childs.Count(), list.Count - received.Childs.Count());
                 foreach (var item in received.Childs)
                 {
                     int i = int.Parse(item.Key);
@@ -236,11 +247,11 @@ namespace FireHive
 
         private void childChanged(string key, ChangeSet data)
         {
-             var obj = innerDictionary[key];
-             //todo: massive hack
-             if (obj is IList<object>) { data["type"] = new ChangeSetLeaf("Array"); } else { data["type"] = new ChangeSetLeaf("Object"); }
-             
-             mapSnapshotToObject(obj, data);
+            var obj = innerDictionary[key];
+            //todo: massive hack
+            if (obj is IList<object>) { data["type"] = new ChangeSetLeaf("Array"); } else { data["type"] = new ChangeSetLeaf("Object"); }
+
+            mapSnapshotToObject(obj, data);
         }
 
 

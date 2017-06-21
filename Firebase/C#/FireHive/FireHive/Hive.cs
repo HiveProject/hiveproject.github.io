@@ -14,6 +14,8 @@ namespace FireHive
     {
         //FirebaseClient database; 
 
+
+        public event EventHandler<EventArgs> Initialized;
         static Hive instance;
         internal Roots roots;
         internal AliveObjects loadedObjects;
@@ -36,6 +38,7 @@ namespace FireHive
             client = new FirebaseClient("https://hive-1336.firebaseio.com/");
             roots = new Roots(client);
             loadedObjects = new AliveObjects(client);
+            loadedObjects.Initialized += (s,e)=>Initialized?.Invoke(this, EventArgs.Empty);
         }
 
 

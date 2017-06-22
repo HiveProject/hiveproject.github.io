@@ -34,6 +34,8 @@ Processed
 
 <hr/>
 <canvas id="canv"></canvas>
+<hr/>
+<canvas id="emptyMap"></canvas>
 <script>
 	let x,y,dx,dy ;
 	x=y=dx=dy=0;
@@ -44,6 +46,8 @@ Processed
 	let colors=[];
 	let canvas;
 	let ctx;
+	let emptyMap;
+	let ectx;
 	let mapSize=50;
 	let graphSize=700;
 	let side = graphSize/mapSize;
@@ -111,6 +115,8 @@ function draw(){
 	
 	ctx.fillStyle = "black";
 	ctx.fillRect(0,0,graphSize,graphSize);
+	ectx.fillStyle = "black";
+	ectx.fillRect(0,0,graphSize,graphSize);
 	for(let cx=0;cx<mapSize;cx++)
 	{
 		for(let cy=0;cy<mapSize;cy++)
@@ -121,8 +127,17 @@ function draw(){
 			ctx.fillRect(cx*side,cy*side,side,side);
 			ctx.fillStyle = "black";
 			ctx.strokeRect(cx*side,cy*side,side,side);
+			if(map[cx][cy]==1)
+				{
+					ectx.fillStyle = "#FFFFFF";
+					ectx.fillRect(cx*side,cy*side,side,side);
+					ectx.fillStyle = "black";
+					ectx.strokeRect(cx*side,cy*side,side,side);
+				}
 		}
 	}
+	 
+		
 }
 let tickCount=0;
 let processedCount=0;
@@ -160,7 +175,7 @@ if(hive){
 		console.log("Hive started");
 		try
 		{
-			squares=hive.get("map");	
+			map=hive.get("map");	
 		}catch(err)
 		{
 			if(err=="Key not found in Hive Roots")
@@ -176,10 +191,16 @@ if(hive){
 		processed=hive.set("processed",processed);
 		
 		
-		canvas = document.getElementById("canv") 
+		canvas = document.getElementById("canv"); 
 		canvas.width=graphSize;
 		canvas.height=graphSize;
 		ctx=canvas.getContext("2d");
+		
+		emptyMap=document.getElementById("emptyMap"); 
+		emptyMap.width=graphSize;
+		emptyMap.height=graphSize; 
+		ectx=emptyMap.getContext("2d");
+		
 		
 		setInterval(tick,200);
 		setInterval(draw,50);

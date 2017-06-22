@@ -41,14 +41,17 @@ Processed
 	let toProcess=[];
 	let processed=[];
 	let graphic=[];
+	let colors=[];
 	let canvas;
 	let ctx;
-	let mapSize=200;
-	let graphSize=1000;
+	let mapSize=10;
+	let graphSize=700;
+	let side = graphSize/mapSize;
+	
 function fillMap(map,size){ 
 	for(let i =0; i<size;i++)
 	{
-		map[i]=Array.from({length: size}, () => Math.floor(Math.random() * 9));
+		map[i]=new Array(size).fill(1);//Array.from({length: size}, () => Math.floor(Math.random() * 9));
 	}
 	return map;
 }
@@ -56,11 +59,13 @@ function fillPairs(pairs,size,maxCreation)
 { 
 	for(  ;x<size;x++)
 	{
+		y=0;
 		for(   ;y<size;y++)
 		{
-			for(  ;dx<size;dx++)
+			dx=mapSize-1;dy=mapSize-1;
+			for(  ;dx>=0;dx--)
 			{
-				for(   ;dy<size;dy++)
+				for(   ;dy>=0;dy--)
 				{
 					if(dx!=x || dy!= y)
 					{
@@ -74,10 +79,16 @@ function fillPairs(pairs,size,maxCreation)
 	}
 }
 
+var baseColors=["#FF0000","#00FF00","#0000FF","#FFFF00","#00FFFF","#FF00FF"];
+let colorindex=0;
 function handleResult(result)
 {
 	for (var i = 0, len = result.length; i < len; i++) {
-		graphic[result[i].x][result[i].y]++; 
+		var t = graphic[result[i].x][result[i].y]++; 
+		if(t>max)
+			max=t;
+		colors[result[i].x][result[i].y]=	baseColors[colorindex];
+		colorindex=(colorindex++)%baseColors.length;
 	} 
 }
 
@@ -85,19 +96,28 @@ function shadeColor1(color, percent) {
     var num = parseInt(color.slice(1),16), amt = Math.round(2.55 * percent), R = (num >> 16) + amt, G = (num >> 8 & 0x00FF) + amt, B = (num & 0x0000FF) + amt;
     return "#" + (0x1000000 + (R<255?R<1?0:R:255)*0x10000 + (G<255?G<1?0:G:255)*0x100 + (B<255?B<1?0:B:255)).toString(16).slice(1);
 }
-
+function shadeColor2(color, percent) {   
+    var f=parseInt(color.slice(1),16),t=percent<0?0:255,p=percent<0?percent*-1:percent,R=f>>16,G=f>>8&0x00FF,B=f&0x0000FF;
+    return "#"+(0x1000000+(Math.round((t-R)*p)+R)*0x10000+(Math.round((t-G)*p)+G)*0x100+(Math.round((t-B)*p)+B)).toString(16).slice(1);
+}
+function blendColors(c0, c1, p) {
+    var f=parseInt(c0.slice(1),16),t=parseInt(c1.slice(1),16),R1=f>>16,G1=f>>8&0x00FF,B1=f&0x0000FF,R2=t>>16,G2=t>>8&0x00FF,B2=t&0x0000FF;
+    return "#"+(0x1000000+(Math.round((R2-R1)*p)+R1)*0x10000+(Math.round((G2-G1)*p)+G1)*0x100+(Math.round((B2-B1)*p)+B1)).toString(16).slice(1);
+}
+var max = 1;
 function draw(){
 	document.getElementById("toProcessBar").style.width = toProcess.length*2 + '%'; 
-	document.getElementById("resultBar").style.width = processed.length*2 + '%'; 
+	document.getElementById("resultBar").style.width = processedCount/(mapSize*mapSize*mapSize*mapSize) + '%'; 
 	
 	ctx.fillStyle = "black";
 	ctx.fillRect(0,0,graphSize,graphSize);
-	let side = graphSize/mapSize;
 	for(let cx=0;cx<mapSize;cx++)
 	{
 		for(let cy=0;cy<mapSize;cy++)
 		{
-			ctx.fillStyle = shadeColor1("#000000",graphic[cx][cy]);
+			ctx.fillStyle = blendColors(shadeColor2("#000000",graphic[cx][cy]/max),colors[cx][cy],0.5);
+			if(colors[cx][cy]!="#000000")
+				colors[cx][cy]="#000000";
 			ctx.fillRect(cx*side,cy*side,side,side);
 			ctx.fillStyle = "black";
 			ctx.strokeRect(cx*side,cy*side,side,side);
@@ -112,25 +132,26 @@ function tick(){
 		{
 			fillPairs(toProcess,mapSize,50);
 		}
-	if(processed.length>0)
+	let p =0;
+	while(processed.length>0  &&p<100)
 	{
+		p++;
 		var current = processed.pop();
 		if(current!=undefined)	{
 			
 			handleResult(current);
-			console.log("Processed: "+ ++processedCount);
-			hive.remove("____asd");
+		//	console.log("Processed: "+ ++processedCount);	
 		} 
-	}  
-	if(tickCount%100==0)
+	} 
+	tickCount=1;
+	let toProcess2=hive.get("toProcess");
+	if(toProcess!=toProcess2 && processed.length<100)
 	{
-		tickCount=1;
-		let toProcess2=hive.get("toProcess");
-		if(toProcess!=toProcess2)
-		{
-			toProcess=toProcess2;
-			console.log("New Page");
-		}
+		toProcess=toProcess2;
+		console.log("New Page");
+	}
+	if(tickCount%100==0)
+	{	
 		hive.remove("___");
 	}
 }
@@ -149,6 +170,7 @@ if(hive){
 		for(let i = 0;i<mapSize;i++)
 		{
 			graphic[i]=new Array(mapSize).fill(0);
+			colors[i]=new Array(mapSize).fill("#000000");
 		}
 		toProcess=hive.set("toProcess",toProcess);
 		processed=hive.set("processed",processed);
@@ -159,7 +181,7 @@ if(hive){
 		canvas.height=graphSize;
 		ctx=canvas.getContext("2d");
 		
-		setInterval(tick,500);
+		setInterval(tick,200);
 		setInterval(draw,10);
 	});
 }else{

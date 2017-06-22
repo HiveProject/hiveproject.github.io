@@ -88,8 +88,8 @@ function handleResult(result)
 		if(t>max)
 			max=t;
 		colors[result[i].x][result[i].y]=	baseColors[colorindex];
-		colorindex=(colorindex++)%baseColors.length;
 	} 
+	colorindex=(colorindex+1)%baseColors.length;
 }
 
 function shadeColor1(color, percent) {   
@@ -182,7 +182,7 @@ if(hive){
 		ctx=canvas.getContext("2d");
 		
 		setInterval(tick,200);
-		setInterval(draw,10);
+		setInterval(draw,50);
 	});
 }else{
 	console.log("Hive was not defined");

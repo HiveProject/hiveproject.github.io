@@ -51,7 +51,7 @@ Processed
 function fillMap(map,size){ 
 	for(let i =0; i<size;i++)
 	{
-		map[i]=Array.from({length: size}, () => Math.round(Math.random()/5 ));
+		map[i]=Array.from({length: size}, () =>  if(Math.random()<0.2 ){return 0;}else{return 1;});
 	}
 	return map;
 }

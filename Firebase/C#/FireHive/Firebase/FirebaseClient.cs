@@ -204,7 +204,7 @@ namespace Firebase
             {
                 Dictionary<string, object> current;
                 unconfirmedChangesets.TryDequeue(out current);
-                Console.WriteLine(string.Format("Request: {0} -> {1}", response.Data.ResquestId, response.Data.Payload.Status));
+              //  Console.WriteLine(string.Format("Request: {0} -> {1}", response.Data.ResquestId, response.Data.Payload.Status));
             }
             else
             {
@@ -253,12 +253,23 @@ namespace Firebase
                 //top of the queue should be the next message if it is mine.
                 Dictionary<string, object> current = null;
 
-                if (unconfirmedChangesets.TryPeek(out current)
-                    &&
-                    flattennedChangeset.All(kvp => current.ContainsKey(kvp.Key) && current[kvp.Key].Equals( kvp.Value)))
+                if (unconfirmedChangesets.TryPeek(out current))
                 {
-                    //i have an unconfirmed changeset that did this exact modification
-                    Console.WriteLine("Echo received");
+                    if (flattennedChangeset.All(kvp => current.ContainsKey(kvp.Key) && current[kvp.Key].Equals(kvp.Value)))
+                    {
+                        //My topmost unconfirmed changeset, did this exact modification, this should indicate that it is my echo
+                     //   Console.WriteLine("Echo received");
+                    }
+                    else {
+                        //now, what if this is not an echo, and invalidates any changeset that has not been commited yet?
+                        var conflicts = unconfirmedChangesets.Where(unconfirmed => flattennedChangeset.Any(kvp => unconfirmed.ContainsKey(kvp.Key) && unconfirmed[kvp.Key] == kvp.Value));
+                        if (conflicts.Count() > 0)
+                        {
+                            //i have no idea what to do here
+                            Console.WriteLine("Collision detected");
+                        }
+
+                    }
                 }
                 else
                 {

@@ -45,7 +45,10 @@ function calculateShortestPath(locations)
 	var start = graph.nodes[locations.from.x][locations.from.y];
 	var end = graph.nodes[locations.to.x][locations.to.y];
 	var result = astar.search(graph.nodes,start,end,false);
-	return result.map( (node)=>{return {x:node.x,y:node.y}});
+	result= result.map( (node)=>{return {x:node.x,y:node.y}});
+	result.unshift(locations.from);
+	
+	return result;
 }
  
 if(hive){

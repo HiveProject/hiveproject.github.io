@@ -44,14 +44,14 @@ Processed
 	let colors=[];
 	let canvas;
 	let ctx;
-	let mapSize=10;
+	let mapSize=50;
 	let graphSize=700;
 	let side = graphSize/mapSize;
 	
 function fillMap(map,size){ 
 	for(let i =0; i<size;i++)
 	{
-		map[i]=new Array(size).fill(1);//Array.from({length: size}, () => Math.floor(Math.random() * 9));
+		map[i]=Array.from({length: size}, () => Math.round(Math.random() ));
 	}
 	return map;
 }

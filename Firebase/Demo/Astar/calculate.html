@@ -1,0 +1,64 @@
+<html>
+<head></head>
+<body>
+<script src="https://www.gstatic.com/firebasejs/3.6.2/firebase.js"></script>
+<script src="https://www.gstatic.com/firebasejs/3.6.2/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/3.6.2/firebase-database.js"></script> 
+<script src="../../fireHive.js" type="text/javascript"></script>
+<script src="graph.js" type="text/javascript"></script>
+<script src="astar.js" type="text/javascript"></script>
+<script>
+let map=[];
+let toProcess=[];
+let graph;
+let processed;
+function tick()
+{
+	if(toProcess.length>0)
+	{ 
+		var current = toProcess.pop();
+		if(current!=undefined)
+		{
+			var result = calculateShortestPath(current);
+			if(result.length>0)
+			{	
+				processed.push(result);
+			}
+			console.log("Processed");
+		} 
+	} else{getNextSet();}
+} 
+function getNextSet()
+{
+	if(toProcess.length==0  )
+	{ 
+		var t = hive.get("toProcess");
+		if(t.length>0){
+			toProcess=t;
+			hive.set("toProcess",[]);
+		}
+	}
+}
+
+function calculateShortestPath(locations)
+{
+	var start = graph.nodes[locations.from.x][locations.from.y];
+	var end = graph.nodes[locations.to.x][locations.to.y];
+	var result = astar.search(graph.nodes,start,end,false);
+	return result.map( (node)=>{return {x:node.x,y:node.y}});
+}
+ 
+if(hive){
+	hive.start(function(){console.log("Hive started");
+	 map= hive.get("map");
+	 graph=new Graph(map);
+	 processed=hive.get("processed");
+	 toProcess=[];
+	 setInterval(tick,101); 
+	});
+	
+}else{
+	console.log("Hive was not defined");
+	}
+</script>
+</body></html>

@@ -1,0 +1,169 @@
+<html>
+<head></head>
+<body>
+<script src="https://www.gstatic.com/firebasejs/3.6.2/firebase.js"></script>
+<script src="https://www.gstatic.com/firebasejs/3.6.2/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/3.6.2/firebase-database.js"></script> 
+<script src="../../fireHive.js" type="text/javascript"></script> 
+
+<style>
+#myProgress {
+    width: 100%;
+    background-color: grey;
+}
+#toProcessBar {
+    width: 1%;
+    height: 30px;
+    background-color: red;
+}
+#resultBar {
+    width: 1%;
+    height: 30px;
+    background-color: green;
+}
+
+</style>
+ToProcess
+<div id="myProgress">
+  <div id="toProcessBar"></div>
+</div>
+Processed
+<div id="myProgress">
+  <div id="resultBar"></div>
+</div>
+
+<hr/>
+<canvas id="canv"></canvas>
+<script>
+	let x,y,dx,dy ;
+	x=y=dx=dy=0;
+	let map=[];
+	let toProcess=[];
+	let processed=[];
+	let graphic=[];
+	let canvas;
+	let ctx;
+	let mapSize=200;
+	let graphSize=1000;
+function fillMap(map,size){ 
+	for(let i =0; i<size;i++)
+	{
+		map[i]=Array.from({length: size}, () => Math.floor(Math.random() * 9));
+	}
+	return map;
+}
+function fillPairs(pairs,size,maxCreation)
+{ 
+	for(  ;x<size;x++)
+	{
+		for(   ;y<size;y++)
+		{
+			for(  ;dx<size;dx++)
+			{
+				for(   ;dy<size;dy++)
+				{
+					if(dx!=x || dy!= y)
+					{
+					pairs.push({from:{x:x,y:y},to:{x:dx,y:dy}});
+					}
+					if(maxCreation-- <=0)
+						return;
+				}
+			}
+		}
+	}
+}
+
+function handleResult(result)
+{
+	for (var i = 0, len = result.length; i < len; i++) {
+		graphic[result[i].x][result[i].y]++; 
+	} 
+}
+
+function shadeColor1(color, percent) {   
+    var num = parseInt(color.slice(1),16), amt = Math.round(2.55 * percent), R = (num >> 16) + amt, G = (num >> 8 & 0x00FF) + amt, B = (num & 0x0000FF) + amt;
+    return "#" + (0x1000000 + (R<255?R<1?0:R:255)*0x10000 + (G<255?G<1?0:G:255)*0x100 + (B<255?B<1?0:B:255)).toString(16).slice(1);
+}
+
+function draw(){
+	document.getElementById("toProcessBar").style.width = toProcess.length*2 + '%'; 
+	document.getElementById("resultBar").style.width = processed.length*2 + '%'; 
+	
+	ctx.fillStyle = "black";
+	ctx.fillRect(0,0,graphSize,graphSize);
+	let side = graphSize/mapSize;
+	for(let cx=0;cx<mapSize;cx++)
+	{
+		for(let cy=0;cy<mapSize;cy++)
+		{
+			ctx.fillStyle = shadeColor1("#000000",graphic[cx][cy]);
+			ctx.fillRect(cx*side,cy*side,side,side);
+			ctx.fillStyle = "black";
+			ctx.strokeRect(cx*side,cy*side,side,side);
+		}
+	}
+}
+let tickCount=0;
+let processedCount=0;
+function tick(){
+	tickCount++;
+	if(toProcess.length<50)
+		{
+			fillPairs(toProcess,mapSize,50);
+		}
+	if(processed.length>0)
+	{
+		var current = processed.pop();
+		if(current!=undefined)	{
+			
+			handleResult(current);
+			console.log("Processed: "+ ++processedCount);
+			hive.remove("____asd");
+		} 
+	}  
+	if(tickCount%100==0)
+	{
+		tickCount=1;
+		let toProcess2=hive.get("toProcess");
+		if(toProcess!=toProcess2)
+		{
+			toProcess=toProcess2;
+			console.log("New Page");
+		}
+		hive.remove("___");
+	}
+}
+if(hive){
+	hive.start(function(){
+		console.log("Hive started");
+		try
+		{
+			squares=hive.get("map");	
+		}catch(err)
+		{
+			if(err=="Key not found in Hive Roots")
+				map = hive.set("map",fillMap(map,mapSize)) 
+		}
+		
+		for(let i = 0;i<mapSize;i++)
+		{
+			graphic[i]=new Array(mapSize).fill(0);
+		}
+		toProcess=hive.set("toProcess",toProcess);
+		processed=hive.set("processed",processed);
+		
+		
+		canvas = document.getElementById("canv") 
+		canvas.width=graphSize;
+		canvas.height=graphSize;
+		ctx=canvas.getContext("2d");
+		
+		setInterval(tick,500);
+		setInterval(draw,10);
+	});
+}else{
+	console.log("Hive was not defined");
+	}
+</script>
+</body></html>

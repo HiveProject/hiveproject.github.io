@@ -1,17 +1,62 @@
 <html>
 <head></head>
 <body>
+<button id="goButton" onClick="buttonClicked()" disabled>Start / Stop</button>
+
+<canvas id="canv"></canvas>
+
 <script src="https://www.gstatic.com/firebasejs/3.6.2/firebase.js"></script>
 <script src="https://www.gstatic.com/firebasejs/3.6.2/firebase-app.js"></script>
 <script src="https://www.gstatic.com/firebasejs/3.6.2/firebase-database.js"></script> 
 <script src="../../fireHive.js" type="text/javascript"></script>
 <script src="graph.js" type="text/javascript"></script>
 <script src="astar.js" type="text/javascript"></script>
+
 <script>
 let map=[];
 let toProcess=[];
 let graph;
 let processed;
+let task;
+let graphic=[];
+let canvas;
+let ctx;
+let mapSize=50;
+let graphSize=700;
+let side;	
+var baseColors=["#FF0000","#00FF00","#0000FF","#FFFF00","#00FFFF","#FF00FF"];
+let colorindex=0;
+function buttonClicked()
+{
+	if(task){
+		clearInterval(task);
+		task=undefined;
+	}else{task= setInterval(tick,101); }
+	
+}
+
+function draw(){
+ 
+	ctx.fillStyle = "black";
+	ctx.fillRect(0,0,graphSize,graphSize); 
+	for(let cx=0;cx<mapSize;cx++)
+	{
+		for(let cy=0;cy<mapSize;cy++)
+		{
+			 
+			if(map[cx][cy]==1)
+				{
+					ctx.fillStyle = graphic[cx][cy];
+					ctx.fillRect(cx*side,cy*side,side,side);
+					ctx.fillStyle = "black";
+					ctx.strokeRect(cx*side,cy*side,side,side);
+				}
+		}
+	}
+	 
+		
+}
+
 function tick()
 {
 	if(toProcess.length>0)
@@ -47,7 +92,11 @@ function calculateShortestPath(locations)
 	var result = astar.search(graph.nodes,start,end,false);
 	result= result.map( (node)=>{return {x:node.x,y:node.y}});
 	result.unshift(locations.from);
-	
+	for(let i = 0;i<result.length;i++)
+	{
+		graphic[result[i].x][result[i].y]=	baseColors[colorindex]; 	
+	}
+	colorindex=(colorindex+1)%baseColors.length;
 	return result;
 }
  
@@ -57,9 +106,19 @@ if(hive){
 	 graph=new Graph(map);
 	 processed=hive.get("processed");
 	 toProcess=[];
-	 setInterval(tick,101); 
+	 document.getElementById("goButton").disabled = false;
+	 mapSize=map.length;
+	for(let i = 0;i<mapSize;i++)
+	{
+		graphic[i]=new Array(mapSize).fill("#FFFFFF"); 
+	}
+		canvas = document.getElementById("canv"); 
+		canvas.width=graphSize;
+		canvas.height=graphSize;
+		ctx=canvas.getContext("2d");
+		side=graphSize/mapSize;
+		setInterval(draw,10);
 	});
-	
 }else{
 	console.log("Hive was not defined");
 	}

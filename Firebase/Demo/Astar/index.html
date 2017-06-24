@@ -66,7 +66,9 @@ function fillPairs(pairs,size,maxCreation)
 		y=0;
 		for(   ;y<size;y++)
 		{
-			dx=mapSize-1;dy=mapSize-1;
+			if(dx<0)
+			{dx=mapSize-1;}
+			if(dy<0){dy=mapSize-1;}
 			for(  ;dx>=0;dx--)
 			{
 				for(   ;dy>=0;dy--)

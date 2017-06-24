@@ -51,7 +51,7 @@ Processed
 	let mapSize=50;
 	let graphSize=700;
 	let side = graphSize/mapSize;
-	
+	let finished = false;
 function fillMap(map,size){ 
 	for(let i =0; i<size;i++)
 	{
@@ -61,28 +61,36 @@ function fillMap(map,size){
 }
 function fillPairs(pairs,size,maxCreation)
 { 
-	for(  ;x<size;x++)
-	{
-		y=0;
-		for(   ;y<size;y++)
+	while(!finished && maxCreation>0 )
+	{ 
+		dx--;
+		if(dx<0)
 		{
-			if(dx<0)
-			{dx=mapSize-1;}
-			if(dy<0){dy=mapSize-1;}
-			for(  ;dx>=0;dx--)
+			dx=size-1;
+			dy--;
+			if(dy<0)
 			{
-				for(   ;dy>=0;dy--)
+				dy=size-1;
+				y++;
+				if(y>=size)
 				{
-					if(dx!=x || dy!= y)
+					y=0;
+					x++;
+					if(x>=size)
 					{
-					pairs.push({from:{x:x,y:y},to:{x:dx,y:dy}});
-					}
-					if(maxCreation-- <=0)
+						finished=true;
 						return;
+					}
 				}
 			}
 		}
+		if(dx!=x || dy!= y)
+		{
+			pairs.push({from:{x:x,y:y},to:{x:dx,y:dy}});
+			maxCreation--;
+		}	
 	}
+ 
 }
 
 var baseColors=["#FF0000","#00FF00","#0000FF","#FFFF00","#00FFFF","#FF00FF"];
@@ -203,7 +211,7 @@ if(hive){
 		emptyMap.height=graphSize; 
 		ectx=emptyMap.getContext("2d");
 		
-		
+		dx=dy=mapSize-1;
 		setInterval(tick,200);
 		setInterval(draw,50);
 	});

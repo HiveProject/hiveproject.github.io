@@ -1,0 +1,45 @@
+<html>
+<head></head>
+<body>
+<script src="https://www.gstatic.com/firebasejs/3.6.2/firebase.js"></script>
+<script src="https://www.gstatic.com/firebasejs/3.6.2/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/3.6.2/firebase-database.js"></script> 
+<script src="../../fireHive.js" type="text/javascript"></script> 
+ 
+<hr/>
+<canvas id="canv"></canvas>
+<hr/>
+ <script>
+let graphSize=500;
+ function draw(){
+ 	
+	ctx.fillStyle = "black";
+	ctx.fillRect(0,0,graphSize,graphSize);
+  	ctx.fillStyle = "Red";
+	ctx.fillRect(0,0,rect.width,rect.height);
+  		
+} 
+var rect = {width:0,height:0};
+if(hive){
+	hive.start(function(){
+		console.log("Hive started");
+	 	
+		canvas = document.getElementById("canv"); 
+		canvas.width=graphSize;
+		canvas.height=graphSize;
+		ctx=canvas.getContext("2d");
+		try
+			{
+				rect=hive.get("Rectangle");	
+			}catch(err)
+			{
+				if(err=="Key not found in Hive Roots")
+				rect= hive.set("Rectangle",rect);
+			}
+	 	setInterval(draw,50);
+	});
+}else{
+	console.log("Hive was not defined");
+	}
+</script>
+</body></html>

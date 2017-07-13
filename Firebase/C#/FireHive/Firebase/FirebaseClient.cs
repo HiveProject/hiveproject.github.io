@@ -15,7 +15,8 @@ namespace Firebase
     {
         private string dbName;
         string version = "5";
-        string firebaseUrl = "wss://s-usc1c-nss-128.firebaseio.com/.ws";//?v=5&ns=hive-1336
+        //      string firebaseUrl = "wss://s-usc1c-nss-128.firebaseio.com/.ws";//?v=5&ns=hive-1336
+        string firebaseUrl = "wss://s-usc1c-nss-105.firebaseio.com/.ws";//?v=5&ns=hive-1336
 
         Uri dbUri;
         System.Net.WebSockets.ClientWebSocket client;
@@ -60,14 +61,16 @@ namespace Firebase
             Messages.RequestData.resetCounter();
             if (sendTh != null)
             {
-                if (sendTh.ThreadState == ThreadState.Running)
-                    sendTh.Abort();
+                //   if (sendTh.ThreadState == ThreadState.Running || sendTh.ThreadState== ThreadState.Background)
+
+                //    sendTh.Abort();
+
                 sendTh = null;
             }
             if (receiveTh != null)
             {
-                if (receiveTh.ThreadState == ThreadState.Running)
-                    receiveTh.Abort();
+                // if (receiveTh.ThreadState == ThreadState.Running || receiveTh.ThreadState == ThreadState.Background)
+                //    receiveTh.Abort();
                 receiveTh = null;
             }
             if (client != null)
@@ -85,7 +88,7 @@ namespace Firebase
             receiveTh = new Thread(() =>
             {
 
-                byte[] buff = new byte[2048];
+                byte[] buff = new byte[16384];
                 ArraySegment<byte> segment = new ArraySegment<byte>(buff);
                 CancellationToken rcvToken = new CancellationToken(false);
                 try
@@ -112,30 +115,38 @@ namespace Firebase
             int keepAlive = 50 * 1000;
             sendTh = new Thread(() =>
             {
-                int toSend = keepAlive;
-                while (client.State == System.Net.WebSockets.WebSocketState.Open)
+                try
                 {
-                    //hack, release send package.
-
-                    int sent = 0;
-                    while (sent++ < 30 && sendQueue.Count > 0 && client.State == System.Net.WebSockets.WebSocketState.Open)
+                    int toSend = keepAlive;
+                    while (client.State == System.Net.WebSockets.WebSocketState.Open)
                     {
-                        string current = string.Empty;
-                        CancellationToken outToken = new CancellationToken();
-                        if (sendQueue.TryDequeue(out current))
+                        //hack, release send package.
+
+                        int sent = 0;
+                        while (sent++ < 30 && sendQueue.Count > 0 && client.State == System.Net.WebSockets.WebSocketState.Open)
                         {
-                            client.SendAsync(new ArraySegment<byte>(System.Text.Encoding.UTF8.GetBytes(current))
-                                , System.Net.WebSockets.WebSocketMessageType.Text,
-                                true, outToken).Wait();
+                            string current = string.Empty;
+                            CancellationToken outToken = new CancellationToken();
+                            if (sendQueue.TryDequeue(out current))
+                            {
+                                client.SendAsync(new ArraySegment<byte>(System.Text.Encoding.UTF8.GetBytes(current))
+                                    , System.Net.WebSockets.WebSocketMessageType.Text,
+                                    true, outToken).Wait();
+                            }
+                        }
+                        Thread.Sleep(10);
+                        toSend -= 10;
+                        if (toSend <= 0)
+                        {
+                            sendQueue.Enqueue("0");
+                            toSend = keepAlive;
                         }
                     }
-                    Thread.Sleep(10);
-                    toSend -= 10;
-                    if (toSend <= 0)
-                    {
-                        sendQueue.Enqueue("0");
-                        toSend = keepAlive;
-                    }
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine("Error on send th");
+                    Console.WriteLine(ex);
                 }
                 Console.WriteLine("send thread ending");
             });
@@ -157,7 +168,18 @@ namespace Firebase
         {
             dynamic obj = Newtonsoft.Json.JsonConvert.DeserializeObject(data);
 
-            obj = obj.d.d;
+            obj = obj.d;
+            string type = obj.t;
+            if (type == "r")
+            {
+                //this means a redirect!
+                obj = obj.d;
+                //now on obj i have a redirection.
+                firebaseUrl = "wss://" + obj + "/.ws";
+                initializeConnections();
+                return;
+            }
+            obj = obj.d;
             serverTime = obj.ts;
             authurl = obj.h;
             authToken = obj.s;
@@ -189,26 +211,65 @@ namespace Firebase
                 {
                     if (item.Value != null && item.Value.GetType() == typeof(int))
                         request.Data.Payload.Data[item.Key] = Convert.ToInt64(item.Value);
-                } 
+                }
                 unconfirmedChangesets.Enqueue(request.Data.Payload.Data);
             }
             sendQueue.Enqueue(Newtonsoft.Json.JsonConvert.SerializeObject(request));
 
         }
-
+        StringBuilder bigMessageBuilder = new StringBuilder();
+        int packages = 0;
+        int currentCount = 0;
         private void PreProcessInput(string data)
         {
-            var response = Newtonsoft.Json.JsonConvert.DeserializeObject<Responses.Response>(data);
-
-            if (response.Data.Action == null)
+            int numeric = -1;
+            if (int.TryParse(data, out numeric))
             {
-                Dictionary<string, object> current;
-                unconfirmedChangesets.TryDequeue(out current);
-              //  Console.WriteLine(string.Format("Request: {0} -> {1}", response.Data.ResquestId, response.Data.Payload.Status));
+                //this means that the next N packages are to be used together
+                packages = numeric;
+                currentCount = 0;
+                bigMessageBuilder = new StringBuilder();
             }
             else
             {
-                ProcessInput(response);
+                if (packages > 1)
+                {
+                    bigMessageBuilder.Append(data);
+                    currentCount += data.Length;
+                    if (currentCount == 16384)
+                    {
+                        packages--;
+                        currentCount = 0;
+                    }
+
+                }
+                else if (packages == 1)
+                {
+                    bigMessageBuilder.Append(data);
+                    if (data.EndsWith("}"))
+                        packages--;
+                    if (packages == 0)
+                    {
+                        data = bigMessageBuilder.ToString();
+                        bigMessageBuilder = new StringBuilder();
+                    }
+                }
+                if (packages == 0)
+                {
+                    Responses.Response response = null;
+                    response = Newtonsoft.Json.JsonConvert.DeserializeObject<Responses.Response>(data);
+
+                    if (response.Data.Action == null)
+                    {
+                        Dictionary<string, object> current;
+                        unconfirmedChangesets.TryDequeue(out current);
+                        //  Console.WriteLine(string.Format("Request: {0} -> {1}", response.Data.ResquestId, response.Data.Payload.Status));
+                    }
+                    else
+                    {
+                        ProcessInput(response);
+                    }
+                }
             }
 
         }
@@ -258,9 +319,10 @@ namespace Firebase
                     if (flattennedChangeset.All(kvp => current.ContainsKey(kvp.Key) && current[kvp.Key].Equals(kvp.Value)))
                     {
                         //My topmost unconfirmed changeset, did this exact modification, this should indicate that it is my echo
-                     //   Console.WriteLine("Echo received");
+                        //   Console.WriteLine("Echo received");
                     }
-                    else {
+                    else
+                    {
                         //now, what if this is not an echo, and invalidates any changeset that has not been commited yet?
                         var conflicts = unconfirmedChangesets.Where(unconfirmed => flattennedChangeset.Any(kvp => unconfirmed.ContainsKey(kvp.Key) && unconfirmed[kvp.Key] == kvp.Value));
                         if (conflicts.Count() > 0)

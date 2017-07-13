@@ -158,7 +158,8 @@ namespace FireHive
                     maxIndex = received.Childs.Keys.Select(int.Parse).Max();
                 }
                 //todo: if i remove things from an array this wont update correctly.
-
+                if (received == null)
+                    return;
                 while (list.Count <= maxIndex)
                 {
                     list.Add(null);

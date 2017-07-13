@@ -42,9 +42,9 @@ namespace Test.UI
                     rectangles.Add(pos);
                     timer2.Interval = 10;
                     panel1.MouseMove += Panel1_MouseMove;
+                    timer2.Enabled = true;
+                    timer1.Enabled = true;
                 }
-                timer2.Enabled = true;
-                timer1.Enabled = true;
             }));
 
 

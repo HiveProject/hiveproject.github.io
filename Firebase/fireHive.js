@@ -538,12 +538,72 @@ let hive = (function () {
 				//i committed the transaction, this means i own the lock
 				acquiredLocks.add(id);
 				callback();
-				database.ref("locks/"+id).set(null).then(function(){acquiredLocks.delete(id);});
+				acquiredLocks.delete(id);
+				database.ref("locks/"+id).set(null);
 			}
 			
 		},
 		false /*this is just so the db does not raise local events in case the transaction fails*/
 		/*see https://firebase.google.com/docs/reference/js/firebase.database.Reference#transaction */);
+	};
+	
+	module.sync=function(pxy,callback){
+			//the object provided SHOULD be a proxy
+		let obj=pxy; 
+		if(handlers.has(pxy))
+		{
+			obj=proxies.getKey(pxy);
+		}else{
+			throw "The object to be locked must be shared ";
+		}
+		let id = loadedObjects.getKey(obj);
+		if (!id) { 
+			//if the object is not shared this is just useless i guess
+			//but i think i should do something like this. id=innerAdd(obj);
+			throw "The object to be locked must be shared ";
+		}
+		var updateAndExecute = function(cb){
+			database.ref("objects/"+id).once("value").then(function(objectSnapshot){
+				childChanged(objectSnapshot);
+				callback();
+				if(cb)
+				{
+					cb();
+				}
+			});
+		};
+		if(acquiredLocks.has(id)){
+			//re-entrant part, if i own this lock, i just execute
+			updateAndExecute();
+			return;
+		}
+		//try to get the lock
+		database.ref("locks/"+id).transaction(function(data){
+			if(data==null)
+			{
+				//no one owns this! yay!
+				return true;
+			}else{
+				return; //this aborts my transaction
+			}
+			
+		},function(error, committed, snapshot){
+			if(!committed || error){
+				//i aborted the transaction, that means that
+				//somebody has this lock, must retry
+				setTimeout(function(){module.lock(pxy,callback);},10);  
+			}else{
+				//i committed the transaction, this means i own the lock
+				acquiredLocks.add(id);
+				updateAndExecute(function(){
+					acquiredLocks.delete(id);
+					database.ref("locks/"+id).set(null);
+				});
+			}
+			
+		},
+		false /*this is just so the db does not raise local events in case the transaction fails*/
+		/*see https://firebase.google.com/docs/reference/js/firebase.database.Reference#transaction */); 
 	};
 	//lock
 	return module;

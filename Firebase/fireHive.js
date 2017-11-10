@@ -537,9 +537,25 @@ let hive = (function () {
 			}else{
 				//i committed the transaction, this means i own the lock
 				acquiredLocks.add(id);
+				let oldLock=hive.lock;
+				let usedLock=false;
+				let newLock = function (pxy2,cb2){
+					usedLock=true;
+					//releaseLock
+					//obtain old.
+					oldLock(pxy2,function(){
+						cb2();
+						acquiredLocks.delete(id);
+						database.ref("locks/"+id).set(null);});
+				}
+				hive.lock=newLock;
 				callback();
-				acquiredLocks.delete(id);
-				database.ref("locks/"+id).set(null);
+				hive.lock=oldLock;
+				if(!usedLock)
+				{
+					acquiredLocks.delete(id);
+					database.ref("locks/"+id).set(null);
+				}
 			}
 			
 		},

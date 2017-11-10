@@ -497,10 +497,8 @@ let hive = (function () {
 	//GC 
 	
 	//lock
-	let acquiredLocks = new Set();
-	let lockIntention=0;
-	module.lock = function(pxy,callback){
-		
+	function innerLock(pxy,callback,lockChain)
+	{
 		//the object provided SHOULD be a proxy
 		let obj=pxy; 
 		if(handlers.has(pxy))
@@ -520,7 +518,7 @@ let hive = (function () {
 			callback();
 			return;
 		}
-		let myCount= ++lockIntention;
+		lockChain.add(id);
 		//try to get the lock
 		database.ref("locks/"+id).transaction(function(data){
 			if(data==null)
@@ -535,29 +533,40 @@ let hive = (function () {
 			if(!committed || error){
 				//i aborted the transaction, that means that
 				//somebody has this lock, must retry
-				setTimeout(function(){module.lock(pxy,callback);},10);  
+				
+				//this specific call might be an issue. check it later
+				setTimeout(function(){innerLock(pxy,callback,lockChain);},10);  
 			}else{
 				//i committed the transaction, this means i own the lock
-				
-				acquiredLocks.add(id);  
-				callback(); 
-				if(myCount== lockIntention)
+				acquiredLocks.add(id);
+				let count = lockChain.size;
+				let newLock = function (pxy2,cb2){
+					innerLock(pxy2,cb2,lockChain);
+				}
+				let oldLock=hive.lock;
+				hive.lock=newLock;
+				callback();
+				hive.lock=oldLock;
+				if(count ==lockChain.size)
 				{
-					//no lock was requested while i executed the cb
-					let arr=  Array.from(acquiredLocks);
+					let arr=  Array.from(lockChain);
 						for (let i = 0, len = arr.length; i < len; i++) {
 						//todo: make this a mass update.
 						let k = arr[i];
 						acquiredLocks.delete(k);
 						database.ref("locks/"+k).set(null);
 					}
-					lockIntention=0;
 				}
 			}
 			
 		},
 		false /*this is just so the db does not raise local events in case the transaction fails*/
 		/*see https://firebase.google.com/docs/reference/js/firebase.database.Reference#transaction */);
+		
+	}
+	let acquiredLocks = new Set();
+	module.lock = function(pxy,callback){
+		innerLock(pxy,callback,new Set()); 
 	};
 	
 	module.sync=function(pxy,callback){

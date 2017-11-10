@@ -498,6 +498,7 @@ let hive = (function () {
 	
 	//lock
 	let acquiredLocks = new Set();
+	let lockIntention=0;
 	module.lock = function(pxy,callback){
 		
 		//the object provided SHOULD be a proxy
@@ -519,6 +520,7 @@ let hive = (function () {
 			callback();
 			return;
 		}
+		let myCount= ++lockIntention;
 		//try to get the lock
 		database.ref("locks/"+id).transaction(function(data){
 			if(data==null)
@@ -536,25 +538,20 @@ let hive = (function () {
 				setTimeout(function(){module.lock(pxy,callback);},10);  
 			}else{
 				//i committed the transaction, this means i own the lock
-				acquiredLocks.add(id);
-				let oldLock=hive.lock;
-				let usedLock=false;
-				let newLock = function (pxy2,cb2){
-					usedLock=true;
-					//releaseLock
-					//obtain old.
-					oldLock(pxy2,function(){
-						cb2();
-						acquiredLocks.delete(id);
-						database.ref("locks/"+id).set(null);});
-				}
-				hive.lock=newLock;
-				callback();
-				hive.lock=oldLock;
-				if(!usedLock)
+				
+				acquiredLocks.add(id);  
+				callback(); 
+				if(myCount== lockIntention)
 				{
-					acquiredLocks.delete(id);
-					database.ref("locks/"+id).set(null);
+					//no lock was requested while i executed the cb
+					let arr=  Array.from(acquiredLocks);
+						for (let i = 0, len = arr.length; i < len; i++) {
+						//todo: make this a mass update.
+						let k = arr[i];
+						acquiredLocks.delete(k);
+						database.ref("locks/"+k).set(null);
+					}
+					lockIntention=0;
 				}
 			}
 			

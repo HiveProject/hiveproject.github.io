@@ -39,6 +39,8 @@ let hive = (function () {
 	let proxies = new Map();
 	//this map contains proxy -> handler
 	let handlers = new Map();
+	//this map contains id->queue
+	let queues = new Map();
 	
 	module.start = function (callback) {
 		roots.clear();
@@ -51,24 +53,28 @@ let hive = (function () {
 		proxies.clear();
 		handlers.clear();
 		
+		queues.clear();
 		database.ref("objects").once("value").then(function(objectsSnapshot){
 			objectsSnapshot.forEach((i)=>{childAdded(i)});			
 			database.ref("objects").on("child_added", childAdded);
 			database.ref("objects").on("child_removed", childRemoved);
 			database.ref("objects").on("child_changed", childChanged);
-			database.ref("roots").once("value").then(function(rootSnapshot){
-				rootSnapshot.forEach((i)=>{rootAdded(i)});
-				database.ref("roots").on("child_added", rootAdded);
-				database.ref("roots").on("child_changed", rootAdded);
-				database.ref("roots").on("child_removed", rootRemoved); 
-				if(callback && callback.constructor.name=="Function"){
-					callback();
-				}
-			});
+			database.ref("queues").once("value").then(function(queueSnapshot){
+				queueSnapshot.forEach((i)=>{queueAdded(i)});
+				database.ref("queues").on("child_added", queueAdded);
+				database.ref("queues").on("child_changed", queueAdded);
+				database.ref("queues").on("child_removed", queueRemoved);
+				database.ref("roots").once("value").then(function(rootSnapshot){
+					rootSnapshot.forEach((i)=>{rootAdded(i)});
+					database.ref("roots").on("child_added", rootAdded);
+					database.ref("roots").on("child_changed", rootAdded);
+					database.ref("roots").on("child_removed", rootRemoved); 
+					if(callback && callback.constructor.name=="Function"){
+						callback();
+					}
+				});
+			});	
 		});
-		
-	
-		
 		
 		return module;
 	}
@@ -99,18 +105,15 @@ let hive = (function () {
 		database.ref("roots/" + key).set(id);
 		return getProxy(obj); 
 	};
-	module.get=function(key)
-	{
+	module.get=function(key){
 		if(!roots.has(key))
 		{throw "Key not found in Hive Roots";}
 		return getProxy(loadedObjects.get(roots.get(key)));
 	};
-	module.keys=function()
-	{
+	module.keys=function(){
 		return Array.from(roots.keys());
 	};
-	module.elements=function()
-	{
+	module.elements=function(){
 		let result=new Map();
 		 Array.from(roots.keys()).forEach(function(key){
 			result.set(key,getProxy( loadedObjects.get(roots.get(key)))); 
@@ -118,8 +121,7 @@ let hive = (function () {
 		return result;
 	};
 	
-	module.forEach=function(callback)
-	{
+	module.forEach=function(callback){
 		Array.from(roots.keys()).forEach(function(key){
 			callback(key,getProxy(loadedObjects.get(roots.get(key))));
 		}); 
@@ -127,7 +129,7 @@ let hive = (function () {
 		return module;
 	};
 	//internal stuff
-	function innerAdd (obj) {
+	function innerAdd (obj){
 		let id = loadedObjects.getKey(obj);
 		if (id) {
 			return id;
@@ -219,8 +221,14 @@ let hive = (function () {
 		mapSnapshotToObject(obj,received);
 	}
 	
-	function mapSnapshotToObject(obj,received)
-	{
+	function mapSnapshotToObject(obj,received)	{
+		//i need to remove everything that is in the object and was not sent.
+		for(let k in obj){
+			if( !("data" in received) || ! (k in received.data)){
+				//i HAVE a key that is not on the received data.
+				delete obj[k];
+			}
+		}
 		for (let k in received.data) {
 			if (received.data[k] != null) {
 				if (received.data[k].type=="null"){
@@ -295,8 +303,7 @@ let hive = (function () {
 			database.ref("objects").update(upd);
 		}
 	}
-	function removeElementsFromArray(obj,oldLength)
-	{
+	function removeElementsFromArray(obj,oldLength)	{
 		let upd = {};
 		let id = loadedObjects.getKey(obj);
 		if (id) {
@@ -308,6 +315,21 @@ let hive = (function () {
 			database.ref("objects").update(upd);
 		}
 	}
+	function removeField(obj,fieldName){
+		let upd = {};
+		if(handlers.has(obj))
+		{
+			//they gave me a proxy.
+			obj=proxies.getKey(obj);
+		}
+		let id = loadedObjects.getKey(obj);
+		if (id) {
+			let basePath = "/" + id + "/data/";
+			upd[basePath+fieldName]=null;
+			database.ref("objects").update(upd);
+		}
+		
+	}
 	function updateField(obj, fieldName) {
 		updateFields(obj,[fieldName]);
 	}
@@ -318,21 +340,18 @@ let hive = (function () {
 	function rootRemoved(oldDataSnapshot) {
 		roots.delete(oldDataSnapshot.key);
 	} 
-	function isPrimitive(obj)
-	{
+	function isPrimitive(obj)	{
 		if(obj==null || obj==undefined)
 		{return false;}
 		return isPrimitiveTypeName(obj.constructor.name);
 	}
-	function isPrimitiveTypeName(name)
-	{
+	function isPrimitiveTypeName(name)	{
 		return name=="Number" || 
 			name=="Date" ||
 			name=="Boolean" ||
 			name=="String" ;
 	}
-	function getProxy(obj)
-	{		
+	function getProxy(obj)	{		
 		if(obj==null)
 		{return obj;}
 		if(isPrimitive(obj))
@@ -365,8 +384,7 @@ let hive = (function () {
 		handlers.set(proxy,handler);
 		return proxy;
 	}
-	function unsuscribeProxy(proxy)
-	{
+	function unsuscribeProxy(proxy)	{
 		if(handlers.has(proxy))
 		{
 			let handler = handlers.get(proxy);
@@ -375,12 +393,10 @@ let hive = (function () {
 		}
 	}
 	
-	function getExecuted(target,property,rcvr)
-	{
+	function getExecuted(target,property,rcvr)	{
 		return getProxy(target[property]); 
 	}
-	function setExecuted(target,property,value,rcvr)
-	{ 
+	function setExecuted(target,property,value,rcvr)	{ 
 		//if what they are setting is a proxy, i need to actually set the real object.
 		if(handlers.has(value))
 		{
@@ -402,8 +418,7 @@ let hive = (function () {
 			}
 		return true;
 	}
-	function arraySetExecuted(target,property,value,rcvr)
-	{
+	function arraySetExecuted(target,property,value,rcvr)	{
 		//if what they are setting is a proxy, i need to actually set the real object.
 		if(handlers.has(value))
 		{
@@ -439,14 +454,14 @@ let hive = (function () {
 			let untouchedSet=new Set(loadedObjects.keys());
 			setTimeout(function(){ 
 				roots.forEach(function(value,key){mark(loadedObjects.get(value),untouchedSet);});
+				queues.forEach(function(value,key){mark(loadedObjects.get(value),untouchedSet);});
 				sweep(untouchedSet);	 
 				initializedGC=false;
 			}, 2000);	
 			
 		}
 	};
-	function mark(obj,untouchedSet)
-	{
+	function mark(obj,untouchedSet)	{
 		if(obj!=undefined)
 		{
 			let type = obj.constructor.name;
@@ -486,8 +501,8 @@ let hive = (function () {
 			}  
 		}
 	};
-	function sweep(untouchedSet)
-	{	let upd = {};
+	function sweep(untouchedSet){
+		let upd = {};
 		//todo: optimize.
 		untouchedSet.forEach(function(key){
 			upd["/"+key]=null; 
@@ -497,8 +512,7 @@ let hive = (function () {
 	//GC 
 	
 	//lock
-	function innerLock(pxy,callback,lockChain)
-	{
+	function innerLock(pxy,callback,lockChain)	{
 		//the object provided SHOULD be a proxy
 		let obj=pxy; 
 		if(handlers.has(pxy))
@@ -628,6 +642,101 @@ let hive = (function () {
 		/*see https://firebase.google.com/docs/reference/js/firebase.database.Reference#transaction */); 
 	};
 	//lock
+	
+	function queueAdded(dataSnapshot){
+		 queues.set(dataSnapshot.key,dataSnapshot.val());	
+	} 
+	function queueRemoved(oldDataSnapshot) {
+		queues.delete(oldDataSnapshot.key);
+	} 
+	//processQueue
+	function getQueue(key){
+		//this should lock and be async.
+		if(!queues.has(key))
+		{
+			let obj={'req':{},'rsp':{}};
+			let id =innerAdd(obj);
+			database.ref("queues/" + key).set(id);
+		}
+		return getProxy(loadedObjects.get(queues.get(key))); 
+	}  
+	module.request=function(key,data){
+		return new Promise(function(resolve,reject){
+			
+		if(key.constructor.name != "String" )
+		{
+			reject("The key must be a string ");
+		}else{			
+			let q = getQueue(key);
+			let rId = loadedObjects.getKey(q.req);
+			let rk= database.ref("objects/"+ rId).push().key;
+			q.req[rk]=data; 
+			
+			var cb = function(){
+				if(rk in q.rsp){
+					//i have an answer! 
+					let response=q.rsp[rk];
+					removeField(q.rsp,rk); 
+					resolve(response);
+				}else{
+					//async retry
+					setTimeout(cb,10);
+				}
+				
+			}
+			cb();
+		}});
+	};
+	 
+	module.process=function(key,func){
+		return new Promise(function(resolve,reject){
+			if(key.constructor.name != "String" ){
+				reject("The key must be a string ");
+			}else{
+				let q = getQueue(key);
+				//maybe this check for size to avoid unnecesary locks
+				//Object.keys(q.req).length
+				
+				//i want to UNLOCK this stuff before i start executing func!
+				//so look at t as a auto-retrying async like function
+				
+				let rk=null;
+				let data=null;
+				let getData = function(){
+				module.lock(q.req,function(){
+					//i own the lock, so now what?
+					let keys = Object.keys(q.req);
+					if(keys.length==0){
+						//nothing to do? retry in a while
+						setTimeout(getData,10);
+					}else{
+						//i remove the first item from the queue.
+						rk=keys[0];
+						data=q.req[rk];
+						removeField(q.req,rk); 
+					}});
+				};
+				let processData = function(){
+					if(data==null){
+						setTimeout(processData,10);  
+					}else{
+						//i have a thing to process.
+						var result = q.rsp[rk]=func(data);
+						resolve(result);
+					}
+				};
+				getData();
+				processData();
+			}
+		}); 
+	};
+	
+	module.requestAll=function(key,data){
+		return Promise.all(
+		data.map(d=> module.request(key,d))
+		);
+	}
+	//processQueue
 	return module;
 }
 	());

@@ -663,30 +663,34 @@ let hive = (function () {
 	module.dq=getQueue;
 	module.drf=removeField;
 	module.request=function(key,data){
+		return new Promise(function(resolve,reject){
+			
 		if(key.constructor.name != "String" )
 		{
-			throw "The key must be a string ";
-		}
-		let q = getQueue(key);
-		let rId = loadedObjects.getKey(q.req);
-		let rk= database.ref("objects/"+ rId).push().key;
-		q.req[rk]=data;
-		//todo promise
+			reject("The key must be a string ");
+		}else{			
+			let q = getQueue(key);
+			let rId = loadedObjects.getKey(q.req);
+			let rk= database.ref("objects/"+ rId).push().key;
+			q.req[rk]=data; 
+		}});
 	};
 	 
 	module.process=function(key,func){
-		let q = getQueue(key);
-		//maybe this check for size to avoid unnecesary locks
-		//Object.keys(q.req).length
-		
-		//i want to UNLOCK this stuff before i start executing func!
-		//so look at t as a auto-retrying async like function
-		
-		let rk=null;
-		let data=null;
-		var result = new Promise(function(resolve,reject){
-			
-			let getData = function(){
+		return new Promise(function(resolve,reject){
+			if(key.constructor.name != "String" ){
+				reject("The key must be a string ");
+			}else{
+				let q = getQueue(key);
+				//maybe this check for size to avoid unnecesary locks
+				//Object.keys(q.req).length
+				
+				//i want to UNLOCK this stuff before i start executing func!
+				//so look at t as a auto-retrying async like function
+				
+				let rk=null;
+				let data=null;
+				let getData = function(){
 				module.lock(q.req,function(){
 					//i own the lock, so now what?
 					let keys = Object.keys(q.req);
@@ -699,21 +703,20 @@ let hive = (function () {
 						data=q.req[rk];
 						removeField(q.req,rk); 
 					}});
-			};
-			let processData = function(){
-				if(data==null){
-					setTimeout(processData,10);  
-				}else{
-					//i have a thing to process.
-					var result = q.rsp[rk]=func(data);
-					resolve(result);
-				}
-			};
-			getData();
-			processData();
-			
-		});
-		return result;
+				};
+				let processData = function(){
+					if(data==null){
+						setTimeout(processData,10);  
+					}else{
+						//i have a thing to process.
+						var result = q.rsp[rk]=func(data);
+						resolve(result);
+					}
+				};
+				getData();
+				processData();
+			}
+		}); 
 	};
 	//processQueue
 	return module;

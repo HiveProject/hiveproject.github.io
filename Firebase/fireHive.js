@@ -659,9 +659,7 @@ let hive = (function () {
 			database.ref("queues/" + key).set(id);
 		}
 		return getProxy(loadedObjects.get(queues.get(key))); 
-	} 
-	module.dq=getQueue;
-	module.drf=removeField;
+	}  
 	module.request=function(key,data){
 		return new Promise(function(resolve,reject){
 			

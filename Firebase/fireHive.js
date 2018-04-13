@@ -62,6 +62,8 @@ let hive = (function () {
 			database.ref("queues").once("value").then(function(queueSnapshot){
 				queueSnapshot.forEach((i)=>{queueAdded(i)});
 				database.ref("queues").on("child_added", queueAdded);
+				database.ref("queues").on("child_changed", queueAdded);
+				database.ref("queues").on("child_removed", queueRemoved);
 				database.ref("roots").once("value").then(function(rootSnapshot){
 					rootSnapshot.forEach((i)=>{rootAdded(i)});
 					database.ref("roots").on("child_added", rootAdded);
@@ -636,7 +638,10 @@ let hive = (function () {
 	
 	function queueAdded(dataSnapshot){
 		 queues.set(dataSnapshot.key,dataSnapshot.val());	
-	}
+	} 
+	function queueRemoved(oldDataSnapshot) {
+		queues.delete(oldDataSnapshot.key);
+	} 
 	//processQueue
 	function getQueue(key){
 		//this should lock and be async.

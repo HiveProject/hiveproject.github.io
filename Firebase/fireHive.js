@@ -222,6 +222,13 @@ let hive = (function () {
 	}
 	
 	function mapSnapshotToObject(obj,received)	{
+		//i need to remove everything that is in the object and was not sent.
+		for(let k in obj){
+			if( !("data" in received) || ! (k in received.data)){
+				//i HAVE a key that is not on the received data.
+				delete obj[k];
+			}
+		}
 		for (let k in received.data) {
 			if (received.data[k] != null) {
 				if (received.data[k].type=="null"){

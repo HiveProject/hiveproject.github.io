@@ -306,6 +306,21 @@ let hive = (function () {
 			database.ref("objects").update(upd);
 		}
 	}
+	function removeField(obj,fieldName){
+		let upd = {};
+		if(handlers.has(obj))
+		{
+			//they gave me a proxy.
+			obj=proxies.getKey(obj);
+		}
+		let id = loadedObjects.getKey(obj);
+		if (id) {
+			let basePath = "/" + id + "/data/";
+			upd[basePath+fieldName]=null;
+			database.ref("objects").update(upd);
+		}
+		
+	}
 	function updateField(obj, fieldName) {
 		updateFields(obj,[fieldName]);
 	}
@@ -645,7 +660,44 @@ let hive = (function () {
 		let rk= database.ref("objects/"+ rId).push().key;
 		q.req[rk]=data;
 		//todo promise
-	}
+	};
+	 
+	module.process=function(key,func){
+		let q = getQueue(key);
+		//maybe this check for size to avoid unnecesary locks
+		//Object.keys(q.req).length
+		
+		//i want to UNLOCK this stuff before i start executing func!
+		//so look at t as a auto-retrying async like function
+		
+		let rk=null;
+		let data=null;
+		
+		let getData = function(){
+			module.lock(q.req,function(){
+				//i own the lock, so now what?
+				let keys = Object.keys(q.req);
+				if(keys.length==0){
+					//nothing to do? retry in a while
+					setTimeout(getData,10);
+				}else{
+					//i remove the first item from the queue.
+					rk=keys[0];
+					data=q.req[rk];
+					removeField(q.req,rk); 
+				}});
+		};
+		let processData = function(){
+			if(data==null){
+				setTimeout(processData,10);  
+			}else{
+				//i have a thing to process.
+				q.rsp[rk]=func(data);
+			}
+		};
+		getData();
+		processData();
+	};
 	//processQueue
 	return module;
 }

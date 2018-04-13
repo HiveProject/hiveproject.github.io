@@ -654,7 +654,7 @@ let hive = (function () {
 		return getProxy(loadedObjects.get(queues.get(key))); 
 	} 
 	module.dq=getQueue;
-	
+	module.drf=removeField;
 	module.request=function(key,data){
 		if(key.constructor.name != "String" )
 		{
@@ -677,31 +677,36 @@ let hive = (function () {
 		
 		let rk=null;
 		let data=null;
-		
-		let getData = function(){
-			module.lock(q.req,function(){
-				//i own the lock, so now what?
-				let keys = Object.keys(q.req);
-				if(keys.length==0){
-					//nothing to do? retry in a while
-					setTimeout(getData,10);
+		var result = new Promise(function(resolve,reject){
+			
+			let getData = function(){
+				module.lock(q.req,function(){
+					//i own the lock, so now what?
+					let keys = Object.keys(q.req);
+					if(keys.length==0){
+						//nothing to do? retry in a while
+						setTimeout(getData,10);
+					}else{
+						//i remove the first item from the queue.
+						rk=keys[0];
+						data=q.req[rk];
+						removeField(q.req,rk); 
+					}});
+			};
+			let processData = function(){
+				if(data==null){
+					setTimeout(processData,10);  
 				}else{
-					//i remove the first item from the queue.
-					rk=keys[0];
-					data=q.req[rk];
-					removeField(q.req,rk); 
-				}});
-		};
-		let processData = function(){
-			if(data==null){
-				setTimeout(processData,10);  
-			}else{
-				//i have a thing to process.
-				q.rsp[rk]=func(data);
-			}
-		};
-		getData();
-		processData();
+					//i have a thing to process.
+					var result = q.rsp[rk]=func(data);
+					resolve(result);
+				}
+			};
+			getData();
+			processData();
+			
+		});
+		return result;
 	};
 	//processQueue
 	return module;

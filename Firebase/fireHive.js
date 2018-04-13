@@ -730,6 +730,12 @@ let hive = (function () {
 			}
 		}); 
 	};
+	
+	module.requestAll=function(key,data){
+		return Promise.all(
+		data.map(d=> module.request(key,d))
+		);
+	}
 	//processQueue
 	return module;
 }

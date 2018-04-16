@@ -703,18 +703,24 @@ let hive = (function () {
 				let rk=null;
 				let data=null;
 				let getData = function(){
-				module.lock(q.req,function(){
-					//i own the lock, so now what?
-					let keys = Object.keys(q.req);
-					if(keys.length==0){
-						//nothing to do? retry in a while
+					let keys1 = Object.keys(q.req);
+					if(keys1.length==0){
 						setTimeout(getData,10);
 					}else{
-						//i remove the first item from the queue.
-						rk=keys[0];
-						data=q.req[rk];
-						removeField(q.req,rk); 
-					}});
+						module.lock(q.req,function(){
+						//i own the lock, so now what?
+						let keys = Object.keys(q.req);
+						if(keys.length==0){
+							//nothing to do? retry in a while
+							setTimeout(getData,10);
+						}else{
+							//i remove the first item from the queue.
+							rk=keys[0];
+							data=q.req[rk];
+							removeField(q.req,rk); 
+						}});
+					}
+
 				};
 				let processData = function(){
 					if(data==null){

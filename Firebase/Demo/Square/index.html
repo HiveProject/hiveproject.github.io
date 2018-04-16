@@ -23,7 +23,9 @@
 				if(err=="Key not found in Hive Roots")
 				squares = hive.set("SquareDemoPosition",[]);
 			}
-			pos= squares[ squares.push(pos)-1];
+			hive.lock(squares,function(){
+				pos= squares[ squares.push(pos)-1];
+			});
 			//drawing init
 			var canvas = document.getElementById("canv") 
 			canvas.width=500;
@@ -55,7 +57,7 @@
 					mouseY = e.layerY;
 				} pos.x=mouseX; pos.y=mouseY;
 			}
-			window.onunload=function(){
+			window.onbeforeunload=function(){
 				
 				squares.splice(squares.indexOf(pos),1);
 			}

@@ -29,9 +29,7 @@ ToProcess
 <script>
 	let x,y,dx,dy ;
 	x=y=dx=dy=0;
-	let map=[];
-	let toProcess=[];
-	let processed=[];
+	let map=[]; 
 	let graphic=[];
 	let colors=[];
 	let canvas;
@@ -110,7 +108,7 @@ function blendColors(c0, c1, p) {
 }
 var max = 1;
 function draw(){
-	document.getElementById("toProcessBar").style.width = toProcess.length*2 + '%';  
+	document.getElementById("toProcessBar").style.width = pendingPages*20 + '%';  
 	
 	ctx.fillStyle = "black";
 	ctx.fillRect(0,0,graphSize,graphSize);
@@ -139,36 +137,32 @@ function draw(){
 		
 }
 let tickCount=0;
-let processedCount=0;
-function tick(){
-	tickCount++;
-	if(toProcess.length<50)
-		{
-			fillPairs(toProcess,mapSize,50);
-		}
-	let p =0;
-	while(processed.length>0  &&p<100)
-	{
-		p++;
-		var current = processed.pop();
-		if(current!=undefined)	{
-			
-			handleResult(current);
-		//	console.log("Processed: "+ ++processedCount);	
-		} 
-	} 
-	tickCount=1;
-	let toProcess2=hive.get("toProcess");
-	if(toProcess!=toProcess2 && processed.length<100)
-	{
-		toProcess=toProcess2;
-		console.log("New Page");
+let processedCount=0; 
+let pendingPages=0;
+function requestCalc(){
+	tickCount++; 
+	while(pendingPages<10){
+		let page= [];
+		fillPairs(page,mapSize,10); 
+		pendingPages++;
+		hive.request("astar",page).then(function(result){
+			handleResults(result);
+			setTimeout(requestCalc,100);
+			pendingPages--;
+		});
 	}
 	if(tickCount%100==0)
 	{	
 		hive.remove("___");
+		tickCount=1;
 	}
 }
+function handleResults(page){
+	for (var i = 0, len = page.length; i < len; i++) {
+		handleResult(page[i]);
+	}
+}
+
 if(hive){
 	hive.start(function(){
 		console.log("Hive started");
@@ -185,9 +179,7 @@ if(hive){
 		{
 			graphic[i]=new Array(mapSize).fill(0);
 			colors[i]=new Array(mapSize).fill("#000000");
-		}
-		toProcess=hive.set("toProcess",toProcess);
-		processed=hive.set("processed",processed);
+		} 
 		
 		
 		canvas = document.getElementById("canv"); 
@@ -200,9 +192,9 @@ if(hive){
 		emptyMap.height=graphSize; 
 		ectx=emptyMap.getContext("2d");
 		
-		dx=dy=mapSize-1;
-		setInterval(tick,200);
+		dx=dy=mapSize-1; 
 		setInterval(draw,50);
+		requestCalc();
 	});
 }else{
 	console.log("Hive was not defined");

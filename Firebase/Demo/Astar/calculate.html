@@ -47,11 +47,12 @@ currentlyRunning=true;
 		for(let i = 0;i<page.length;i++)
 		{
 			result.push(calculateShortestPath(page[i]));
-		}
+		} 
+			draw();
 		return result;
 		})
 		.then(function(){
-			console.log("Page Processed"); 
+			console.log("Page Processed");
 			currentlyRunning=false;
 			if(running){
 				currentlyRunning=true;
@@ -119,7 +120,8 @@ if(hive){
 		canvas.height=graphSize;
 		ctx=canvas.getContext("2d");
 		side=graphSize/mapSize;
-		setInterval(draw,50);
+		draw();
+		//setInterval(draw,50);
 	});
 }else{
 	console.log("Hive was not defined");

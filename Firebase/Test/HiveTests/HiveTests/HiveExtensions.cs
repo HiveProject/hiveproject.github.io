@@ -10,6 +10,7 @@ namespace HiveTests
     {
         private const string hiveSetString = "hive.set(\"{0}\",{1})";
         private const string hiveGetString = "hive.get(\"{0}\")";
+        private const string hiveRemoveString = "hive.remove(\"{0}\")";
 
         public static async Task<List<ChromeSession>> CreateHiveSessions(this Chrome c, int amount)
         {
@@ -26,14 +27,16 @@ namespace HiveTests
         }
 
         public static async Task<T> hiveSetValue<T>(this ChromeSession s, string key, T value) where T : struct
-        {
-     //       var m = await s.EvalObject(string.Format(hiveSetString, key, value));
-
+        { 
             return await s.EvalValue<T>(string.Format(hiveSetString, key, value));
         }
         public static async Task<T> hiveGetValue<T>(this ChromeSession s, string key) where T : struct
         {
             return await s.EvalValue<T>(string.Format(hiveGetString, key));
+        }
+        public static async Task hiveRemove(this ChromeSession s, string key) 
+        {
+            await s.EvalObject(string.Format(hiveRemoveString, key));
         }
     }
 }

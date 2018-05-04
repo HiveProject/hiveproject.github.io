@@ -32,7 +32,7 @@ namespace HiveTests
 
         public static async Task<T> hiveSetValue<T>(this ChromeSession s, string key, T value) where T : struct
         {
-            return await s.EvalValue<T>(string.Format(hiveSetString, key, value));
+            return await s.EvalValue<T>(string.Format(hiveSetString, key, Newtonsoft.Json.JsonConvert.ToString(value)));
         }
         public static async Task<T> hiveGetValue<T>(this ChromeSession s, string key) where T : struct
         {
@@ -46,7 +46,7 @@ namespace HiveTests
             {
                 try
                 {
-                    //TODO(tera): use the json parser to print the correct format of the values.
+
                     var t = await s.EvalValue<T>(string.Format(hiveGetString, key));
                     return t;
                 }

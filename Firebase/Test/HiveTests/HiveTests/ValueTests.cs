@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using Tera.ChromeDevTools;
 
@@ -13,11 +14,12 @@ namespace HiveTests
         Chrome chrome;
         [TestInitialize]
         public void Initialize()
-        {
+        { 
             chrome = new Chrome(headless: false);
         }
         [TestCleanup]
-        public void Cleanup() {
+        public void Cleanup()
+        {
             chrome.Dispose();
             chrome = null;
         }
@@ -28,16 +30,15 @@ namespace HiveTests
             {
 
                 var result = await sessions[0].hiveSetValue(key, value);
-                await Task.Delay(10);
-
+                var received = await sessions[1].hiveWaitUntilGetValue<T>(key, 5000);
                 //check if what returned from both the set and the get are the same.
-                Assert.AreEqual(result, await sessions[1].hiveGetValue<T>(key), key+": The value was not present on the second session!");
+                Assert.AreEqual(result, received, key + ": The value was not present on the second session!");
                 //cleanup?
-                await sessions[0].hiveRemove(key);
+                await sessions[0].hiveRemove(key); 
             }
-            catch (Exception)
+            catch (Exception ex)
             {
-                throw;
+                throw ex;
             }
             finally
             {
@@ -51,16 +52,16 @@ namespace HiveTests
         [TestMethod]
         public async Task NumberSyncTest()
         {
-            await TestHiveValueReplication("number", 5);
-            await TestHiveValueReplication("number", 5.01);
-            await TestHiveValueReplication("number", 0.01);
-            await TestHiveValueReplication("number", -1);
+            await TestHiveValueReplication("number1", 5);
+            await TestHiveValueReplication("number2", 5.01);
+            await TestHiveValueReplication("number3", 0.01);
+            await TestHiveValueReplication("number4", -1);
         }
         [TestMethod]
         public async Task BoolSyncTest()
         {
-            await TestHiveValueReplication("bool", true);
-            await TestHiveValueReplication("bool", false);
+            await TestHiveValueReplication("bool1", true);
+            await TestHiveValueReplication("bool2", false);
         }
     }
 

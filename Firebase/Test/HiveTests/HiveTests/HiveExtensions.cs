@@ -11,8 +11,6 @@ namespace HiveTests
         private const string hiveSetString = "hive.set(\"{0}\",{1})";
         private const string hiveGetString = "hive.get(\"{0}\")";
         private const string hiveRemoveString = "hive.remove(\"{0}\")";
-        private const int getMsDelay = 10;
-
         public static async Task<List<ChromeSession>> CreateHiveSessions(this Chrome c, int amount)
         {
             List<ChromeSession> result = new List<ChromeSession>();
@@ -41,27 +39,44 @@ namespace HiveTests
         }
 
 
-        public static async Task<T> hiveWaitUntilGetValue<T>(this ChromeSession s, string key,int timeout=1000) where T : struct
+        public static async Task<T> hiveWaitUntilGetValue<T>(this ChromeSession s, string key, int timeout = 1000) where T : struct
         {
-            while (timeout>0)
+            T result = default(T);
+            if (await asyncSpinlock.WaitUntil(async () =>
+             {
+                 try
+                 {
+
+                     result = await s.EvalValue<T>(string.Format(hiveGetString, key));
+                     return true;
+                 }
+                 catch (Exception)
+                 {
+                     return false;
+                 }
+             },timeout))
+            {
+                return result;
+            }
+            throw new TimeoutException("The desired response was not ready.");
+
+        }
+
+        public static async Task<bool> hiveWaitUntilValueEquals<T>(this ChromeSession s, string key, T value, int timeout = 1000) where T : struct
+        {
+            return await asyncSpinlock.WaitUntil(async () =>
             {
                 try
                 {
-
-                    var t = await s.EvalValue<T>(string.Format(hiveGetString, key));
-                    return t;
+                    return value.Equals(await s.EvalValue<T>(string.Format(hiveGetString, key)));
                 }
-                catch (Exception ex)
+                catch (Exception)
                 {
-                    //is this correct?
+                    return false;
                 }
-                await Task.Delay(getMsDelay);
-                timeout -= getMsDelay;
-            }
-            throw new TimeoutException("The desired response was not ready.");
+            }, timeout);
+
         }
-
-
         public static async Task hiveRemove(this ChromeSession s, string key)
         {
             await s.EvalObject(string.Format(hiveRemoveString, key));

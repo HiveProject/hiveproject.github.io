@@ -29,15 +29,40 @@ namespace HiveTests
             return result;
         }
 
+        public static async Task<dynamic> hiveSet(this ChromeSession s, string key, object value) 
+        {
+            return await s.EvalObject(string.Format(hiveSetString, key, Newtonsoft.Json.JsonConvert.SerializeObject(value)));
+        }
         public static async Task<T> hiveSetValue<T>(this ChromeSession s, string key, T value) where T : struct
         {
-            return await s.EvalValue<T>(string.Format(hiveSetString, key, Newtonsoft.Json.JsonConvert.ToString(value)));
+            return await s.EvalValue<T>(string.Format(hiveSetString, key, Newtonsoft.Json.JsonConvert.SerializeObject(value)));
         }
         public static async Task<T> hiveGetValue<T>(this ChromeSession s, string key) where T : struct
         {
             return await s.EvalValue<T>(string.Format(hiveGetString, key));
         }
 
+        public static async Task<dynamic> hiveWaitUntilGet(this ChromeSession s, string key, int timeout) {
+
+            dynamic result = null;
+            if (await asyncSpinlock.WaitUntil(async () =>
+            {
+                try
+                {
+
+                    result = await s.EvalObject(string.Format(hiveGetString, key));
+                    return true;
+                }
+                catch (Exception)
+                {
+                    return false;
+                }
+            }, timeout))
+            {
+                return result;
+            }
+            throw new TimeoutException("The desired response was not ready.");
+        }
 
         public static async Task<T> hiveWaitUntilGetValue<T>(this ChromeSession s, string key, int timeout = 1000) where T : struct
         {

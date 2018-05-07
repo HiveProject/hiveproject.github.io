@@ -11,6 +11,7 @@ namespace HiveTests
         private const string hiveSetString = "hive.set(\"{0}\",{1})";
         private const string hiveGetString = "hive.get(\"{0}\")";
         private const string hiveRemoveString = "hive.remove(\"{0}\")";
+        private const int getMsDelay = 10;
 
         public static async Task<List<ChromeSession>> CreateHiveSessions(this Chrome c, int amount)
         {
@@ -54,7 +55,8 @@ namespace HiveTests
                 {
                     //is this correct?
                 }
-                await Task.Delay(100);
+                await Task.Delay(getMsDelay);
+                timeout -= getMsDelay;
             }
             throw new TimeoutException("The desired response was not ready.");
         }

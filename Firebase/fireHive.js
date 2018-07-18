@@ -512,135 +512,104 @@ let hive = (function () {
 	//GC 
 	
 	//lock
-	function innerLock(pxy,callback,lockChain)	{
-		//the object provided SHOULD be a proxy
-		let obj=pxy; 
-		if(handlers.has(pxy))
-		{
-			obj=proxies.getKey(pxy);
-		}else{
-			throw "The object to be locked must be shared ";
-		}
-		let id = loadedObjects.getKey(obj);
-		if (!id) { 
-			//if the object is not shared this is just useless i guess
-			//but i think i should do something like this. id=innerAdd(obj);
-			throw "The object to be locked must be shared ";
-		}
-		if(acquiredLocks.has(id)){
-			//re-entrant part, if i own this lock, i just execute
-			callback();
-			return;
-		}
-		lockChain.add(id);
-		//try to get the lock
-		database.ref("locks/"+id).transaction(function(data){
-			if(data==null)
-			{
-				//no one owns this! yay!
-				return true;
+	//this function returns a promise that will succeede when i own the lock
+	function getLock(id){
+		return new Promise(function(resolve,reject){
+			if(acquiredLocks.has(id)){
+				//re-entrant part, if i own this lock, i just execute
+				resolve(); 
 			}else{
-				return; //this aborts my transaction
-			}
-			
-		},function(error, committed, snapshot){
-			if(!committed || error){
-				//i aborted the transaction, that means that
-				//somebody has this lock, must retry
-				
-				//this specific call might be an issue. check it later
-				setTimeout(function(){innerLock(pxy,callback,lockChain);},10);  
-			}else{
-				//i committed the transaction, this means i own the lock
-				acquiredLocks.add(id);
-				let count = lockChain.size;
-				let newLock = function (pxy2,cb2){
-					innerLock(pxy2,cb2,lockChain);
+				let tryGetLock = function(){
+					database.ref("locks/"+id).transaction(
+					function(data){
+						//this function tries to write the lock
+						if(data==null)
+						{
+							//no one owns this! yay!
+							return true;
+						}else{
+							return; //this aborts my transaction
+						}
+					},
+					function(error, committed, snapshot){
+						if(!committed || error){
+							//i aborted the transaction, that means that
+							//somebody has this lock, must retry
+							//this specific call might be an issue. check it later
+							setTimeout(function(){tryGetLock();},10);
+						}else{
+							//i committed the transaction, this means i own the lock
+							acquiredLocks.add(id);
+							resolve();
+						}
+					},false 
+					/*this is just so the db does not raise local events in case the transaction fails*/
+					/*see https://firebase.google.com/docs/reference/js/firebase.database.Reference#transaction */
+					);};
+					tryGetLock(); 
 				}
-				let oldLock=hive.lock;
-				hive.lock=newLock;
-				callback();
-				hive.lock=oldLock;
-				if(count ==lockChain.size)
-				{
-					let arr=  Array.from(lockChain);
-						for (let i = 0, len = arr.length; i < len; i++) {
-						//todo: make this a mass update.
-						let k = arr[i];
-						acquiredLocks.delete(k);
-						database.ref("locks/"+k).set(null);
-					}
-				}
-			}
-			
-		},
-		false /*this is just so the db does not raise local events in case the transaction fails*/
-		/*see https://firebase.google.com/docs/reference/js/firebase.database.Reference#transaction */);
-		
+		});
 	}
+ 
 	let acquiredLocks = new Set();
+	let currentPromise = Promise;
 	module.lock = function(pxy,callback){
-		innerLock(pxy,callback,new Set()); 
-	};
-	
-	module.sync=function(pxy,callback){
-			//the object provided SHOULD be a proxy
-		let obj=pxy; 
-		if(handlers.has(pxy))
-		{
-			obj=proxies.getKey(pxy);
-		}else{
-			throw "The object to be locked must be shared ";
-		}
-		let id = loadedObjects.getKey(obj);
-		if (!id) { 
-			//if the object is not shared this is just useless i guess
-			//but i think i should do something like this. id=innerAdd(obj);
-			throw "The object to be locked must be shared ";
-		}
-		var updateAndExecute = function(cb){
-			database.ref("objects/"+id).once("value").then(function(objectSnapshot){
-				childChanged(objectSnapshot);
-				callback();
-				if(cb)
-				{
-					cb();
-				}
-			});
-		};
-		if(acquiredLocks.has(id)){
-			//re-entrant part, if i own this lock, i just execute
-			updateAndExecute();
-			return;
-		}
-		//try to get the lock
-		database.ref("locks/"+id).transaction(function(data){
-			if(data==null)
+		return new currentPromise(function(resolve,reject){
+			let obj=pxy; 
+			if(handlers.has(pxy))
 			{
-				//no one owns this! yay!
-				return true;
+				obj=proxies.getKey(pxy);
 			}else{
-				return; //this aborts my transaction
+				reject( "The object to be locked must be shared ");
 			}
-			
-		},function(error, committed, snapshot){
-			if(!committed || error){
-				//i aborted the transaction, that means that
-				//somebody has this lock, must retry
-				setTimeout(function(){module.lock(pxy,callback);},10);  
-			}else{
-				//i committed the transaction, this means i own the lock
-				acquiredLocks.add(id);
-				updateAndExecute(function(){
-					acquiredLocks.delete(id);
-					database.ref("locks/"+id).set(null);
-				});
+			let id = loadedObjects.getKey(obj);
+			if (!id) { 
+				//if the object is not shared this is just useless i guess
+				//but i think i should do something like this. id=innerAdd(obj);
+				reject( "The object to be locked must be shared ");
 			}
-			
-		},
-		false /*this is just so the db does not raise local events in case the transaction fails*/
-		/*see https://firebase.google.com/docs/reference/js/firebase.database.Reference#transaction */); 
+			let count=0;
+			let innerLocks=[];
+			getLock(id)
+			.then(()=>{
+				count=acquiredLocks.size;
+				var old = module.lock;
+				var oldP= currentPromise;
+				currentPromise= class  extends Promise {
+					then(f){
+
+						let inner = super.then(f);
+					 	innerLocks.push(inner);
+						return inner;
+						
+					}
+}
+				module.lock= function(px,cb){
+					var p = old(px,cb);
+					innerLocks.push(p);
+					return p;
+				};
+				callback();
+				currentPromise=oldP;
+				module.lock=old;
+				var subPromise = new Promise(function(res){
+					var removeMyself = function(){						
+						acquiredLocks.delete(id);
+						database.ref("locks/"+id).set(null);
+					};
+					if(innerLocks.length!=0)
+					{
+						Promise.all(innerLocks).then(removeMyself);
+					}else{
+						removeMyself();
+					}
+					res();
+				}).then(resolve);
+				
+			});
+		});
 	};
+
 	//lock
 	
 	function queueAdded(dataSnapshot){

@@ -512,7 +512,7 @@ let hive = (function () {
 	//GC 
 	
 	//lock
-	function innerLock(pxy,callback,lockChain,then)	{
+	function innerLock(pxy,callback,lockChain)	{
 		//the object provided SHOULD be a proxy
 		let obj=pxy; 
 		if(handlers.has(pxy))
@@ -549,7 +549,7 @@ let hive = (function () {
 				//somebody has this lock, must retry
 				
 				//this specific call might be an issue. check it later
-				setTimeout(function(){innerLock(pxy,callback,lockChain,then);},10);  
+				setTimeout(function(){innerLock(pxy,callback,lockChain);},10);  
 			}else{
 				//i committed the transaction, this means i own the lock
 				acquiredLocks.add(id);
@@ -571,10 +571,6 @@ let hive = (function () {
 						database.ref("locks/"+k).set(null);
 					}
 				}
-				if(then!=undefined)
-				{
-					then();
-				}
 			}
 			
 		},
@@ -584,10 +580,10 @@ let hive = (function () {
 	}
 	let acquiredLocks = new Set();
 	module.lock = function(pxy,callback){
-			return new Promise(function(resolve,reject){
-				innerLock(pxy,callback,new Set(),resolve); 
-			});
-	}; 
+		innerLock(pxy,callback,new Set()); 
+	};
+	
+	module.sync=function(pxy,callback){
 			//the object provided SHOULD be a proxy
 		let obj=pxy; 
 		if(handlers.has(pxy))

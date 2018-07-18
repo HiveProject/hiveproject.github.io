@@ -557,7 +557,7 @@ let hive = (function () {
 				acquiredLocks.add(id);
 				let count = lockChain.size;
 				let newLock = function (pxy2,cb2){
-					innerLock(pxy2,cb2,lockChain);
+					createLock(pxy2,cb2,lockChain);
 				}
 				let oldLock=hive.lock;
 				hive.lock=newLock;
@@ -573,7 +573,7 @@ let hive = (function () {
 						database.ref("locks/"+k).set(null);
 					}
 				}
-				if(then )
+				if(then)
 				{
 					then();
 				}
@@ -585,11 +585,13 @@ let hive = (function () {
 		
 	}
 	let acquiredLocks = new Set();
-	module.lock = function(pxy,callback){
-		
+	function createLock(pxy, callback, set){
 		return new Promise(function(resolve,reject){
-			innerLock(pxy,callback,new Set(),resolve); 
+			innerLock(pxy,callback,set,resolve); 
 		});
+	}
+	module.lock = function(pxy,callback){
+		return createLock(pxy,callback,new Set());
 	};
 	
 	module.sync=function(pxy,callback){

@@ -557,7 +557,7 @@ let hive = (function () {
 				acquiredLocks.add(id);
 				let count = lockChain.size;
 				let newLock = function (pxy2,cb2){
-					createLock(pxy2,cb2,lockChain);
+					return createLock(pxy2,cb2,lockChain);
 				}
 				let oldLock=hive.lock;
 				hive.lock=newLock;

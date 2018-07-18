@@ -530,7 +530,7 @@ let hive = (function () {
 		if(acquiredLocks.has(id)){
 			//re-entrant part, if i own this lock, i just execute
 			callback();
-			if(then!=null)
+			if(then )
 			{then();}
 			return;
 		}
@@ -573,7 +573,7 @@ let hive = (function () {
 						database.ref("locks/"+k).set(null);
 					}
 				}
-				if(then!=null)
+				if(then )
 				{
 					then();
 				}

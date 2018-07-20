@@ -512,6 +512,25 @@ let hive = (function () {
 	//GC 
 	
 	//lock
+	function interceptContinuation(promise,func)
+	{
+		let handler = {
+			get(target, propKey, receiver) {
+				const origMethod = target[propKey];
+				if(propKey!="then"){
+					return origMethod;
+				}
+				const _target=target;
+				return function (...args) {
+					let result = origMethod.apply(_target, args);
+					func(result);
+					var proxiedResult = interceptContinuation(result,func);
+					return proxiedResult;
+				};
+			}
+		};
+		return new Proxy(promise,handler);
+	}
 	//this function returns a promise that will succeede when i own the lock
 	function getLock(id){
 		return new Promise(function(resolve,reject){
@@ -552,9 +571,8 @@ let hive = (function () {
 	}
  
 	let acquiredLocks = new Set();
-	let currentPromise = Promise;
 	module.lock = function(pxy,callback){
-		return new currentPromise(function(resolve,reject){
+		return new Promise(function(resolve,reject){
 			let obj=pxy; 
 			if(handlers.has(pxy))
 			{
@@ -568,38 +586,55 @@ let hive = (function () {
 				//but i think i should do something like this. id=innerAdd(obj);
 				reject( "The object to be locked must be shared ");
 			}
-			let count=0;
-			let innerLocks=[];
+			let count=acquiredLocks.size;
+			let createdContinuations=[];
+			let old = null;
 			getLock(id)
 			.then(()=>{
+				//mustRelease is false in the case of a re-entrant locks
+				let mustRelease= count!= acquiredLocks.size;
 				count=acquiredLocks.size;
-				var old = module.lock;
-				var oldP= currentPromise;
-				currentPromise= class  extends Promise {
-					then(f){
-
-						let inner = super.then(f);
-					 	innerLocks.push(inner);
-						return inner;
-						
-					}
-}
+				old = module.lock; 
 				module.lock= function(px,cb){
-					var p = old(px,cb);
-					innerLocks.push(p);
-					return p;
+					let p = old(px,cb);
+					createdContinuations.push(p); 
+					return interceptContinuation(p, (res)=>{createdContinuations.push(res);});
 				};
 				callback();
-				currentPromise=oldP;
-				module.lock=old;
+				//i create a promise here to handle the release, because i want it to be enqueued after anything created 
+				//inside the callback.
 				var subPromise = new Promise(function(res){
+					//exit condition for re-entrant locks
+					if(!mustRelease)
+						return res();
 					var removeMyself = function(){						
+						module.lock=old;
 						acquiredLocks.delete(id);
 						database.ref("locks/"+id).set(null);
 					};
-					if(innerLocks.length!=0)
+					if(createdContinuations.length!=0)
 					{
-						Promise.all(innerLocks).then(removeMyself);
+						let createdCount=createdContinuations.length;
+						//this function is to replace Promise.all with something that will evaluate the whole collection everytime.
+						//I had the following issue:
+						//The callback executed and added a promise (1) to createdContinuations
+						//This code executed, and decided to wait to the promise (1) to be executed
+						//The execution of the promise (1) created a new promise (2) and added to createdContinuations, getting solved in the process
+						//Since Promise.all had already evaluated createdContinuations, it executed because the only promise it had to wait was (1)
+						
+						//This function validates that the number of elements in createdContinuations did not change before releasing.
+						function checkCreatedContinuations(){
+							Promise.all(createdContinuations).then(()=>{
+								if(createdContinuations.length==createdCount){
+									removeMyself();
+								}else{
+									//one of the continuations created a continuation	
+									createdCount=createdContinuations.length;
+									Promise.all(createdContinuations).then(checkCreatedContinuations);
+								}
+							});	
+						}
+						checkCreatedContinuations();
 					}else{
 						removeMyself();
 					}

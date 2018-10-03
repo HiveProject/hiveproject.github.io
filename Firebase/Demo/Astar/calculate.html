@@ -46,11 +46,24 @@ currentlyRunning=true;
 		let result = [];
 		for(let i = 0;i<page.length;i++)
 		{
-			result.push(calculateShortestPath(page[i]));
+			let subRes= calculateShortestPath(page[i]);
+			for(let j = 0;j<subRes.length;j++)
+			{
+				let it = subRes[j];
+				if(result[it.x]==undefined)
+				{
+					result[it.x]=[];
+				}
+				if(result[it.x][it.y]==undefined){
+					result[it.x][it.y]=it;
+				}else{
+					result[it.x][it.y].count++;
+				}
+			}
 		} 
-			draw();
-		return result;
-		})
+		draw(); 
+		return result.flat();
+	})
 		.then(function(){
 			console.log("Page Processed");
 			currentlyRunning=false;
@@ -67,12 +80,11 @@ function draw(){
 	for(let cx=0;cx<mapSize;cx++)
 	{
 		for(let cy=0;cy<mapSize;cy++)
-		{
-			  
-					ctx.fillStyle = graphic[cx][cy];
-					ctx.fillRect(cx*side,cy*side,side,side);
-					ctx.fillStyle = "black";
-					ctx.strokeRect(cx*side,cy*side,side,side); 
+		{ 
+			ctx.fillStyle = graphic[cx][cy];
+			ctx.fillRect(cx*side,cy*side,side,side);
+			ctx.fillStyle = "black";
+			ctx.strokeRect(cx*side,cy*side,side,side); 
 		}
 	}
 	 
@@ -81,11 +93,12 @@ function draw(){
   
 function calculateShortestPath(locations)
 {
-	var start = graph.nodes[locations.from.x][locations.from.y];
-	var end = graph.nodes[locations.to.x][locations.to.y];
+	var start = graph.nodes[locations.fromX][locations.fromY];
+	var end = graph.nodes[locations.toX][locations.toY];
 	var result = astar.search(graph.nodes,start,end,false);
-	result= result.map( (node)=>{return {x:node.x,y:node.y}});
-	result.unshift(locations.from);
+	result= result.map( (node)=>{return {x:node.x,y:node.y,count:1}});
+	 
+	result.unshift({x:locations.fromX, y:locations.fromY, count:1});
 	for(let i = 0;i<result.length;i++)
 	{
 		graphic[result[i].x][result[i].y]=	baseColors[colorindex]; 	

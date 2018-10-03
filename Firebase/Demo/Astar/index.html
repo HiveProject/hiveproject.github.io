@@ -75,7 +75,7 @@ function fillPairs(pairs,size,maxCreation)
 		}
 		if(dx!=x || dy!= y)
 		{
-			pairs.push({from:{x:x,y:y},to:{x:dx,y:dy}});
+			pairs.push({fromX:x, fromY:y, toX:dx, toY:dy});
 			maxCreation--;
 		}	
 	}
@@ -87,7 +87,8 @@ let colorindex=0;
 function handleResult(result)
 {
 	for (var i = 0, len = result.length; i < len; i++) {
-		var t = graphic[result[i].x][result[i].y]++; 
+		graphic[result[i].x][result[i].y]+=result[i].count;
+		var t = graphic[result[i].x][result[i].y]; 
 		if(t>max)
 			max=t;
 		colors[result[i].x][result[i].y]=	baseColors[colorindex];
@@ -110,7 +111,8 @@ function blendColors(c0, c1, p) {
 }
 var max = 1;
 function draw(){
-	document.getElementById("toProcessBar").style.width = pendingPages*20 + '%';  
+	let last5Pages= processedInWindow.reduce((t,n)=>t+n);
+	document.getElementById("toProcessBar").style.width = (last5Pages/processedInWindow.length) /10*100 + '%';  
 	document.getElementById("Processed").innerHTML = processedCount;  
 	
 	ctx.fillStyle = "black";
@@ -142,29 +144,27 @@ function draw(){
 let tickCount=0;
 let processedCount=0; 
 let pendingPages=0;
+let processedInWindow=[0,0,0,0,0,0,0,0,0,0];
+let windowIndex=0;
 function requestCalc(){
-	tickCount++; 
 	while(pendingPages<10){
 		let page= [];
 		fillPairs(page,mapSize,10); 
 		pendingPages++;
 		hive.request("astar",page).then(function(result){
-			handleResults(result);
+			processedInWindow[windowIndex]++;
+			tickCount++; 
+			handleResult(result);
 			setTimeout(requestCalc,100);
-			pendingPages--;
+			pendingPages--;	
+			if(tickCount%4==0)
+			{	
+				hive.remove("___");
+				tickCount=1;
+			}
 		});
 	}
-	if(tickCount%10==0)
-	{	
-		hive.remove("___");
-		tickCount=1;
-	}
-}
-function handleResults(page){
-	for (var i = 0, len = page.length; i < len; i++) {
-		handleResult(page[i]);
-	}
-}
+} 
 
 if(hive){
 	hive.start(function(){
@@ -196,7 +196,12 @@ if(hive){
 		ectx=emptyMap.getContext("2d");
 		
 		dx=dy=mapSize-1; 
-		requestAnimationFrame(draw);
+		setInterval(draw,300);
+		setInterval(()=>{
+			windowIndex++;
+			windowIndex%=processedInWindow.length;
+			processedInWindow[windowIndex]=0;
+		},1000);
 		requestCalc();
 	});
 }else{

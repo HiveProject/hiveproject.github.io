@@ -5,7 +5,8 @@
 <script src="https://www.gstatic.com/firebasejs/3.6.2/firebase-app.js"></script>
 <script src="https://www.gstatic.com/firebasejs/3.6.2/firebase-database.js"></script> 
 <script src="../../fireHive.js" type="text/javascript"></script> 
-
+<script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
+   
 <style>
 #myProgress {
     width: 100%;
@@ -17,10 +18,8 @@
     background-color: red;
 } 
 </style>
-ToProcess
-<div id="myProgress">
-  <div id="toProcessBar"></div>
-</div> 
+ <div id="chart_div" style="width: 600px; height: 300px;"></div>
+ 
 Processed: 
 <div id="Processed"></div>
 <hr/>
@@ -28,6 +27,9 @@ Processed:
 <hr/>
 <canvas id="emptyMap"></canvas>
 <script>
+  google.charts.load('current', {'packages':['gauge']});
+  google.charts.setOnLoadCallback(drawChart);
+
 	let x,y,dx,dy ;
 	x=y=dx=dy=0;
 	let map=[]; 
@@ -41,6 +43,40 @@ Processed:
 	let graphSize=700;
 	let side = graphSize/mapSize;
 	let finished = false;
+	
+function drawChart() {
+
+        var data = google.visualization.arrayToDataTable([
+          ['Label', 'Value'],
+          ['P/s', 0]
+        ]);
+		let max=20;
+        var options = {
+          width: 600, height: 300,
+          redFrom: 0.90*max, redTo: max,
+          yellowFrom:0.75*max, yellowTo: 0.90*max,
+          minorTicks: 5,
+		  max:max
+        };
+
+        var chart = new google.visualization.Gauge(document.getElementById('chart_div'));
+
+        chart.draw(data, options);
+
+        setInterval(function() {		
+			windowIndex++;
+			windowIndex%=processedInWindow.length;
+			processedInWindow[windowIndex]=0;
+			let last5Pages= processedInWindow.reduce((t,n)=>t+n) / processedInWindow.length;
+
+          data.setValue(0, 1,last5Pages);
+          chart.draw(data, options);
+        }, 1000); 
+      }
+ 
+	
+	
+	
 function fillMap(map,size){ 
 	for(let i =0; i<size;i++)
 	{
@@ -111,9 +147,7 @@ function blendColors(c0, c1, p) {
 }
 var max = 1;
 function draw(){
-	let last5Pages= processedInWindow.reduce((t,n)=>t+n);
-	document.getElementById("toProcessBar").style.width = (last5Pages/processedInWindow.length) /10*100 + '%';  
-	document.getElementById("Processed").innerHTML = processedCount;  
+	 document.getElementById("Processed").innerHTML = processedCount;  
 	
 	ctx.fillStyle = "black";
 	ctx.fillRect(0,0,graphSize,graphSize);
@@ -197,11 +231,7 @@ if(hive){
 		
 		dx=dy=mapSize-1; 
 		setInterval(draw,300);
-		setInterval(()=>{
-			windowIndex++;
-			windowIndex%=processedInWindow.length;
-			processedInWindow[windowIndex]=0;
-		},1000);
+		 
 		requestCalc();
 	});
 }else{

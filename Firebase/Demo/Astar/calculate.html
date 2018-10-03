@@ -1,7 +1,7 @@
 <html>
 <head></head>
 <body>
-<button id="goButton" onClick="buttonClicked()" disabled>Start / Stop</button>
+<button id="goButton" onClick="buttonClicked()" disabled>Start</button>
 
 <button id="stepButton" onClick="stepButtonClicked()" disabled>Step</button>
 <br/>
@@ -30,11 +30,14 @@ let colorindex=0;
 function stepButtonClicked()
 {
 	running=false;
+	document.getElementById("goButton").innerText= running?"Stop":"Start";
 	process();
 }
 function buttonClicked()
 {
+	
 	running=!running; 
+	document.getElementById("goButton").innerText= running?"Stop":"Start";
 	if(running & (!(currentlyRunning))){
 		process();
 	}

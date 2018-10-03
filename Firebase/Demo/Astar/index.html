@@ -180,10 +180,12 @@ let processedCount=0;
 let pendingPages=0;
 let processedInWindow=[0,0,0,0,0,0,0,0,0,0];
 let windowIndex=0;
+let pageSize=10;
+let maxPages=10;
 function requestCalc(){
-	while(pendingPages<10){
+	while(pendingPages<maxPages){
 		let page= [];
-		fillPairs(page,mapSize,10); 
+		fillPairs(page,mapSize,pageSize); 
 		pendingPages++;
 		hive.request("astar",page).then(function(result){
 			processedInWindow[windowIndex]++;

@@ -452,11 +452,14 @@ let hive = (function () {
 			initializedGC=true;		
 			//i am going to list all the elements i should actually delete.
 			let untouchedSet=new Set(loadedObjects.keys());
+			let initialCount = loadedObjects.size;
 			setTimeout(function(){ 
 				roots.forEach(function(value,key){mark(loadedObjects.get(value),untouchedSet);});
 				queues.forEach(function(value,key){mark(loadedObjects.get(value),untouchedSet);});
 				sweep(untouchedSet);	 
 				initializedGC=false;
+				let finalCount = loadedObjects.size;
+				console.log("GC deleted "+ (initialCount-finalCount) + " objects");
 			}, 2000);	
 			
 		}

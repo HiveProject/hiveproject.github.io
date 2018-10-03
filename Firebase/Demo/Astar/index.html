@@ -154,7 +154,7 @@ function requestCalc(){
 			pendingPages--;
 		});
 	}
-	if(tickCount%100==0)
+	if(tickCount%10==0)
 	{	
 		hive.remove("___");
 		tickCount=1;
@@ -196,7 +196,7 @@ if(hive){
 		ectx=emptyMap.getContext("2d");
 		
 		dx=dy=mapSize-1; 
-		setInterval(draw,50);
+		requestAnimationFrame(draw);
 		requestCalc();
 	});
 }else{

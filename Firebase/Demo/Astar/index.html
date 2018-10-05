@@ -18,16 +18,17 @@
     background-color: red;
 } 
 </style>
- <div id="chart_div" style="width: 600px; height: 300px;"></div>
- 
-Processed: 
-<div id="Processed"></div>
-<hr/>
-<canvas id="canv"></canvas>
-<hr/>
-<canvas id="emptyMap"></canvas>
+<div style="float:left;">
+ <div id="chart_div" style="width: 600px; height: 300px; float:left;"></div>
+  <div id="hist_div" style="width: 600px; height: 300px;float:left;"></div>
+ </div>
+<div style="float:left;">
+ <canvas id="canv" style="float:left;"></canvas>
+
+<canvas id="emptyMap" style="float:left;"></canvas>
+</div>
 <script>
-  google.charts.load('current', {'packages':['gauge']});
+  google.charts.load('current', {'packages':['gauge','corechart']});
   google.charts.setOnLoadCallback(drawChart);
 
 	let x,y,dx,dy ;
@@ -43,14 +44,14 @@ Processed:
 	let graphSize=700;
 	let side = graphSize/mapSize;
 	let finished = false;
-	
+	pendingCount=mapSize*mapSize;
 function drawChart() {
 
-        var data = google.visualization.arrayToDataTable([
+        var speed = google.visualization.arrayToDataTable([
           ['Label', 'Value'],
           ['P/s', 0]
         ]);
-		let max=20;
+		let max=10;
         var options = {
           width: 600, height: 300,
           redFrom: 0.90*max, redTo: max,
@@ -61,17 +62,39 @@ function drawChart() {
 
         var chart = new google.visualization.Gauge(document.getElementById('chart_div'));
 
-        chart.draw(data, options);
+        chart.draw(speed, options);
+		var histOptions = { 
+			colors: ['#4285F4'],
+ 
+ 
+			bar: { gap: 0 },
 
+		 
+		};
+		let sample=0;
+		var histData = google.visualization.arrayToDataTable([
+			['time','Pages per second'],
+			[sample++,0]
+        ]);
+		var hist = new google.visualization.ColumnChart(document.getElementById('hist_div'));
+		
         setInterval(function() {		
 			windowIndex++;
 			windowIndex%=processedInWindow.length;
 			processedInWindow[windowIndex]=0;
 			let last5Pages= processedInWindow.reduce((t,n)=>t+n) / processedInWindow.length;
-
-          data.setValue(0, 1,last5Pages);
-          chart.draw(data, options);
-        }, 1000); 
+			histData.addRow([sample++,last5Pages]);
+			if(histData.getNumberOfRows()>90)
+			{
+				histData.removeRow(0);
+			}
+          speed.setValue(0, 1,last5Pages);
+          chart.draw(speed, options);
+		  hist.draw(histData,histOptions);
+        }, 1000);
+		
+		
+		
       }
  
 	
@@ -130,6 +153,7 @@ function handleResult(result)
 		colors[result[i].x][result[i].y]=	baseColors[colorindex];
 	} 
 	processedCount++;
+	pendingCount--;
 	colorindex=(colorindex+1)%baseColors.length;
 }
 
@@ -147,8 +171,7 @@ function blendColors(c0, c1, p) {
 }
 var max = 1;
 function draw(){
-	 document.getElementById("Processed").innerHTML = processedCount;  
-	
+ 
 	ctx.fillStyle = "black";
 	ctx.fillRect(0,0,graphSize,graphSize);
 	ectx.fillStyle = "black";
@@ -177,7 +200,7 @@ function draw(){
 }
 let tickCount=0;
 let processedCount=0; 
-let pendingPages=0;
+let pendingPages=0; 
 let processedInWindow=[0,0,0,0,0,0,0,0,0,0];
 let windowIndex=0;
 let pageSize=10;

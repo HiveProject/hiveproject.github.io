@@ -134,8 +134,10 @@ function fillPairs(pairs,size,maxCreation)
 		}
 		if(dx!=x || dy!= y)
 		{
-			pairs.push({fromX:x, fromY:y, toX:dx, toY:dy});
-			maxCreation--;
+			if(map[x][y]==1){
+				pairs.push({fromX:x, fromY:y, toX:dx, toY:dy});
+				maxCreation--;
+			}
 		}	
 	}
  

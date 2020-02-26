@@ -42,8 +42,9 @@ let hive = (function () {
 	//this map contains id->queue
 	let queues = new Map();
 	
-	module.start = function (callback) {
+	module.start = function (config, callback) {
 		roots.clear();
+		module.config=config;
 		loadedObjects.clear();
 		firebase.initializeApp(module.config);
 		database = firebase.database();

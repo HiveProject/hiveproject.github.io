@@ -228,7 +228,13 @@ function requestCalc(){
 } 
 
 if(hive){
-	hive.start(function(){
+	let config={
+			apiKey: " AIzaSyA-Y_mz58xgvGkQNK_tQCXQiG3q1mlA6hM",
+			authDomain: "hive-1336.firebaseapp.com",
+			databaseURL: "https://hive-1336.firebaseio.com/",
+			storageBucket: "hive-1336.appspot.com"
+		};
+	hive.start(config, function(){
 		console.log("Hive started");
 		try
 		{

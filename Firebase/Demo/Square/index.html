@@ -11,7 +11,13 @@
 	//To Do: i do not have a real way to know when hive is actually working and has all the data.
 	
 	window.onload =function(){
-		hive.start(function(){
+	let config={
+			apiKey: " AIzaSyA-Y_mz58xgvGkQNK_tQCXQiG3q1mlA6hM",
+			authDomain: "hive-1336.firebaseapp.com",
+			databaseURL: "https://hive-1336.firebaseio.com/",
+			storageBucket: "hive-1336.appspot.com"
+		};
+	hive.start(config, function(){
 			let myColor=((1<<24)*Math.random()|0).toString(16);
 			let pos = {x:50,y:50,color:"#"+myColor};
 			let squares={};

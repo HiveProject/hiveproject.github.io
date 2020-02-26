@@ -615,6 +615,7 @@ let hive = (function () {
 						module.lock=old;
 						acquiredLocks.delete(id);
 						database.ref("locks/"+id).set(null);
+						res();
 					};
 					if(createdContinuations.length!=0)
 					{
@@ -642,7 +643,6 @@ let hive = (function () {
 					}else{
 						removeMyself();
 					}
-					res();
 				}).then(resolve);
 				
 			});

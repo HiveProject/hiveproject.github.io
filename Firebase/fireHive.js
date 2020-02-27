@@ -121,6 +121,19 @@ let hive = (function () {
 		}); 
 		return result;
 	};
+	module.queues=function(){
+		let result = new Map();
+		Array.from(queues.keys())
+		.forEach(function(key){
+			result.set(key,
+			{
+				"name":key,
+				"unassignedWork":Object.keys(getQueue(key).req).length
+			});
+		});
+		
+		return result;
+	};
 	
 	module.forEach=function(callback){
 		Array.from(roots.keys()).forEach(function(key){

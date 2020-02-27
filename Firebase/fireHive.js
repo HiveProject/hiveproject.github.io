@@ -695,8 +695,13 @@ let hive = (function () {
 			cb();
 		}});
 	};
-	 
 	module.process=function(key,func){
+		return module.processAsync(key,(data,resolve)=>{
+			resolve(func(data));
+		});
+		
+	}
+	module.processAsync=function(key,func){
 		return new Promise(function(resolve,reject){
 			if(key.constructor.name != "String" ){
 				reject("The key must be a string ");
@@ -735,8 +740,10 @@ let hive = (function () {
 						setTimeout(processData,10);  
 					}else{
 						//i have a thing to process.
-						var result = q.rsp[rk]=func(data);
-						resolve(result);
+						func(data, (result)=>{
+							q.rsp[rk]=result;
+							resolve(result);
+						});
 					}
 				};
 				getData();

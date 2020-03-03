@@ -1,0 +1,42 @@
+<html>
+<head>
+</head>
+<body> 
+<form id="form"> 
+<input id="file" type="file" multiple />
+</form>
+<table id="output"></table>
+
+<script type="text/javascript">
+document.getElementById("file").onchange=loadImage;
+  function loadImage() {
+	  const input = document.getElementById('file');
+	  if (input.files && input.files[0]) {
+		var reader = new FileReader();
+		
+		reader.onload = function(e) {
+			requestImageProcessing(e.target.result);
+			document.getElementById("form").reset();
+		  //$('#blah').attr('src', e.target.result);
+		}		
+		reader.readAsDataURL(input.files[0]);
+	  }
+	}
+
+	function requestImageProcessing(b64)
+	{
+		const outputTable = document.getElementById('output');
+		let img= document.createElement("img");
+		img.src=b64;
+		img.height=50;
+		let row = document.createElement("tr");
+		let data = document.createElement("td");
+		let resultData = document.createElement("td");
+		data.appendChild(img);
+		row.appendChild(data);
+		row.appendChild(resultData);
+		outputTable.appendChild(row);
+	}
+</script>  
+</body>
+</html>

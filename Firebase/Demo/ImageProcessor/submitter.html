@@ -17,6 +17,7 @@
 
 	<script type="text/javascript">
 
+		const input = document.getElementById('file');
 		if (hive) {
 			let config = {
 				apiKey: " AIzaSyA-Y_mz58xgvGkQNK_tQCXQiG3q1mlA6hM",
@@ -28,19 +29,51 @@
 				function () {
 					console.log("Hive started");
 					document.getElementById("file").disabled = false;
-					document.getElementById("file").onchange = loadImage;
-					function loadImage() {
-						const input = document.getElementById('file');
-						if (input.files && input.files[0]) {
-							var reader = new FileReader();
+					document.getElementById("file").onchange = processImage;
+					function processImage() {
+						loadImage().then(requestImageProcessing);
 
-							reader.onload = function (e) {
-								requestImageProcessing(e.target.result);
-								document.getElementById("form").reset();
-								//$('#blah').attr('src', e.target.result);
-							}
-							reader.readAsDataURL(input.files[0]);
-						}
+					}
+					function loadImage() {
+						return new Promise((res, rej) => {
+							if (input.files && input.files[0]) {
+								var reader = new FileReader();
+
+								reader.onload = function (e) {
+									res(e.target.result);
+									document.getElementById("form").reset();
+									//$('#blah').attr('src', e.target.result);
+								}
+								reader.onerror = rej;
+								reader.readAsDataURL(input.files[0]);
+							} else { rej() }
+						});
+
+					}
+					const maxDimention = 500;
+
+
+					function scaleToMaxSize(b64) {
+						return new Promise((res, rej) => {
+							var img = new Image();
+							let canvas = document.createElement("canvas");
+							let context = canvas.getContext('2d');
+
+							img.onload = function () {
+								let width = img.width;
+								let height = img.height;
+								let scale = Math.min(maxDimention / width, maxDimention / height);
+								if (scale > 1) scale = 1;
+								width *= scale;
+								height *= scale;
+								canvas.width = width;
+								canvas.height = height;
+								context.drawImage(img, 0, 0, width, height);
+								res(canvas.toDataURL("image/png"));
+							};
+							img.src = b64;
+						});
+
 					}
 
 					function requestImageProcessing(b64) {

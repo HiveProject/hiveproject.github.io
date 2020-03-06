@@ -52,48 +52,101 @@ function getBase64(imageData) {
     });
 }
 function getPixel(imageData, x, y) {
-    if(x<0||x>=imageData.width 
-        ||y<0 ||y>=imageData.height)
-        {return [0,0,0,0];}
+    /* if (x < 0 || x >= imageData.width
+         || y < 0 || y >= imageData.height) { return [0, 0, 0, 0]; }
+     */
     let start = ((imageData.width * y) + x) * 4;
-    return imageData.data.slice(start, start+4);
+    return imageData.data.slice(start, start + 4);
 }
 function setPixel(imageData, x, y, value) {
     if (value.length != 4)
         value = [0, 0, 0, 0];
     let start = ((imageData.width * y) + x) * 4;
     for (let index = 0; index < 4; index++) {
-        imageData.data[start+index]=value[index];        
+        imageData.data[start + index] = value[index];
     }
 }
-const channels={
-    R:0,
-    G:1,
-    B:2,
-    A:3
+const channels = {
+    R: 0,
+    G: 1,
+    B: 2,
+    A: 3
 }
 function toGrayScale(b64) {
     return new Promise((res, rej) => {
         //this follows colorimetric conversion
         //https://en.wikipedia.org/wiki/Grayscale#Converting_color_to_grayscale
         getImageData(b64).then((data) => {
-            let result = new ImageData(data.width,data.height);
-            
+            let result = new ImageData(data.width, data.height);
+
             for (let y = 0; y < data.height; y++) {
                 for (let x = 0; x < data.width; x++) {
-                    let pixel=getPixel(data,x,y);
-                    let color= (.2126 * pixel[channels.R]+.7152*pixel[channels.R]+.0722*pixel[channels.B])/255;
-                    if(color <=0.0031308)
-                    {
-                        color*=12.92;
-                    }else{
-                        color= 1.055 * color **(1/2.4) - 0.055
+                    let pixel = getPixel(data, x, y);
+                    let color = (.2126 * pixel[channels.R] + .7152 * pixel[channels.R] + .0722 * pixel[channels.B]) / 255;
+                    if (color <= 0.0031308) {
+                        color *= 12.92;
+                    } else {
+                        color = 1.055 * color ** (1 / 2.4) - 0.055
                     }
-                    color*=255;
-                    setPixel(result,x,y,[color,color,color,255]);
-                }    
+                    color *= 255;
+                    setPixel(result, x, y, [color, color, color, 255]);
+                }
             }
             getBase64(result).then(res);
         });
     });
+}
+//INFO this requires a grayscale thingy inside! at least for now
+function applySobelFilter(b64) {
+    let maskX = [
+        [-1, 0, 1],
+        [-2, 0, 2],
+        [-1, 0, 1]
+    ];
+    let maskY = [
+        [-1, -2, -1],
+        [0, 0, 0],
+        [1, 2, 1]
+    ];
+
+    return new Promise((res, rej) => {
+        getImageData(b64).then((data) => {
+            let result = new ImageData(data.width, data.height);
+            let pixelAt=(x,y)=>{
+                return getPixel(data,x,y)[0];
+            };
+            for (let y = 1; y < data.height - 1; y++) {
+                for (let x = 1; x < data.width - 1; x++) {
+                    var pixelX = (
+                        (maskX[0][0] * pixelAt(x - 1, y - 1)) +
+                        (maskX[0][1] * pixelAt(x, y - 1)) +
+                        (maskX[0][2] * pixelAt(x + 1, y - 1)) +
+                        (maskX[1][0] * pixelAt(x - 1, y)) +
+                        (maskX[1][1] * pixelAt(x, y)) +
+                        (maskX[1][2] * pixelAt(x + 1, y)) +
+                        (maskX[2][0] * pixelAt(x - 1, y + 1)) +
+                        (maskX[2][1] * pixelAt(x, y + 1)) +
+                        (maskX[2][2] * pixelAt(x + 1, y + 1))
+                    );
+            
+                    var pixelY = (
+                      (maskY[0][0] * pixelAt(x - 1, y - 1)) +
+                      (maskY[0][1] * pixelAt(x, y - 1)) +
+                      (maskY[0][2] * pixelAt(x + 1, y - 1)) +
+                      (maskY[1][0] * pixelAt(x - 1, y)) +
+                      (maskY[1][1] * pixelAt(x, y)) +
+                      (maskY[1][2] * pixelAt(x + 1, y)) +
+                      (maskY[2][0] * pixelAt(x - 1, y + 1)) +
+                      (maskY[2][1] * pixelAt(x, y + 1)) +
+                      (maskY[2][2] * pixelAt(x + 1, y + 1))
+                    );
+                    var magnitude = Math.sqrt((pixelX * pixelX) + (pixelY * pixelY))>>>0;
+                    setPixel(result,x,y,[magnitude,magnitude,magnitude,255]);
+
+                }
+            }
+            getBase64(result).then(res);
+        });
+    });
+
 }

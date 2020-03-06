@@ -71,21 +71,23 @@ const channels = {
     B: 2,
     A: 3
 }
-function mapPixels(b64, func) {
+function mapImage(b64,func)
+{
     return new Promise((res, rej) => {
         getImageData(b64).then((data) => {
             let result = new ImageData(data.width, data.height);
             for (let y = 0; y < data.height; y++) {
                 for (let x = 0; x < data.width; x++) {
-                    let pixel = getPixel(data, x, y);
-                    setPixel(result, x, y, func(pixel));
+                    setPixel(result, x, y, func(data,x,y));
                 }
             }
             getBase64(result).then(res);
         });
 
     });
-
+}
+function mapPixels(b64, func) {
+    return mapImage(b64,(data,x,y)=>{return func(getPixel(data,x,y));});
 }
 function toColorimetricGrayScale(b64) {
     return new Promise((res, rej) => {

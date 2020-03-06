@@ -32,7 +32,9 @@
 					document.getElementById("file").disabled = false;
 					document.getElementById("file").onchange = processImage;
 					function processImage() {
-						loadImage().then(scaleToMaxSize).then(requestImageProcessing);
+						loadImage().then(
+							(b64) => { return scaleToMaxSize(b64, 800).then(requestImageProcessing); }
+						);
 					}
 					function loadImage() {
 						return new Promise((res, rej) => {

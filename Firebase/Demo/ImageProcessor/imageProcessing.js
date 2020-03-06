@@ -1,6 +1,5 @@
-const maxDimention = 800;
 
-function scaleToMaxSize(b64) {
+function scaleToMaxSize(b64, maxDimention) {
     return new Promise((res, rej) => {
         var img = new Image();
         let canvas = document.createElement("canvas");
@@ -79,7 +78,7 @@ function mapPixels(b64, func) {
             for (let y = 0; y < data.height; y++) {
                 for (let x = 0; x < data.width; x++) {
                     let pixel = getPixel(data, x, y);
-                    setPixel(result, x, y, func(pixel)); 
+                    setPixel(result, x, y, func(pixel));
                 }
             }
             getBase64(result).then(res);
@@ -106,23 +105,22 @@ function toColorimetricGrayScale(b64) {
 }
 function toRoughGrayScale(b64) {
     return new Promise((res, rej) => {
-      mapPixels(b64,(pixel)=>{ 
-        let color = (pixel[channels.R] + pixel[channels.G] + pixel[channels.B]) / 3;
-          return  [color, color, color, 255];
-      }).then(res); 
+        mapPixels(b64, (pixel) => {
+            let color = (pixel[channels.R] + pixel[channels.G] + pixel[channels.B]) / 3;
+            return [color, color, color, 255];
+        }).then(res);
     });
 }
-function toBlackAndWhite(b64,threshold) {
+function toBlackAndWhite(b64, threshold) {
     return new Promise((res, rej) => {
-      mapPixels(b64,(pixel)=>{ 
-        let color = (pixel[channels.R] + pixel[channels.G] + pixel[channels.B]) / 3;
-        if(color>threshold)
-        {color=255}
-        else{
-            color=0;
-        }
-          return  [color, color, color, 255];
-      }).then(res); 
+        mapPixels(b64, (pixel) => {
+            let color = (pixel[channels.R] + pixel[channels.G] + pixel[channels.B]) / 3;
+            if (color > threshold) { color = 255 }
+            else {
+                color = 0;
+            }
+            return [color, color, color, 255];
+        }).then(res);
     });
 }
 //INFO this requires a grayscale thingy inside! at least for now

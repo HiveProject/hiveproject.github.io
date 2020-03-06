@@ -1,66 +1,65 @@
 <body>
-<script src="imageProcessing.js" type="text/javascript"></script>
-<form id="form"> 
-<input id="file" type="file" multiple  />
-</form>
-<table id="output"></table>
+	<script src="imageProcessing.js" type="text/javascript"></script>
+	<form id="form">
+		<input id="file" type="file" multiple />
+	</form>
+	<table id="output"></table>
 
-<script>
+	<script>
 
-	const input = document.getElementById('file');
-	const outputTable = document.getElementById('output');
-	input.onchange=processImage;
-	function processImage(){ 
-		outputTable.innerHTML="";
-		loadImage().then(getImageData).then(getBase64)
-		.then(pushImage)
-		.then(scaleToMaxSize).then(pushImage)
-		.then((b64)=>{
-			toColorimetricGrayScale(b64).then(pushImage);
-			toRoughGrayScale(b64).then(pushImage);
-			applySobelFilter(b64).then(pushImage)
-			.then((b64)=>{ toBlackAndWhite(b64,140).then(pushImage);});
-		});
-	}
-	function pushImage(b64){
-		let img= document.createElement("img");
-		img.src=b64;
-		let row = document.createElement("tr");
-		let data = document.createElement("td");
-		let resultData = document.createElement("td");
-		data.appendChild(img);
-		row.appendChild(data);
-		row.appendChild(resultData);
-		outputTable.appendChild(row);
-		return b64;
-	}
-	function loadImage() {
-	return new Promise((res,rej)=>{
-		if (input.files && input.files[0]) {
-		var reader = new FileReader();
-	
-		reader.onload = function(e) {
-			res(e.target.result);
-			document.getElementById("form").reset();
-		  //$('#blah').attr('src', e.target.result);
+		const input = document.getElementById('file');
+		const outputTable = document.getElementById('output');
+		input.onchange = processImage;
+		function processImage() {
+			outputTable.innerHTML = "";
+			loadImage().then(getImageData).then(getBase64)
+				.then(pushImage)
+				.then(scaleToMaxSize).then(pushImage)
+				.then((b64) => {
+					toColorimetricGrayScale(b64).then(pushImage);
+					toRoughGrayScale(b64).then(pushImage);
+					applySobelFilter(b64).then(pushImage)
+						.then((b64) => { toBlackAndWhite(b64, 140).then(pushImage); });
+				});
 		}
-		reader.onerror=rej;		
-		reader.readAsDataURL(input.files[0]);
-	  }else{rej()}
-		});
-	  
-	} 
-	
-	function requestImageProcessing(b64)
-	{
-		pushImage(b64);
-	
-		/*hive.request("imageProcessing",b64).then((r)=>{
-			let img= document.createElement("img");
-			img.src=r;
-			img.height=50;
-			resultData.appendChild(img);
-		});*/
-	}
-</script>
+		function pushImage(b64) {
+			let img = document.createElement("img");
+			img.src = b64;
+			let row = document.createElement("tr");
+			let data = document.createElement("td");
+			let resultData = document.createElement("td");
+			data.appendChild(img);
+			row.appendChild(data);
+			row.appendChild(resultData);
+			outputTable.appendChild(row);
+			return b64;
+		}
+		function loadImage() {
+			return new Promise((res, rej) => {
+				if (input.files && input.files[0]) {
+					var reader = new FileReader();
+
+					reader.onload = function (e) {
+						res(e.target.result);
+						document.getElementById("form").reset();
+						//$('#blah').attr('src', e.target.result);
+					}
+					reader.onerror = rej;
+					reader.readAsDataURL(input.files[0]);
+				} else { rej() }
+			});
+
+		}
+
+		function requestImageProcessing(b64) {
+			pushImage(b64);
+
+			/*hive.request("imageProcessing",b64).then((r)=>{
+				let img= document.createElement("img");
+				img.src=r;
+				img.height=50;
+				resultData.appendChild(img);
+			});*/
+		}
+	</script>
 </body>

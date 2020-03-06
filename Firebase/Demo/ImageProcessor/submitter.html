@@ -9,6 +9,7 @@
 	<script src="https://www.gstatic.com/firebasejs/3.6.2/firebase-app.js"></script>
 	<script src="https://www.gstatic.com/firebasejs/3.6.2/firebase-database.js"></script>
 	<script src="../../fireHive.js" type="text/javascript"></script>
+	<script src="imageProcessing.js" type="text/javascript"></script>
 
 	<form id="form">
 		<input id="file" type="file" multiple disabled />
@@ -49,31 +50,7 @@
 						});
 
 					}
-					const maxDimention = 800;
 
-
-					function scaleToMaxSize(b64) {
-						return new Promise((res, rej) => {
-							var img = new Image();
-							let canvas = document.createElement("canvas");
-							let context = canvas.getContext('2d');
-
-							img.onload = function () {
-								let width = img.width;
-								let height = img.height;
-								let scale = Math.min(maxDimention / width, maxDimention / height);
-								if (scale > 1) scale = 1;
-								width *= scale;
-								height *= scale;
-								canvas.width = width;
-								canvas.height = height;
-								context.drawImage(img, 0, 0, width, height);
-								res(canvas.toDataURL("image/png"));
-							};
-							img.src = b64;
-						});
-
-					}
 
 					function requestImageProcessing(b64) {
 						const outputTable = document.getElementById('output');

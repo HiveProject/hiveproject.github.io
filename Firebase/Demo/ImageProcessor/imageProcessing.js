@@ -122,8 +122,7 @@ function toBlackAndWhite(b64, threshold) {
             return [color, color, color, 255];
         }).then(res);
     });
-}
-//INFO this requires a grayscale thingy inside! at least for now
+} 
 function applySobelFilter(b64) {
     let maskX = [
         [-1, 0, 1],

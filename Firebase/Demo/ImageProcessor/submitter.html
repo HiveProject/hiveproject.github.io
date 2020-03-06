@@ -31,8 +31,7 @@
 					document.getElementById("file").disabled = false;
 					document.getElementById("file").onchange = processImage;
 					function processImage() {
-						loadImage().then(requestImageProcessing);
-
+						loadImage().then(scaleToMaxSize).then(requestImageProcessing);
 					}
 					function loadImage() {
 						return new Promise((res, rej) => {
@@ -50,7 +49,7 @@
 						});
 
 					}
-					const maxDimention = 500;
+					const maxDimention = 800;
 
 
 					function scaleToMaxSize(b64) {

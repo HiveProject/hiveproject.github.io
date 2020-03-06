@@ -17,7 +17,7 @@
 		.then(scaleToMaxSize).then(pushImage)
 		.then((b64)=>{
 			toColorimetricGrayScale(b64).then(pushImage);
-			tolinearGrayScale(b64).then(pushImage);
+			toRoughGrayScale(b64).then(pushImage);
 			applySobelFilter(b64).then(pushImage);
 
 		});

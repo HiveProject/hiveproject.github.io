@@ -104,7 +104,7 @@ function toColorimetricGrayScale(b64) {
         }).then(res);
     });
 }
-function tolinearGrayScale(b64) {
+function toRoughGrayScale(b64) {
     return new Promise((res, rej) => {
       mapPixels(b64,(pixel)=>{ 
         let color = (pixel[channels.R] + pixel[channels.G] + pixel[channels.B]) / 3;
@@ -126,7 +126,7 @@ function applySobelFilter(b64) {
     ];
 
     return new Promise((res, rej) => {
-        tolinearGrayScale(b64).then(getImageData).then((data) => {
+        toRoughGrayScale(b64).then(getImageData).then((data) => {
             let result = new ImageData(data.width, data.height);
             let pixelAt = (x, y) => {
                 return getPixel(data, x, y)[0];

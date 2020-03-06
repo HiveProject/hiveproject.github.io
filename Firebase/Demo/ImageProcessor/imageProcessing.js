@@ -173,48 +173,47 @@ function thinning(b64) {
     //https://rosettacode.org/wiki/Zhang-Suen_thinning_algorithm
     return new Promise((res, rej) => {
         getImageData(b64).then((data) => {
-            const white = [255, 255, 255, 255];
-            let result = data;
+            const black = [0, 0, 0, 255];
             let changed = false;
             do {
-                data=result;
-                result=new ImageData(data.width,data.height);
+                changed=false;
                 let pixelAt = (x, y) => {
                     return getPixel(data, x, y)[0];
                 };
                 let getNeighbours = (x, y) => {
                     return [pixelAt(x, y - 1),
-                        pixelAt(x + 1, y - 1),
-                        pixelAt(x + 1, y),
-                        pixelAt(x + 1, y + 1),
-                        pixelAt(x, y + 1),
-                        pixelAt(x - 1, y + 1),
-                        pixelAt(x - 1, y),
-                        pixelAt(x - 1, y - 1)];
+                    pixelAt(x + 1, y - 1),
+                    pixelAt(x + 1, y),
+                    pixelAt(x + 1, y + 1),
+                    pixelAt(x, y + 1),
+                    pixelAt(x - 1, y + 1),
+                    pixelAt(x - 1, y),
+                    pixelAt(x - 1, y - 1)];
                 };
-                let numBlack = (x, y) => {
-                    return getNeighbours(x, y).filter(x => x == 0).length;
+                let numWhite = (x, y) => {
+                    return getNeighbours(x, y).filter(x => x == 255).length;
                 };
                 let transitions = (x, y) => {
                     let tr = 0;
                     let n = getNeighbours(x, y);
                     n.push(n[0]);
                     for (let i = 0; i < n.length - 1; i++) {
-                        if (n[i] == 255 & n[i + 1] == 0) { tr++; }
+                        if (n[i] == 0 & n[i + 1] == 255) { tr++; }
                     }
                     return tr;
                 };
                 //step1
+                let toBlack = [];
                 for (let y = 1; y < data.height - 1; y++) {
                     for (let x = 1; x < data.width - 1; x++) {
-                        if (pixelAt(x, y) == 255) { continue; }
-                        const nb = numBlack(x, y);
+                        if (pixelAt(x, y) != 255) { continue; }
+                        const nb = numWhite(x, y);
                         let n = getNeighbours(x, y);
                         if (2 <= nb && nb <= 6) {
                             if (transitions(x, y) == 1) {
-                                if (n[0] == 255 || n[2] == 255 || n[4] == 255) {
-                                    if (n[2] == 255 || n[4] == 255 || n[6] == 255) {
-                                        setPixel(result, x, y, white);
+                                if (n[0] == 0 || n[2] == 0 || n[4] == 0) {
+                                    if (n[2] == 0 || n[4] == 0 || n[6] == 0) {
+                                        toBlack.push([x, y]);
                                         changed = true;
                                     }
                                 }
@@ -222,17 +221,21 @@ function thinning(b64) {
                         }
                     }
                 }
+                toBlack.forEach(position => {
+                    setPixel(data, position[0], position[1], black);
+                });
+                toBlack = [];
                 //step2
                 for (let y = 1; y < data.height - 1; y++) {
                     for (let x = 1; x < data.width - 1; x++) {
-                        if (pixelAt(x, y) == 255) { continue; }
-                        const nb = numBlack(x, y);
+                        if (pixelAt(x, y) != 255) { continue; }
+                        const nb = numWhite(x, y);
                         let n = getNeighbours(x, y);
                         if (2 <= nb && nb <= 6) {
                             if (transitions(x, y) == 1) {
-                                if (n[0] == 255 || n[2] == 255 || n[6] == 255) {
-                                    if (n[0] == 255 || n[4] == 255 || n[6] == 255) {
-                                        setPixel(result, x, y, white);
+                                if (n[0] == 0 || n[2] == 0 || n[6] == 0) {
+                                    if (n[0] == 0 || n[4] == 0 || n[6] == 0) {
+                                        toBlack.push([x, y]);
                                         changed = true;
                                     }
                                 }
@@ -240,9 +243,12 @@ function thinning(b64) {
                         }
                     }
                 }
+                toBlack.forEach(position => {
+                    setPixel(data, position[0], position[1], black);
+                });
             } while (changed);
 
-            getBase64(result).then(res);
+            getBase64(data).then(res);
         });
 
 

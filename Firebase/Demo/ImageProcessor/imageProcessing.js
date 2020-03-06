@@ -63,6 +63,12 @@ function setPixel(imageData, x, y, value) {
         imageData.data[start+index]=value[index];        
     }
 }
+const channels={
+    R:0,
+    G:1,
+    B:2,
+    A:3
+}
 function toGrayScale(b64) {
     return new Promise((res, rej) => {
         //this follows colorimetric conversion
@@ -73,9 +79,15 @@ function toGrayScale(b64) {
             for (let y = 0; y < data.height; y++) {
                 for (let x = 0; x < data.width; x++) {
                     let pixel=getPixel(data,x,y);
-                    pixel[1]=0;
-                    pixel[2]=0;
-                    setPixel(result,x,y,pixel);
+                    let color= (.2126 * pixel[channels.R]+.7152*pixel[channels.R]+.0722*pixel[channels.B])/255;
+                    if(color <=0.0031308)
+                    {
+                        color*=12.92;
+                    }else{
+                        color= 1.055 * color **(1/2.4) - 0.055
+                    }
+                    color*=255;
+                    setPixel(result,x,y,[color,color,color,255]);
                 }    
             }
             getBase64(result).then(res);

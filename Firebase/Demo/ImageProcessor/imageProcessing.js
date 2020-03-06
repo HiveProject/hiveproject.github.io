@@ -52,6 +52,9 @@ function getBase64(imageData) {
     });
 }
 function getPixel(imageData, x, y) {
+    if(x<0||x>=imageData.width 
+        ||y<0 ||y>=imageData.height)
+        {return [0,0,0,0];}
     let start = ((imageData.width * y) + x) * 4;
     return imageData.data.slice(start, start+4);
 }

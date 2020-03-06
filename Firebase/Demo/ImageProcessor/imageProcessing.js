@@ -71,14 +71,13 @@ const channels = {
     B: 2,
     A: 3
 }
-function mapImage(b64,func)
-{
+function mapImage(b64, func) {
     return new Promise((res, rej) => {
         getImageData(b64).then((data) => {
             let result = new ImageData(data.width, data.height);
             for (let y = 0; y < data.height; y++) {
                 for (let x = 0; x < data.width; x++) {
-                    setPixel(result, x, y, func(data,x,y));
+                    setPixel(result, x, y, func(data, x, y));
                 }
             }
             getBase64(result).then(res);
@@ -87,7 +86,7 @@ function mapImage(b64,func)
     });
 }
 function mapPixels(b64, func) {
-    return mapImage(b64,(data,x,y)=>{return func(getPixel(data,x,y));});
+    return mapImage(b64, (data, x, y) => { return func(getPixel(data, x, y)); });
 }
 function toColorimetricGrayScale(b64) {
     return new Promise((res, rej) => {
@@ -124,7 +123,7 @@ function toBlackAndWhite(b64, threshold) {
             return [color, color, color, 255];
         }).then(res);
     });
-} 
+}
 function applySobelFilter(b64) {
     let maskX = [
         [-1, 0, 1],
@@ -136,45 +135,38 @@ function applySobelFilter(b64) {
         [0, 0, 0],
         [1, 2, 1]
     ];
-
-    return new Promise((res, rej) => {
-        toRoughGrayScale(b64).then(getImageData).then((data) => {
-            let result = new ImageData(data.width, data.height);
+    return toRoughGrayScale(b64).then((b64) => mapImage(b64,
+        (data, x, y) => {
             let pixelAt = (x, y) => {
                 return getPixel(data, x, y)[0];
             };
-            for (let y = 1; y < data.height - 1; y++) {
-                for (let x = 1; x < data.width - 1; x++) {
-                    var pixelX = (
-                        (maskX[0][0] * pixelAt(x - 1, y - 1)) +
-                        (maskX[0][1] * pixelAt(x, y - 1)) +
-                        (maskX[0][2] * pixelAt(x + 1, y - 1)) +
-                        (maskX[1][0] * pixelAt(x - 1, y)) +
-                        (maskX[1][1] * pixelAt(x, y)) +
-                        (maskX[1][2] * pixelAt(x + 1, y)) +
-                        (maskX[2][0] * pixelAt(x - 1, y + 1)) +
-                        (maskX[2][1] * pixelAt(x, y + 1)) +
-                        (maskX[2][2] * pixelAt(x + 1, y + 1))
-                    );
+            var pixelX = (
+                (maskX[0][0] * pixelAt(x - 1, y - 1)) +
+                (maskX[0][1] * pixelAt(x, y - 1)) +
+                (maskX[0][2] * pixelAt(x + 1, y - 1)) +
+                (maskX[1][0] * pixelAt(x - 1, y)) +
+                (maskX[1][1] * pixelAt(x, y)) +
+                (maskX[1][2] * pixelAt(x + 1, y)) +
+                (maskX[2][0] * pixelAt(x - 1, y + 1)) +
+                (maskX[2][1] * pixelAt(x, y + 1)) +
+                (maskX[2][2] * pixelAt(x + 1, y + 1))
+            );
 
-                    var pixelY = (
-                        (maskY[0][0] * pixelAt(x - 1, y - 1)) +
-                        (maskY[0][1] * pixelAt(x, y - 1)) +
-                        (maskY[0][2] * pixelAt(x + 1, y - 1)) +
-                        (maskY[1][0] * pixelAt(x - 1, y)) +
-                        (maskY[1][1] * pixelAt(x, y)) +
-                        (maskY[1][2] * pixelAt(x + 1, y)) +
-                        (maskY[2][0] * pixelAt(x - 1, y + 1)) +
-                        (maskY[2][1] * pixelAt(x, y + 1)) +
-                        (maskY[2][2] * pixelAt(x + 1, y + 1))
-                    );
-                    var magnitude = Math.sqrt((pixelX * pixelX) + (pixelY * pixelY)) >>> 0;
-                    setPixel(result, x, y, [magnitude, magnitude, magnitude, 255]);
+            var pixelY = (
+                (maskY[0][0] * pixelAt(x - 1, y - 1)) +
+                (maskY[0][1] * pixelAt(x, y - 1)) +
+                (maskY[0][2] * pixelAt(x + 1, y - 1)) +
+                (maskY[1][0] * pixelAt(x - 1, y)) +
+                (maskY[1][1] * pixelAt(x, y)) +
+                (maskY[1][2] * pixelAt(x + 1, y)) +
+                (maskY[2][0] * pixelAt(x - 1, y + 1)) +
+                (maskY[2][1] * pixelAt(x, y + 1)) +
+                (maskY[2][2] * pixelAt(x + 1, y + 1))
+            );
+            var magnitude = Math.sqrt((pixelX * pixelX) + (pixelY * pixelY)) >>> 0;
+            return [magnitude, magnitude, magnitude, 255];
 
-                }
-            }
-            getBase64(result).then(res);
-        });
-    });
+        }));
+
 
 }

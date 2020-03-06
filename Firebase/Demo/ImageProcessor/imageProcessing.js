@@ -112,6 +112,19 @@ function toRoughGrayScale(b64) {
       }).then(res); 
     });
 }
+function toBlackAndWhite(b64,threshold) {
+    return new Promise((res, rej) => {
+      mapPixels(b64,(pixel)=>{ 
+        let color = (pixel[channels.R] + pixel[channels.G] + pixel[channels.B]) / 3;
+        if(color>threshold)
+        {color=255}
+        else{
+            color=0;
+        }
+          return  [color, color, color, 255];
+      }).then(res); 
+    });
+}
 //INFO this requires a grayscale thingy inside! at least for now
 function applySobelFilter(b64) {
     let maskX = [

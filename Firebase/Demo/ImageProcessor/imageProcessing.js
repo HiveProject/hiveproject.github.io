@@ -72,7 +72,7 @@ const channels = {
     B: 2,
     A: 3
 }
-function toGrayScale(b64) {
+function toColorimetricGrayScale(b64) {
     return new Promise((res, rej) => {
         //this follows colorimetric conversion
         //https://en.wikipedia.org/wiki/Grayscale#Converting_color_to_grayscale
@@ -96,6 +96,24 @@ function toGrayScale(b64) {
         });
     });
 }
+function tolinearGrayScale(b64) {
+    return new Promise((res, rej) => {
+        //this follows colorimetric conversion
+        //https://en.wikipedia.org/wiki/Grayscale#Converting_color_to_grayscale
+        getImageData(b64).then((data) => {
+            let result = new ImageData(data.width, data.height);
+
+            for (let y = 0; y < data.height; y++) {
+                for (let x = 0; x < data.width; x++) {
+                    let pixel = getPixel(data, x, y);
+                    let color = (pixel[channels.R] + pixel[channels.G]+ pixel[channels.B])/3;
+                    setPixel(result, x, y, [color, color, color, 255]);
+                }
+            }
+            getBase64(result).then(res);
+        });
+    });
+}
 //INFO this requires a grayscale thingy inside! at least for now
 function applySobelFilter(b64) {
     let maskX = [
@@ -110,7 +128,7 @@ function applySobelFilter(b64) {
     ];
 
     return new Promise((res, rej) => {
-        getImageData(b64).then((data) => {
+        tolinearGrayScale(b64).then(getImageData).then((data) => {
             let result = new ImageData(data.width, data.height);
             let pixelAt=(x,y)=>{
                 return getPixel(data,x,y)[0];

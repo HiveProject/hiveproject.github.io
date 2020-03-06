@@ -12,10 +12,15 @@
 	input.onchange=processImage;
 	function processImage(){ 
 		outputTable.innerHTML="";
-		loadImage().then(getImageData).then(getBase64).then(pushImage)
+		loadImage().then(getImageData).then(getBase64)
+		.then(pushImage)
 		.then(scaleToMaxSize).then(pushImage)
-		.then(toGrayScale).then(pushImage)
-		.then(applySobelFilter).then(pushImage);
+		.then((b64)=>{
+			toColorimetricGrayScale(b64).then(pushImage);
+			tolinearGrayScale(b64).then(pushImage);
+			applySobelFilter(b64).then(pushImage);
+
+		});
 	}
 	function pushImage(b64){
 		let img= document.createElement("img");

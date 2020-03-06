@@ -1,50 +1,53 @@
 <html>
+
 <head></head>
+
 <body>
-<script src="https://www.gstatic.com/firebasejs/3.6.2/firebase.js"></script>
-<script src="https://www.gstatic.com/firebasejs/3.6.2/firebase-app.js"></script>
-<script src="https://www.gstatic.com/firebasejs/3.6.2/firebase-database.js"></script> 
-<script src="../../fireHive.js" type="text/javascript"></script>
-<!-- using the nice sobel filter implemented on https://github.com/miguelmota/sobel -->
-<script src="https://lab.miguelmota.com/sobel/sobel.js"></script>
-<p> Performing Sobel Filter</p>
-<img id="pre"></img>
-<canvas id="post"></canvas>
-<script>
-	let config={
+	<script src="https://www.gstatic.com/firebasejs/3.6.2/firebase.js"></script>
+	<script src="https://www.gstatic.com/firebasejs/3.6.2/firebase-app.js"></script>
+	<script src="https://www.gstatic.com/firebasejs/3.6.2/firebase-database.js"></script>
+	<script src="../../fireHive.js" type="text/javascript"></script>
+	<!-- using the nice sobel filter implemented on https://github.com/miguelmota/sobel -->
+	<script src="https://lab.miguelmota.com/sobel/sobel.js"></script>
+	<p> Performing Sobel Filter</p>
+	<img id="pre"></img>
+	<canvas id="post"></canvas>
+	<script>
+		let config = {
 			apiKey: " AIzaSyA-Y_mz58xgvGkQNK_tQCXQiG3q1mlA6hM",
 			authDomain: "hive-1336.firebaseapp.com",
 			databaseURL: "https://hive-1336.firebaseio.com/",
 			storageBucket: "hive-1336.appspot.com"
 		};
-	hive.start(config, function(){
-		let f = ()=>{
-			console.log("Waiting for a new image");
-			hive.processAsync("imageProcessing",processImage).then(f);};
-		f();
-	});
-	function processImage(b64, resolve)
-	{ 
-		let image =document.getElementById("pre");
-		let canvas = document.getElementById("post");
-		let context = canvas.getContext('2d');
-
-		image.onload = function() {
-			let width=image.width;
-			let height=image.height;
-			canvas.width = width;
-			canvas.height = height;
-			context.drawImage(image, 0, 0);
-			var imageData = context.getImageData(0, 0, width, height);
-			// Sobel constructor returns an Uint8ClampedArray with sobel data
-			var sobelData = Sobel(imageData);
-			// [sobelData].toImageData() returns a new ImageData object
-			var sobelImageData = sobelData.toImageData();
-			context.putImageData(sobelImageData, 0, 0);
-			resolve( canvas.toDataURL("image/png"));
+		hive.start(config, function () {
+			let f = () => {
+				console.log("Waiting for a new image");
+				hive.processAsync("imageProcessing", processImage).then(f);
 			};
-		image.src=b64;
-	}
-</script>
+			f();
+		});
+		function processImage(b64, resolve) {
+			let image = document.getElementById("pre");
+			let canvas = document.getElementById("post");
+			let context = canvas.getContext('2d');
+
+			image.onload = function () {
+				let width = image.width;
+				let height = image.height;
+				canvas.width = width;
+				canvas.height = height;
+				context.drawImage(image, 0, 0);
+				var imageData = context.getImageData(0, 0, width, height);
+				// Sobel constructor returns an Uint8ClampedArray with sobel data
+				var sobelData = Sobel(imageData);
+				// [sobelData].toImageData() returns a new ImageData object
+				var sobelImageData = sobelData.toImageData();
+				context.putImageData(sobelImageData, 0, 0);
+				resolve(canvas.toDataURL("image/png"));
+			};
+			image.src = b64;
+		}
+	</script>
 </body>
+
 </html>

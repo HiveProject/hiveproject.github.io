@@ -1,70 +1,72 @@
 <html>
+
 <head>
 </head>
-<body> 
 
-<script src="https://www.gstatic.com/firebasejs/3.6.2/firebase.js"></script>
-<script src="https://www.gstatic.com/firebasejs/3.6.2/firebase-app.js"></script>
-<script src="https://www.gstatic.com/firebasejs/3.6.2/firebase-database.js"></script> 
-<script src="../../fireHive.js" type="text/javascript"></script>
+<body>
 
-<form id="form"> 
-<input id="file" type="file" multiple disabled />
-</form>
-<table id="output"></table>
+	<script src="https://www.gstatic.com/firebasejs/3.6.2/firebase.js"></script>
+	<script src="https://www.gstatic.com/firebasejs/3.6.2/firebase-app.js"></script>
+	<script src="https://www.gstatic.com/firebasejs/3.6.2/firebase-database.js"></script>
+	<script src="../../fireHive.js" type="text/javascript"></script>
 
-<script type="text/javascript">
+	<form id="form">
+		<input id="file" type="file" multiple disabled />
+	</form>
+	<table id="output"></table>
 
-if(hive){
-	let config={
-			apiKey: " AIzaSyA-Y_mz58xgvGkQNK_tQCXQiG3q1mlA6hM",
-			authDomain: "hive-1336.firebaseapp.com",
-			databaseURL: "https://hive-1336.firebaseio.com/",
-			storageBucket: "hive-1336.appspot.com"
-		};
-	hive.start(config, 
-	function(){
-		console.log("Hive started");
-		document.getElementById("file").disabled = false;
-		document.getElementById("file").onchange=loadImage;
-		function loadImage() {
-		  const input = document.getElementById('file');
-		  if (input.files && input.files[0]) {
-			var reader = new FileReader();
-			
-			reader.onload = function(e) {
-				requestImageProcessing(e.target.result);
-				document.getElementById("form").reset();
-			  //$('#blah').attr('src', e.target.result);
-			}		
-			reader.readAsDataURL(input.files[0]);
-		  }
+	<script type="text/javascript">
+
+		if (hive) {
+			let config = {
+				apiKey: " AIzaSyA-Y_mz58xgvGkQNK_tQCXQiG3q1mlA6hM",
+				authDomain: "hive-1336.firebaseapp.com",
+				databaseURL: "https://hive-1336.firebaseio.com/",
+				storageBucket: "hive-1336.appspot.com"
+			};
+			hive.start(config,
+				function () {
+					console.log("Hive started");
+					document.getElementById("file").disabled = false;
+					document.getElementById("file").onchange = loadImage;
+					function loadImage() {
+						const input = document.getElementById('file');
+						if (input.files && input.files[0]) {
+							var reader = new FileReader();
+
+							reader.onload = function (e) {
+								requestImageProcessing(e.target.result);
+								document.getElementById("form").reset();
+								//$('#blah').attr('src', e.target.result);
+							}
+							reader.readAsDataURL(input.files[0]);
+						}
+					}
+
+					function requestImageProcessing(b64) {
+						const outputTable = document.getElementById('output');
+						let img = document.createElement("img");
+						img.src = b64;
+						img.height = 50;
+						let row = document.createElement("tr");
+						let data = document.createElement("td");
+						let resultData = document.createElement("td");
+						data.appendChild(img);
+						row.appendChild(data);
+						row.appendChild(resultData);
+						outputTable.appendChild(row);
+						hive.request("imageProcessing", b64).then((r) => {
+							let img = document.createElement("img");
+							img.src = r;
+							img.height = 50;
+							resultData.appendChild(img);
+						});
+					}
+				});
+		} else {
+			console.log("Hive was not defined");
 		}
-
-		function requestImageProcessing(b64)
-		{
-			const outputTable = document.getElementById('output');
-			let img= document.createElement("img");
-			img.src=b64;
-			img.height=50;
-			let row = document.createElement("tr");
-			let data = document.createElement("td");
-			let resultData = document.createElement("td");
-			data.appendChild(img);
-			row.appendChild(data);
-			row.appendChild(resultData);
-			outputTable.appendChild(row);
-			hive.request("imageProcessing",b64).then((r)=>{
-				let img= document.createElement("img");
-				img.src=r;
-				img.height=50;
-				resultData.appendChild(img);
-			});
-		}
-		});
-}else{
-	console.log("Hive was not defined");
-	}
-</script>  
+	</script>
 </body>
+
 </html>

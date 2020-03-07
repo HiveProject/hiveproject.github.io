@@ -176,7 +176,7 @@ function thinning(b64) {
             const black = [0, 0, 0, 255];
             let changed = false;
             do {
-                changed=false;
+                changed = false;
                 let pixelAt = (x, y) => {
                     return getPixel(data, x, y)[0];
                 };
@@ -255,6 +255,79 @@ function thinning(b64) {
 
     });
 }
+
+function labelImage(b64) {
+    return new Promise((res, rej) => {
+        return applySobelFilter(b64).then((b64) => {
+            toBlackAndWhite(b64, 140).then(
+                (b64) => {
+                    getImageData(b64).then((data) => {
+                        let pixelAt = (x, y) => {
+                            //this padds with white
+                            if (x < 0 || x >= data.width || y < 0 || y >= data.height)
+                                return 255;
+                            return getPixel(data, x, y)[0];
+                        };
+                        let putPixel = (x, y, value) => {
+                            setPixel(data, x, y, [value, value, value, 255]);
+                        };
+                        let getTopLeft = (x, y) => [pixelAt(x, y - 1), pixelAt(x - 1, y)];
+                        let foundEquivalences = [];
+                        let currentLabel = 0;
+                        for (let y = 0; y < data.height; y++) {
+                            for (let x = 0; x < data.width; x++) {
+                                if (pixelAt(x, y) == 255)
+                                    continue;
+
+                                let topLeft = getTopLeft(x, y);
+                                if (topLeft.some((v) => v != 255)) {
+                                    if (topLeft[0] == 255 || topLeft[1] == 255) {
+                                        //i have ONE border
+                                        //the label to be used will be the lesser of them.
+                                        putPixel(x, y, Math.min(topLeft[0], topLeft[1]));
+                                    } else {
+                                        //i have NO BORDER, both are valid.
+                                        putPixel(x, y, topLeft[0]);
+                                        if (topLeft[0] != topLeft[1]) {
+                                            if (!foundEquivalences.some(d => d[0] == topLeft[0] && d[1] == topLeft[1]))
+                                                foundEquivalences.push(topLeft);
+                                        }
+                                    }
+                                } else {
+                                    //both are borders, this is a new label
+                                    putPixel(x, y, ++currentLabel);
+                                }
+
+                            }
+                        } 
+                        while (foundEquivalences.length > 0) {
+                            let [from, to] = foundEquivalences.pop()
+                            for (let y = 0; y < data.height; y++) {
+                                for (let x = 0; x < data.width; x++) {
+                                    if (pixelAt(x, y) == from)
+                                        putPixel(x, y, to);
+                                }
+                            }
+                            foundEquivalences=foundEquivalences.map((d)=>{
+                                if(d[0]==from)
+                                    d[0]=to;
+                                if(d[1]==from)
+                                    d[1]=to;
+                                return d;
+                            });
+                        }
+
+                        getBase64(data).then(res);
+                    });
+                })
+        });
+    });
+
+}
+
+
+
+//this implementation is bugged
 function fillClosedBodies(b64) {
     return new Promise((res, rej) => {
         return applySobelFilter(b64).then((b64) => {
@@ -278,16 +351,29 @@ function fillClosedBodies(b64) {
                                     if (inBorder) {
                                         continue;
                                     } else {
-                                        bordersFound++;
+                                        bordersFoundLeft++;
                                         inBorder = true;
                                     }
                                 } else {
                                     if (inBorder) { inBorder = false; }
                                 }
-
                             }
-                            
-                            if (bordersFound % 2 == 0) {
+                            let bordersFoundRight = 0;
+                            inBorder = false;
+                            for (let nx = x + 1; nx < data.width; nx++) {
+                                let p = pixelAt(nx, y);
+                                if (p == 255) {
+                                    if (inBorder) {
+                                        continue;
+                                    } else {
+                                        bordersFoundRight++;
+                                        inBorder = true;
+                                    }
+                                } else {
+                                    if (inBorder) { inBorder = false; }
+                                }
+                            }
+                            if (Math.min(bordersFoundLeft, bordersFoundRight) % 2 == 0) {
 
                                 return [0, 0, 0, 255];
                             } else {

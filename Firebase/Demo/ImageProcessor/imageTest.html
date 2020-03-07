@@ -14,17 +14,18 @@
 			outputTable.innerHTML = "";
 			loadImage().then(getImageData).then(getBase64)
 				.then(pushImage)
-				.then((b64)=>scaleToMaxSize(b64,800)).then(pushImage)
+				.then((b64) => scaleToMaxSize(b64, 800)).then(pushImage)
 				.then((b64) => {
 					toColorimetricGrayScale(b64).then(pushImage);
 					toRoughGrayScale(b64).then(pushImage);
 					applySobelFilter(b64).then(pushImage)
-						.then((b64) => { toBlackAndWhite(b64, 140).then(pushImage)
-							.then(thinning).then(pushImage)
-							
-							; });
-					//fillClosedBodies(b64).then(pushImage);
-					
+						.then((b64) => {
+							toBlackAndWhite(b64, 140).then(pushImage)
+							.then(thinning).then(pushImage);
+						});
+
+					fillClosedBodies(b64).then(pushImage);
+
 				});
 		}
 		function pushImage(b64) {

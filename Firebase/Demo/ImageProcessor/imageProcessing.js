@@ -258,7 +258,7 @@ function thinning(b64) {
 function fillClosedBodies(b64) {
     return new Promise((res, rej) => {
         return applySobelFilter(b64).then((b64) => {
-            toBlackAndWhite(b64, 140).then(
+            toBlackAndWhite(b64, 140).then(thinning).then(
                 (b64) => {
                     mapImage(b64,
                         (data, x, y) => {
@@ -270,7 +270,7 @@ function fillClosedBodies(b64) {
                                 return [0, 0, 0, 255];
                             }
                             //i now need to check every pixel between myself and a border, if i have an odd number of borders, i am inside something
-                            let bordersFound = 0;
+                            let bordersFoundLeft = 0;
                             let inBorder = false;
                             for (let nx = x - 1; nx > 0; nx--) {
                                 let p = pixelAt(nx, y);
@@ -286,6 +286,7 @@ function fillClosedBodies(b64) {
                                 }
 
                             }
+                            
                             if (bordersFound % 2 == 0) {
 
                                 return [0, 0, 0, 255];

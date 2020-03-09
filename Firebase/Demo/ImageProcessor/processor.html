@@ -31,8 +31,7 @@
 			let context = canvas.getContext('2d');
 
 			image.onload = function () {
-
-				applySobelFilter(b64).then((resultB64) => {
+				findRectanglesOfInterest(b64).then((result) => {
 					let simg = new Image();
 					simg.onload = () => {
 						let width = simg.width;
@@ -40,10 +39,16 @@
 						canvas.width = width;
 						canvas.height = height;
 						context.drawImage(simg, 0, 0);
-						resolve(resultB64);
+						result.rectangles.forEach((b) => {
+							context.strokeStyle = 'red';
+							context.strokeRect(b.bounds.x, b.bounds.y, b.bounds.w, b.bounds.h);
+						});
+						resolve(result.rectangles);
 					};
-					simg.src = resultB64;
+					simg.src = result.imageB64;
+
 				});
+				 
 			};
 			image.src = b64;
 		}

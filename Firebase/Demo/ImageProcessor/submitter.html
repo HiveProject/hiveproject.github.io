@@ -57,21 +57,32 @@
 					function requestImageProcessing(b64) {
 						const outputTable = document.getElementById('output');
 						let img = document.createElement("img");
+						img.onload = () => {
+							img.height /= 2;
+							img.width /= 2;
+							let canvas = document.createElement("canvas");
+							let context = canvas.getContext("2d");
+							canvas.height = img.height;
+							canvas.width = img.width;
+							context.drawImage(img, 0, 0, img.width, img.height);
+							let row = document.createElement("tr");
+							let data = document.createElement("td");
+							let resultData = document.createElement("td");
+							data.appendChild(canvas);
+							row.appendChild(data);
+							row.appendChild(resultData);
+							outputTable.appendChild(row);
+							hive.request("imageProcessing", b64).then((rectangles) => {
+								rectangles.forEach((b) => {
+									context.strokeStyle = 'red';
+									context.strokeRect(b.bounds.x / 2, b.bounds.y / 2, b.bounds.w / 2, b.bounds.h / 2);
+								});
+							});
+
+						};
 						img.src = b64;
-						img.height = 50;
-						let row = document.createElement("tr");
-						let data = document.createElement("td");
-						let resultData = document.createElement("td");
-						data.appendChild(img);
-						row.appendChild(data);
-						row.appendChild(resultData);
-						outputTable.appendChild(row);
-						hive.request("imageProcessing", b64).then((r) => {
-							let img = document.createElement("img");
-							img.src = r;
-							img.height = 50;
-							resultData.appendChild(img);
-						});
+
+
 					}
 				});
 		} else {

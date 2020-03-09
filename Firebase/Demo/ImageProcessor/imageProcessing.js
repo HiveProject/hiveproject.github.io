@@ -288,9 +288,19 @@ function labelImage(b64) {
                                     } else {
                                         //i have NO BORDER, both are valid.
                                         putPixel(x, y, topLeft[0]);
-                                        if (topLeft[0] != topLeft[1]) {
-                                            if (!foundEquivalences.some(d => d[0] == topLeft[0] && d[1] == topLeft[1]))
-                                                foundEquivalences.push(topLeft);
+                                        if (topLeft[0] != topLeft[1]) { 
+                                            let from = Math.max(topLeft[0], topLeft[1]);
+                                            let to = Math.min(topLeft[0], topLeft[1]);
+                                            for (let y = 0; y < data.height; y++) {
+                                                for (let x = 0; x < data.width; x++) {
+                                                    if (pixelAt(x, y) == from)
+                                                        putPixel(x, y, to);
+                                                }
+                                            }
+                                            if(from==currentLabel)
+                                            {
+                                                currentLabel--;
+                                            }
                                         }
                                     }
                                 } else {
@@ -300,22 +310,7 @@ function labelImage(b64) {
 
                             }
                         }
-                        while (foundEquivalences.length > 0) {
-                            let [from, to] = foundEquivalences.pop()
-                            for (let y = 0; y < data.height; y++) {
-                                for (let x = 0; x < data.width; x++) {
-                                    if (pixelAt(x, y) == from)
-                                        putPixel(x, y, to);
-                                }
-                            }
-                            foundEquivalences = foundEquivalences.map((d) => {
-                                if (d[0] == from)
-                                    d[0] = to;
-                                if (d[1] == from)
-                                    d[1] = to;
-                                return d;
-                            });
-                        }
+
 
                         getBase64(data).then(res);
                     });
@@ -357,9 +352,9 @@ function findRectanglesOfInterest(b64) {
             result = result.map((v) => ({
                 id: v.id,
                 massCenter: { x: v.totX / v.numPoints, y: v.totY / v.numPoints },
-                bounds: {x:v.minX, y: v.minY, w: v.maxX-v.minX, h: v.maxY-v.minY}
+                bounds: { x: v.minX, y: v.minY, w: v.maxX - v.minX, h: v.maxY - v.minY }
             }));
-            res({ imageB64: b64, rectanles: result });
+            res({ imageB64: b64, rectangles: result });
         });
     });
 }

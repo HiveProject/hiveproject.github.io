@@ -21,10 +21,10 @@
 					applySobelFilter(b64).then(pushImage)
 						.then((b64) => {
 							toBlackAndWhite(b64, 140).then(pushImage)
-							.then(thinning).then(pushImage);
+								.then(thinning).then(pushImage);
 						});
 
-						labelImage(b64).then(pushImage);
+					labelImage(b64).then(pushImage);
 					findAndDrawBodies(b64);
 
 				});
@@ -57,10 +57,32 @@
 			});
 
 		}
-		function findAndDrawBodies(b64)
-		{
-			findRectanglesOfInterest(b64).then((r)=>{
-				debugger;
+		function findAndDrawBodies(b64) {
+			findRectanglesOfInterest(b64).then((r) => {
+
+				let img = document.createElement("img");
+				img.onload = () => {
+					let row = document.createElement("tr");
+					let data = document.createElement("td");
+					let resultData = document.createElement("td");
+					let canvas = document.createElement("canvas");
+
+					
+					data.appendChild(canvas);
+					row.appendChild(data);
+					row.appendChild(resultData);
+					outputTable.appendChild(row);
+
+					canvas.width = img.width;
+					canvas.height = img.height;
+					let context = canvas.getContext("2d");
+					context.drawImage(img, 0, 0, img.width, img.height);
+					r.rectangles.forEach((b) => {
+						context.strokeStyle = 'red';		
+						context.strokeRect(b.bounds.x, b.bounds.y, b.bounds.w, b.bounds.h); 
+					}); 
+				};
+				img.src = r.imageB64;
 			});
 		}
 		function requestImageProcessing(b64) {

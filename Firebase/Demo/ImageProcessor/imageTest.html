@@ -25,6 +25,7 @@
 						});
 
 						labelImage(b64).then(pushImage);
+					findAndDrawBodies(b64);
 
 				});
 		}
@@ -56,7 +57,12 @@
 			});
 
 		}
-
+		function findAndDrawBodies(b64)
+		{
+			findRectanglesOfInterest(b64).then((r)=>{
+				debugger;
+			});
+		}
 		function requestImageProcessing(b64) {
 			pushImage(b64);
 

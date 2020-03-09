@@ -1,7 +1,7 @@
 
 function scaleToMaxSize(b64, maxDimention) {
     return new Promise((res, rej) => {
-        var img = new Image();
+        let img = new Image();
         let canvas = document.createElement("canvas");
         let context = canvas.getContext('2d');
         img.onload = function () {
@@ -299,7 +299,7 @@ function labelImage(b64) {
                                 }
 
                             }
-                        } 
+                        }
                         while (foundEquivalences.length > 0) {
                             let [from, to] = foundEquivalences.pop()
                             for (let y = 0; y < data.height; y++) {
@@ -308,11 +308,11 @@ function labelImage(b64) {
                                         putPixel(x, y, to);
                                 }
                             }
-                            foundEquivalences=foundEquivalences.map((d)=>{
-                                if(d[0]==from)
-                                    d[0]=to;
-                                if(d[1]==from)
-                                    d[1]=to;
+                            foundEquivalences = foundEquivalences.map((d) => {
+                                if (d[0] == from)
+                                    d[0] = to;
+                                if (d[1] == from)
+                                    d[1] = to;
                                 return d;
                             });
                         }
@@ -324,7 +324,45 @@ function labelImage(b64) {
     });
 
 }
+function findRectanglesOfInterest(b64) {
+    return new Promise((res, rej) => {
+        labelImage(b64).then(getImageData).then((data) => {
+            let result = {};
 
+            for (let y = 0; y < data.height; y++) {
+                for (let x = 0; x < data.width; x++) {
+                    let current = getPixel(data, x, y)[0];
+                    //borders
+                    if (current == 255)
+                        continue;
+                    if (!result[current]) {
+                        result[current] = { id: current, maxX: 0, minX: data.width, maxY: 0, minY: data.height, totX: 0, totY: 0, numPoints: 0 };
+                    }
+                    let bucket = result[current];
+                    bucket.totX += x;
+                    bucket.totY += y;
+                    bucket.numPoints++;
+                    if (bucket.maxX < x)
+                        bucket.maxX = x;
+                    if (bucket.minX > x)
+                        bucket.minX = x;
+                    if (bucket.maxY < y)
+                        bucket.maxY = y;
+                    if (bucket.minY > y)
+                        bucket.minY = y;
+                }
+            }
+
+            result = Object.values(result);
+            result = result.map((v) => ({
+                id: v.id,
+                massCenter: { x: v.totX / v.numPoints, y: v.totY / v.numPoints },
+                bounds: {x:v.minX, y: v.minY, w: v.maxX-v.minX, h: v.maxY-v.minY}
+            }));
+            res({ imageB64: b64, rectanles: result });
+        });
+    });
+}
 
 
 //this implementation is bugged

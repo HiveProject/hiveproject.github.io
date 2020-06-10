@@ -13,6 +13,7 @@ window.onload = (event) => {
     }
     let result = {};
     result.awarenessKind = {
+        Any: 0b0,
         Presence: 0b1,
         Location: 0b10,
         Density: 0b100,

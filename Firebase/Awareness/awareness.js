@@ -63,6 +63,8 @@ window.onload = (event) => {
     };
     result.notify = function (obj, kind, data) {
         ensureAwarenessInitialization(obj);
+        data.kind=kind;
+        data.time=new Date();
         let subscribers = obj["__awareness__"].subscriptions;
         for (const key in subscribers) {
             if (subscribers.hasOwnProperty(key)) {

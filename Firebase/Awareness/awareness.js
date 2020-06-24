@@ -91,8 +91,9 @@ window.onload = (event) => {
             if (history.length > nextIndexToProcess) {
                 let news = [];
                 for (; nextIndexToProcess < history.length; nextIndexToProcess++) {
+                    let element = history[nextIndexToProcess];
                     if ((element.kind & kind) == element.kind) {
-                        news.push(history[nextIndexToProcess]);
+                        news.push(element);
                     }
                 }
                 callback(news);

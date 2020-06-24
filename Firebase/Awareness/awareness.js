@@ -33,7 +33,7 @@ window.onload = (event) => {
         All: 0b1111111111111111
     };
 
-    
+
     function ensureAwarenessInitialization(obj) {
         if (!obj["__awareness__"]) {
             obj["__awareness__"] = {
@@ -50,31 +50,59 @@ window.onload = (event) => {
         obj["__awareness__"].subscriptions[me]
             = { kind: kind, events: [] };
         let cancelation = setInterval(() => {
-            if(obj["__awareness__"].subscriptions[me].events.length!=0)
-            {
+            if (obj["__awareness__"].subscriptions[me].events.length != 0) {
                 callback(obj["__awareness__"].subscriptions[me].events.shift());
             }
         }, 10);
-        return { unsusbcibe: function (){
-            clearInterval(cancelation);
-            delete obj["__awareness__"].subscriptions[me];
-        }};
+        return {
+            unsusbcibe: function () {
+                clearInterval(cancelation);
+                delete obj["__awareness__"].subscriptions[me];
+            }
+        };
 
     };
     result.notify = function (obj, kind, data) {
         ensureAwarenessInitialization(obj);
-        data.kind=kind;
-        data.time=new Date();
+        data.kind = kind;
+        data.time = new Date();
         let subscribers = obj["__awareness__"].subscriptions;
         for (const key in subscribers) {
             if (subscribers.hasOwnProperty(key)) {
                 const element = subscribers[key];
-                if((element.kind & kind) == element.kind)
-                {
+                if ((element.kind & kind) == element.kind) {
                     element.events.push(data);
                 }
             }
         }
     };
+
+    result.notifyHistory = function (obj, kind, data) {
+        ensureAwarenessInitialization(obj);
+        data.kind = kind | result.awarenessKind.History;
+        data.time = new Date();
+        hive.lock(obj, () => { obj["__awareness__"].history.push(data); });
+    };
+    result.subscribeHistory = function (obj, kind, callback) {
+        ensureAwarenessInitialization(obj);
+        let nextIndexToProcess = 0;
+        let cancelation = setInterval(() => {
+            var history = obj["__awareness__"].history;
+            if (history.length > nextIndexToProcess) {
+                let news = [];
+                for (; nextIndexToProcess < history.length; nextIndexToProcess++) {
+                    if ((element.kind & kind) == element.kind) {
+                        news.push(history[nextIndexToProcess]);
+                    }
+                }
+                callback(news);
+            }
+        }, 10);
+        return {
+            unsusbcibe: function () {
+                clearInterval(cancelation);
+            }
+        };
+    }
     hive.awareness = result;
 };

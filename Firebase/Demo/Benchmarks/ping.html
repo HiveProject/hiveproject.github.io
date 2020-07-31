@@ -1,0 +1,129 @@
+<html>
+
+<head>
+    <title>Ping requester</title>
+</head>
+
+<body>
+    <script src="https://www.gstatic.com/firebasejs/3.6.2/firebase.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/3.6.2/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/3.6.2/firebase-database.js"></script>
+    <script src="../../fireHive.js" type="text/javascript"></script>
+
+    <script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
+
+    <h1 id="myId"></h1>
+    <h2 id="status">starting up</h2>
+
+
+    <button id="startButton" disabled>Start</button>
+
+    <button id="stopButton" disabled>Stop</button>
+
+    <div style="float:left;">
+        <div id="chart_div" style="width: 300px; height: 300px; float:left;"></div>
+        <div id="hist_div" style="width: 900px; height: 300px;float:left;"></div>
+    </div>
+    <script>
+        google.charts.load('current', { 'packages': ['gauge', 'corechart'] });
+        google.charts.setOnLoadCallback(drawChart);
+        let max = 1000;
+
+
+
+        function updateState(state) {
+            document.getElementById("status").innerText = state;
+            console.log(state);
+        }
+
+        function drawChart() {
+
+            let speed = google.visualization.arrayToDataTable([
+                ['Label', 'Value'],
+                ['RT', 0]
+            ]);
+
+            let chart = new google.visualization.Gauge(document.getElementById('chart_div'));
+            let options = {
+                width: 600, height: 300,
+                redFrom: 0.80 * max, redTo: max,
+                yellowFrom: 0.50 * max, yellowTo: 0.80 * max,
+                minorTicks: 5,
+                max: max
+            };
+            chart.draw(speed, options);
+            var histOptions = {
+                title: 'Lengths of dinosaurs, in meters',
+                legend: { position: 'none' },
+            };
+            let sample = 0;
+            var hist = new google.visualization.Histogram(document.getElementById('hist_div'));
+
+            if (hive) {
+                let config = {
+                    apiKey: " AIzaSyA-Y_mz58xgvGkQNK_tQCXQiG3q1mlA6hM",
+                    authDomain: "hive-1336.firebaseapp.com",
+                    databaseURL: "https://hive-1336.firebaseio.com/",
+                    storageBucket: "hive-1336.appspot.com"
+                };
+                hive.start(config, function () {
+                    console.log("Hive started");
+                    let me = Math.floor(Math.random() * 1000);
+                    document.getElementById("myId").innerText = me;
+
+                    let startButton = document.getElementById("startButton");
+                    let stopButton = document.getElementById("stopButton");
+                    startButton.onclick = () => {
+
+                        var histData = new google.visualization.DataTable();
+                        histData.addColumn('string', 'label');
+                        histData.addColumn('number', 'roundtrip');
+                        
+                        startButton.disabled = true;
+                        updateState("Waiting for connection");
+                        let pingData = hive.set("ping_" + me, { before: [], middle: [] });
+                        let before = pingData.before;
+                        let middle = pingData.middle;
+                        let roundtrip = [];
+                        let pushInterval;
+                        let getInterval;
+                        hive.request("ping", { source: me, channel: pingData })
+                            .then((otherId) => {
+                                updateState("Pinging " + otherId);
+                                pushInterval = setInterval(() => {
+                                    before.push(Date.now());
+                                }, 100);
+                                getInterval = setInterval(() => {
+                                    if (middle.length > roundtrip.length) {
+                                        let rt = Date.now() - before[roundtrip.length];
+                                        roundtrip.push(rt);
+
+                                        speed.setValue(0, 1, rt);
+                                        chart.draw(speed, options);
+                                        histData.addRow(["rt", rt]);
+                                        hist.draw(histData, histOptions);
+                                    }
+                                }, 0);
+                            });
+                        stopButton.onclick = () => {
+                            stopButton.disabled = true;
+                            clearInterval(pushInterval);
+                            clearInterval(getInterval);
+                            hive.remove("ping_" + me);
+                            startButton.disabled = false;
+
+                        };
+                        stopButton.disabled = false;
+
+                    };
+                    startButton.disabled = false;
+                });
+            } else {
+                console.log("Hive was not defined");
+            }
+        }
+
+    </script>
+</body>
+
+</html>

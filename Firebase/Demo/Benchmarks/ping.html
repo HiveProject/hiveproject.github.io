@@ -81,9 +81,11 @@
                         
                         startButton.disabled = true;
                         updateState("Waiting for connection");
-                        let pingData = hive.set("ping_" + me, { before: [], middle: [] });
+                        let pingData = hive.set("ping_" + me, { before: [], middle: [], after:[] });
+                        window["pingData"] = pingData;
                         let before = pingData.before;
                         let middle = pingData.middle;
+                        let after = pingData.after;
                         let roundtrip = [];
                         let pushInterval;
                         let getInterval;
@@ -95,7 +97,8 @@
                                 }, 100);
                                 getInterval = setInterval(() => {
                                     if (middle.length > roundtrip.length) {
-                                        let rt = Date.now() - before[roundtrip.length];
+                                        after.push(Date.now());
+                                        let rt = after[roundtrip.length] - before[roundtrip.length];
                                         roundtrip.push(rt);
 
                                         speed.setValue(0, 1, rt);

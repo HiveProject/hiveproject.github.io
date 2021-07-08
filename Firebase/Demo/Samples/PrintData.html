@@ -27,6 +27,7 @@
 				let stringData = JSON.stringify(data,undefined,2);
 				target.innerHTML=stringData;
 			}
+			setInterval(refresh, 250);
 			hive.start(config, function () {
 				console.log("Hive started");
 
@@ -37,7 +38,6 @@
 						data = hive.set("PrintData", data);
 				}
 				window["printData"] = data;
-				setInterval(refresh, 250);
 			});
 		} else {
 			console.log("Hive was not defined");

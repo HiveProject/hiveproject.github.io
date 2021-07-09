@@ -1,152 +1,144 @@
 <html>
+
 <head></head>
+
 <body>
-<button id="goButton" onClick="buttonClicked()" disabled>Start</button>
+	<button id="goButton" onClick="buttonClicked()" disabled>Start</button>
 
-<button id="stepButton" onClick="stepButtonClicked()" disabled>Step</button>
-<br/>
-<canvas id="canv"></canvas>
+	<button id="stepButton" onClick="stepButtonClicked()" disabled>Step</button>
+	<br />
+	<canvas id="canv"></canvas>
 
-<script src="https://www.gstatic.com/firebasejs/3.6.2/firebase.js"></script>
-<script src="https://www.gstatic.com/firebasejs/3.6.2/firebase-app.js"></script>
-<script src="https://www.gstatic.com/firebasejs/3.6.2/firebase-database.js"></script> 
-<script src="../../fireHive.js" type="text/javascript"></script>
-<script src="graph.js" type="text/javascript"></script>
-<script src="astar.js" type="text/javascript"></script>
+	<script src="https://www.gstatic.com/firebasejs/3.6.2/firebase.js"></script>
+	<script src="https://www.gstatic.com/firebasejs/3.6.2/firebase-app.js"></script>
+	<script src="https://www.gstatic.com/firebasejs/3.6.2/firebase-database.js"></script>
+	<script src="../../fireHive.js" type="text/javascript"></script>
+	<script src="graph.js" type="text/javascript"></script>
+	<script src="astar.js" type="text/javascript"></script>
 
-<script>
-let map=[]; 
-let graph;
-let graphic=[];
-let canvas;
-let ctx;
-let mapSize=50;
-let graphSize=700;
-let side;	
-let running =false;
-let currentlyRunning=false;
-var baseColors=["#FF0000","#00FF00","#0000FF","#FFFF00","#00FFFF","#FF00FF"];
-let colorindex=0;
-function stepButtonClicked()
-{
-	running=false;
-	document.getElementById("goButton").innerText= running?"Stop":"Start";
-	process();
-}
-function buttonClicked()
-{
-	
-	running=!running; 
-	document.getElementById("goButton").innerText= running?"Stop":"Start";
-	if(running & (!(currentlyRunning))){
-		process();
-	}
-}
-function process(){
-currentlyRunning=true;
-	hive.process("astar",
-	function(page){
-		let result = [];
-		for(let i = 0;i<page.length;i++)
-		{
-			let subRes= calculateShortestPath(page[i]);
-			for(let j = 0;j<subRes.length;j++)
-			{
-				let it = subRes[j];
-				if(result[it.x]==undefined)
-				{
-					result[it.x]=[];
-				}
-				if(result[it.x][it.y]==undefined){
-					result[it.x][it.y]=it;
-				}else{
-					result[it.x][it.y].count++;
-				}
+	<script>
+		let map = [];
+		let graph;
+		let graphic = [];
+		let canvas;
+		let ctx;
+		let mapSize = 50;
+		let graphSize = 700;
+		let side;
+		let running = false;
+		let currentlyRunning = false;
+		var baseColors = ["#FF0000", "#00FF00", "#0000FF", "#FFFF00", "#00FFFF", "#FF00FF"];
+		let colorindex = 0;
+		function stepButtonClicked() {
+			running = false;
+			document.getElementById("goButton").innerText = running ? "Stop" : "Start";
+			process();
+		}
+		function buttonClicked() {
+
+			running = !running;
+			document.getElementById("goButton").innerText = running ? "Stop" : "Start";
+			if (running & (!(currentlyRunning))) {
+				process();
 			}
-		} 
-		draw(); 
-		return result.flat();
-	})
-		.then(function(){
-			console.log("Page Processed");
-			currentlyRunning=false;
-			if(running){
-				currentlyRunning=true;
-				setTimeout(process, 1);
-				}
-			});
-}
-function draw(){
- 
-	ctx.fillStyle = "black";
-	ctx.fillRect(0,0,graphSize,graphSize); 
-	for(let cx=0;cx<mapSize;cx++)
-	{
-		for(let cy=0;cy<mapSize;cy++)
-		{ 
-			ctx.fillStyle = graphic[cx][cy];
-			ctx.fillRect(cx*side,cy*side,side,side);
+		}
+		function process() {
+			currentlyRunning = true;
+			hive.process("astar",
+				function (page) {
+					let result = [];
+					for (let i = 0; i < page.length; i++) {
+						let subRes = calculateShortestPath(page[i]);
+						for (let j = 0; j < subRes.length; j++) {
+							let it = subRes[j];
+							if (result[it.x] == undefined) {
+								result[it.x] = [];
+							}
+							if (result[it.x][it.y] == undefined) {
+								result[it.x][it.y] = it;
+							} else {
+								result[it.x][it.y].count++;
+							}
+						}
+					}
+					draw();
+					return result.flat();
+				})
+				.then(function () {
+					console.log("Page Processed");
+					currentlyRunning = false;
+					if (running) {
+						currentlyRunning = true;
+						setTimeout(process, 1);
+					}
+				});
+		}
+		function draw() {
+
 			ctx.fillStyle = "black";
-			ctx.strokeRect(cx*side,cy*side,side,side); 
-		}
-	}
-	 
-		
-}
-  
-function calculateShortestPath(locations)
-{
-	var start = graph.nodes[locations.fromX][locations.fromY];
-	var end = graph.nodes[locations.toX][locations.toY];
-	var result = astar.search(graph.nodes,start,end,false);
-	result= result.map( (node)=>{return {x:node.x,y:node.y,count:1}});
-	 
-	result.unshift({x:locations.fromX, y:locations.fromY, count:1});
-	for(let i = 0;i<result.length;i++)
-	{
-		graphic[result[i].x][result[i].y]=	baseColors[colorindex]; 	
-	}
-	colorindex=(colorindex+1)%baseColors.length;
-	return result;
-}
- 
-if(hive){
-	let config={
-			apiKey: " AIzaSyA-Y_mz58xgvGkQNK_tQCXQiG3q1mlA6hM",
-			authDomain: "hive-1336.firebaseapp.com",
-			databaseURL: "https://hive-1336.firebaseio.com/",
-			storageBucket: "hive-1336.appspot.com"
-		};
-	hive.start(config, function(){console.log("Hive started");
-	 map= hive.get("map");
-	 graph=new Graph(map);
-	   document.getElementById("goButton").disabled = false;
-	   document.getElementById("stepButton").disabled = false;
-	 mapSize=map.length;
-	for(let i = 0;i<mapSize;i++)
-	{
-		graphic[i]=new Array(mapSize).fill("#FFFFFFFF"); 
-	}
-	for(let cx=0;cx<mapSize;cx++)
-	{
-		for(let cy=0;cy<mapSize;cy++)
-		{
-		if(map[cx][cy]==0)
-			{
-				graphic[cx][cy]="#00000000";
+			ctx.fillRect(0, 0, graphSize, graphSize);
+			for (let cx = 0; cx < mapSize; cx++) {
+				for (let cy = 0; cy < mapSize; cy++) {
+					ctx.fillStyle = graphic[cx][cy];
+					ctx.fillRect(cx * side, cy * side, side, side);
+					ctx.fillStyle = "black";
+					ctx.strokeRect(cx * side, cy * side, side, side);
+				}
 			}
+
+
 		}
-	}
-		canvas = document.getElementById("canv"); 
-		canvas.width=graphSize;
-		canvas.height=graphSize;
-		ctx=canvas.getContext("2d");
-		side=graphSize/mapSize;
-		draw();
-		//setInterval(draw,50);
-	});
-}else{
-	console.log("Hive was not defined");
-	}
-</script>
-</body></html>
+
+		function calculateShortestPath(locations) {
+			var start = graph.nodes[locations.fromX][locations.fromY];
+			var end = graph.nodes[locations.toX][locations.toY];
+			var result = astar.search(graph.nodes, start, end, false);
+			result = result.map((node) => { return { x: node.x, y: node.y, count: 1 } });
+
+			result.unshift({ x: locations.fromX, y: locations.fromY, count: 1 });
+			for (let i = 0; i < result.length; i++) {
+				graphic[result[i].x][result[i].y] = baseColors[colorindex];
+			}
+			colorindex = (colorindex + 1) % baseColors.length;
+			return result;
+		}
+
+		if (hive) {
+			let config = {
+				apiKey: " AIzaSyA-Y_mz58xgvGkQNK_tQCXQiG3q1mlA6hM",
+				authDomain: "hive-1336.firebaseapp.com",
+				databaseURL: "https://hive-1336.firebaseio.com/",
+				storageBucket: "hive-1336.appspot.com"
+			};
+			hive.start(config, function () {
+				console.log("Hive started");
+				map = hive.get("map");
+				graph = new Graph(map);
+				document.getElementById("goButton").disabled = false;
+				document.getElementById("stepButton").disabled = false;
+				mapSize = map.length;
+				for (let i = 0; i < mapSize; i++) {
+					graphic[i] = new Array(mapSize).fill("#FFFFFFFF");
+				}
+				for (let cx = 0; cx < mapSize; cx++) {
+					for (let cy = 0; cy < mapSize; cy++) {
+						if (map[cx][cy] == 0) {
+							graphic[cx][cy] = "#00000000";
+						}
+					}
+				}
+				canvas = document.getElementById("canv");
+				canvas.width = graphSize;
+				canvas.height = graphSize;
+				ctx = canvas.getContext("2d");
+				side = graphSize / mapSize;
+				draw();
+				//setInterval(draw,50);
+			});
+		} else {
+			console.log("Hive was not defined");
+		}
+	</script>
+</body>
+
+</html>
